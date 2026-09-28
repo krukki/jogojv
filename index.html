@@ -196,19 +196,28 @@
   .fov-row input{flex:1;min-width:0;accent-color:var(--amber);cursor:pointer}
   .fov-row output{min-width:3em;text-align:right;color:var(--amber)}
   #pause .fov-row{margin-left:auto;margin-right:auto}
+  .fov-row.sens-row{margin-top:10px}
 
   /* ---------- Celular ---------- */
   /* páginas compactas: não cobrem a tela toda e o botão de fechar fica sempre visível */
   body.touch .modal{background:rgba(0,0,0,.45);padding:10px calc(10px + env(safe-area-inset-right)) 10px calc(10px + env(safe-area-inset-left))}
-  body.touch .paper{display:flex;flex-direction:column;overflow:hidden;max-width:min(440px,calc(var(--vw)*64));max-height:min(calc(var(--vh)*76),420px);padding:16px 18px 12px}
+  body.touch .paper{display:flex;flex-direction:column;overflow:hidden;max-width:min(340px,calc(var(--vw)*44));max-height:min(calc(var(--vh)*62),300px);padding:12px 14px 10px}
   body.touch .paper .label{font-size:9px;flex:none}
-  body.touch .paper h3{font-size:15px;margin:4px 0 8px;flex:none}
-  body.touch .paper .body{font-size:15px;line-height:1.4;overflow:auto;flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch;touch-action:pan-y}
-  body.touch .paper.stone .body{font-size:12px;line-height:1.6}
-  body.touch .paper .foot{margin-top:10px;flex:none}
-  body.touch .paper .close{padding:8px 14px;font-size:12px}
+  body.touch .paper h3{font-size:13px;margin:3px 0 6px;flex:none}
+  body.touch .paper .body{font-size:13px;line-height:1.35;overflow:auto;flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  body.touch .paper.stone .body{font-size:11px;line-height:1.5}
+  body.touch .paper .foot{margin-top:8px;flex:none}
+  body.touch .paper .close{padding:7px 12px;font-size:11px}
   body.touch .journal #journal-list{overflow:auto;flex:1 1 auto;min-height:0;touch-action:pan-y}
-  body.touch #journal-list button,body.touch #journal-list .missing{font-size:15px;padding:8px 10px}
+  body.touch #journal-list button,body.touch #journal-list .missing{font-size:13px;padding:6px 8px}
+  body.touch .paper .count{font-size:10px}
+  /* título compacto no celular deitado (sem a ajuda de teclado) */
+  body.touch .controls{display:none}
+  body.touch #title-ghost{height:min(calc(var(--vh)*24),400px);margin-bottom:0}
+  body.touch h1{font-size:clamp(24px,calc(var(--vw)*5),64px);margin:6px 0}
+  body.touch .lede{font-size:14px;line-height:1.35;max-width:520px}
+  body.touch #title .btn{margin-top:12px;padding:10px 28px}
+  body.touch #title .fov-row{margin-top:8px;font-size:11px}
 
   /* tudo fica dentro de #app; com o celular em pé ele gira 90° (JS) para jogar deitado,
      mesmo com a rotação automática travada. --vw/--vh = 1% da tela do jogo (já girada) */
@@ -270,6 +279,7 @@
   <p class="lede">João Vitão estudava na IFMT. A Menina Jojo também, e ela era bruxa. Ele disse “não” para ela, e desde então nunca mais conseguiu sair da escola. Hoje a IFMT está abandonada, mas ele continua lá dentro. A bateria do seu celular não vai durar para sempre.</p>
   <button class="btn" id="btn-start">Entrar</button>
   <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
+  <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
   <div class="controls">
     <b>W</b><b>S</b> andar &nbsp;·&nbsp; <b>A</b><b>D</b> passo lateral &nbsp;·&nbsp; <b>←</b><b>→</b> ou <b>mouse</b> olhar &nbsp;·&nbsp; <b>R</b><b>F</b> cima/baixo<br>
     <b>E</b> esconder no armário &nbsp;·&nbsp; <b>L</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
@@ -304,6 +314,7 @@
     <button class="btn" id="pause-resume">Continuar</button>
     <button class="btn ghost" id="pause-journal">Diário</button>
     <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
+  <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
     <div class="controls"><b>W</b><b>S</b> andar · <b>A</b><b>D</b> lateral · <b>←</b><b>→</b>/mouse olhar · <b>R</b><b>F</b> cima/baixo<br><b>E</b> armário · <b>L</b> lanterna · <b>Tab</b> mapa · <b>J</b> diário · <b>M</b> som</div>
   </div>
 </div>
@@ -1545,6 +1556,9 @@ let cw = 0, ch = 0, dpr = 1, RW = 320, RH = 180, FOC = 240, PLANE = .66;
 // campo de visão horizontal em graus (slider no título e na pausa; lembrado entre sessões)
 let FOV_DEG = 75;
 try { const f = +localStorage.getItem('jv-fov'); if (f >= 50 && f <= 120) FOV_DEG = f; } catch (e) {}
+// sensibilidade da câmera em % (mouse e arrastar no celular; slider no título e na pausa)
+let SENS = 100;
+try { const v = +localStorage.getItem('jv-sens'); if (v >= 20 && v <= 300) SENS = v; } catch (e) {}
 let imgData, buf, zbuf;
 
 /* CELULAR EM PÉ: em vez de esperar a tela girar (não gira com a rotação automática
@@ -1998,6 +2012,18 @@ fovInputs.forEach(i => {
   i.addEventListener('change', () => i.blur());
 });
 setFov(FOV_DEG);
+const sensInputs = document.querySelectorAll('.sens-input'), sensVals = document.querySelectorAll('.sens-val');
+function setSens(v, save){
+  SENS = clamp(Math.round(v/10)*10, 20, 300);
+  sensInputs.forEach(i => { i.value = SENS; });
+  sensVals.forEach(o => { o.textContent = (SENS/100).toFixed(1) + '×'; });
+  if (save) try { localStorage.setItem('jv-sens', SENS); } catch (e) {}
+}
+sensInputs.forEach(i => {
+  i.addEventListener('input', () => setSens(+i.value, true));
+  i.addEventListener('change', () => i.blur());
+});
+setSens(SENS);
 function setPause(on){
   if (on && G.state === 'play'){ G.state = 'paused'; $('pause').classList.add('on'); releasePointer(); }
   else if (!on && G.state === 'paused'){ G.state = 'play'; $('pause').classList.remove('on'); }
@@ -2293,13 +2319,14 @@ function updatePlay(dt){
   let turn = 0;
   if (keys['arrowleft']) turn -= 1;
   if (keys['arrowright']) turn += 1;
-  P.a += turn*P.turn*dt + lookDX*.0028;
+  const look = .0028*SENS/100;
+  P.a += turn*P.turn*dt + lookDX*look;
   // olhar para cima/baixo (mouse, arrastar ou R/F)
   let tilt = 0;
   if (keys['r'] || keys['pageup']) tilt += 1;
   if (keys['f'] || keys['pagedown']) tilt -= 1;
   const lim = pitchLimit();
-  P.pitch = clamp(P.pitch + tilt*1.4*dt - lookDY*.0028, -lim, lim);
+  P.pitch = clamp(P.pitch + tilt*1.4*dt - lookDY*look, -lim, lim);
   lookDX = lookDY = 0;
   if (P.hideCd > 0) P.hideCd -= dt;
   // no armário: não anda, o celular fica desligado e só dá para espiar pelas frestas
