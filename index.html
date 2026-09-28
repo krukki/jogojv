@@ -25,20 +25,24 @@
     gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;pointer-events:none;z-index:5;opacity:0;transition:opacity .8s}
   #hud.on{opacity:1}
   .lvl{font-family:Cinzel,serif;font-size:12px;letter-spacing:.2em;color:var(--amber);text-transform:uppercase;text-shadow:0 0 10px #000,0 0 3px #000}
-  .fuel{display:flex;align-items:center;gap:8px;margin-top:9px}
-  .fuel svg{width:20px;height:20px;color:var(--ember);filter:drop-shadow(0 0 6px rgba(255,120,40,.75));flex:none}
-  .bar{width:min(160px,34vw);height:8px;border:1px solid rgba(227,164,82,.45);background:rgba(0,0,0,.65);overflow:hidden}
-  #fuel-fill{height:100%;width:100%;background:linear-gradient(90deg,#7a240a,#e0621c,#ffc76a);transition:width .25s linear}
-  .fuel.low svg{animation:flick .18s infinite alternate}
-  .fuel.low .bar{border-color:rgba(255,90,40,.7)}
-  .fuel.out svg{color:#5a3a2a;filter:none;animation:none}
-  @keyframes flick{from{opacity:1;transform:scale(1)}to{opacity:.35;transform:scale(.8)}}
+  /* bateria do celular */
+  .battery{display:flex;align-items:center;gap:9px;margin-top:9px;font-family:Cinzel,serif;font-size:13px;letter-spacing:.08em;color:#e8eef2;text-shadow:0 0 8px #000}
+  .batt{position:relative;width:46px;height:20px;border:2px solid rgba(232,238,242,.85);border-radius:4px;padding:2px;background:rgba(0,0,0,.55)}
+  .batt::after{content:'';position:absolute;right:-6px;top:4px;width:4px;height:8px;border-radius:0 2px 2px 0;background:rgba(232,238,242,.85)}
+  #fuel-fill{height:100%;width:100%;border-radius:1px;background:#5fd36a;transition:width .25s linear,background-color .3s}
+  .battery.low #fuel-fill{background:#f0b43c}
+  .battery.crit #fuel-fill{background:#ff4a3a}
+  .battery.crit .batt{animation:flick .5s infinite alternate}
+  .battery.out .batt{border-color:#7a3a34}
+  @keyframes flick{from{opacity:1}to{opacity:.35}}
   .chips{display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
   .chip{display:flex;align-items:center;gap:6px;padding:0 10px;height:38px;border:1px solid var(--line);
     background:rgba(10,7,5,.72);color:var(--text);font-family:Cinzel,serif;font-size:13px;letter-spacing:.06em}
   .chip svg{width:18px;height:18px;flex:none}
   #keys-chip svg{color:#ffcf6a}
   #book svg{color:var(--parch)}
+  #btn-light svg{color:#f3f6ff;filter:drop-shadow(0 0 5px rgba(220,235,255,.8))}
+  #btn-light.off svg{color:#5b5550;filter:none}
   button.chip:hover{border-color:rgba(227,164,82,.6)}
   button.chip:focus-visible{outline:1px solid var(--amber);outline-offset:2px}
   .icon-btn{width:38px;justify-content:center;padding:0}
@@ -56,6 +60,13 @@
     text-align:center;font-size:19px;font-style:italic;color:#eadcc3;background:rgba(6,4,3,.78);border:1px solid var(--line);
     padding:10px 18px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;z-index:8;text-shadow:0 0 8px #000}
   #toast.on{opacity:1;transform:translate(-50%,0)}
+  /* aviso de ação (armário) — no celular também é o botão */
+  #act{position:fixed;left:50%;bottom:calc(27% + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:8;display:none;
+    font-family:Cinzel,serif;font-size:13px;letter-spacing:.16em;text-transform:uppercase;color:#e8eef2;background:rgba(6,8,10,.75);
+    border:1px solid rgba(200,215,230,.35);padding:10px 16px;white-space:nowrap}
+  #act.on{display:block}
+  #act b{font-weight:400;border:1px solid rgba(200,215,230,.5);padding:1px 6px;margin-right:8px}
+  body.touch #act b{display:none}
   body.touch #toast{bottom:calc(200px + env(safe-area-inset-bottom))}
 
   /* ---------- D-pad (mobile) ---------- */
@@ -102,6 +113,9 @@
   #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:30;display:flex;flex-direction:column;
     align-items:center;justify-content:center;text-align:center;padding:24px 16px;transition-property:opacity;transition-duration:1s}
   #fade.block{pointer-events:auto}
+  /* tela de entrada: só aparece se o navegador bloquear o som antes do primeiro clique */
+  #gate{z-index:40;background:var(--bg);cursor:pointer}
+  #gate .btn{margin-top:22px}
   /* jumpscare: o rosto dele cobre a tela inteira, banhado de vermelho, tremendo */
   #jumpscare{position:fixed;inset:0;z-index:28;display:none;background:#000;overflow:hidden;pointer-events:none}
   #jumpscare.on{display:block;animation:js-shake .08s linear infinite}
@@ -134,10 +148,11 @@
   .paper .count{font-family:Cinzel,serif;font-size:12px;letter-spacing:.14em;opacity:.6}
   .paper .close{font-family:Cinzel,serif;font-size:13px;letter-spacing:.2em;text-transform:uppercase;padding:9px 18px;border:1px solid rgba(43,29,18,.45)}
   .paper .close:hover{background:rgba(43,29,18,.1)}
-  .paper.stone{background:radial-gradient(ellipse at 40% 25%,#4c4946,#2c2a28 70%,#1d1c1b);color:#d3dae2;text-align:center;
-    box-shadow:0 0 0 1px #111,0 24px 70px rgba(0,0,0,.85),inset 0 0 60px rgba(0,0,0,.6)}
-  .paper.stone .body{font-family:Cinzel,serif;font-size:17px;letter-spacing:.14em;line-height:1.8;text-shadow:0 0 12px rgba(170,200,255,.35)}
-  .paper.stone .close{border-color:rgba(211,218,226,.35)}
+  /* páginas "escritas na lousa": quadro-negro com moldura de madeira */
+  .paper.stone{background:radial-gradient(ellipse at 40% 25%,#35503f,#22362b 70%,#18271f);color:#eef2ea;text-align:center;
+    box-shadow:0 0 0 8px #5a3d24,0 0 0 9px #2e1f12,0 24px 70px rgba(0,0,0,.85),inset 0 0 60px rgba(0,0,0,.45)}
+  .paper.stone .body{font-family:Cinzel,serif;font-size:17px;letter-spacing:.14em;line-height:1.8;text-shadow:0 0 6px rgba(240,250,240,.35)}
+  .paper.stone .close{border-color:rgba(238,242,234,.35)}
   .paper.stone .foot{justify-content:center;flex-direction:column}
   .journal{background:linear-gradient(#1a120c,#0f0a07);color:var(--text);border:1px solid var(--line);box-shadow:0 24px 70px rgba(0,0,0,.85)}
   .journal h3{color:#f0d9a8}
@@ -190,10 +205,9 @@
 <!-- HUD -->
 <div id="hud">
   <div>
-    <div class="lvl" id="lvl-name">I · Os Salões da Entrada</div>
-    <div class="fuel" id="fuel-box">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 1.5c.9 3.6 5.3 6 5.3 11.3A5.3 5.3 0 0 1 6.7 12.8c0-2.9 1.8-4.1 2.3-6.6 1.1 1 1.7 2.3 1.9 3.9C12.3 7.8 12.6 4.6 12 1.5z"/></svg>
-      <div class="bar" role="meter" aria-label="Combustível da tocha"><div id="fuel-fill"></div></div>
+    <div class="lvl" id="lvl-name">I · Bloco A · Entrada</div>
+    <div class="battery" id="fuel-box" role="meter" aria-label="Bateria do celular">
+      <div class="batt"><div id="fuel-fill"></div></div><span id="batt-pct">100%</span>
     </div>
   </div>
   <div class="chips">
@@ -204,6 +218,9 @@
     <button class="chip" id="book" title="Diário (J)">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.2c3-1.2 6-1 8.5.9 2.5-1.9 5.5-2.1 8.5-.9v13.6c-3-1.2-6-1-8.5.9-2.5-1.9-5.5-2.1-8.5-.9z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 6.1v13.6" stroke="currentColor" stroke-width="1.4"/></svg>
       <span id="pages-count">0/13</span>
+    </button>
+    <button class="chip icon-btn" id="btn-light" title="Lanterna (L)" aria-label="Lanterna" aria-pressed="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v4l-2 3v10a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V10L8 7z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 13v3" stroke="currentColor" stroke-width="1.6"/></svg>
     </button>
     <button class="chip icon-btn" id="btn-map" title="Mapa (Tab)" aria-label="Mapa">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.4"/></svg>
@@ -216,20 +233,27 @@
 </div>
 
 <div id="toast"></div>
+<div id="act"></div>
 <div id="dpad"><span class="arr u"></span><span class="arr d"></span><span class="arr l"></span><span class="arr r"></span><div id="knob"></div></div>
 <div id="look-hint">arraste para olhar</div>
+
+<!-- Tela de entrada (desbloqueia o som) -->
+<div class="screen" id="gate">
+  <div class="kicker">Use fones de ouvido</div>
+  <button class="btn" id="gate-btn">Clique para entrar</button>
+</div>
 
 <!-- Tela título -->
 <div class="screen on" id="title">
   <img id="title-ghost" alt="" hidden>
   <div class="kicker">Um conto de luz e sombra</div>
   <h1>João Vitão<span class="sub">A história não contada</span></h1>
-  <p class="lede">Na IFMT Abandonada vive uma menina que não envelhece: a Menina Jojo. Quem a contraria, ela guarda para sempre na sua caixa de brinquedos, debaixo da terra. João Vitão a contrariou. Sua tocha não vai durar para sempre.</p>
-  <button class="btn" id="btn-start">Descer</button>
+  <p class="lede">João Vitão estudava na IFMT. A Menina Jojo também, e ela era bruxa. Ele disse “não” para ela, e desde então nunca mais conseguiu sair da escola. Hoje a IFMT está abandonada, mas ele continua lá dentro. A bateria do seu celular não vai durar para sempre.</p>
+  <button class="btn" id="btn-start">Entrar</button>
   <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
   <div class="controls">
     <b>W</b><b>S</b> andar &nbsp;·&nbsp; <b>A</b><b>D</b> passo lateral &nbsp;·&nbsp; <b>←</b><b>→</b> ou <b>mouse</b> olhar &nbsp;·&nbsp; <b>R</b><b>F</b> cima/baixo<br>
-    <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
+    <b>E</b> esconder no armário &nbsp;·&nbsp; <b>L</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
     Clique na tela para controlar a visão com o mouse. Use fones de ouvido.
   </div>
 </div>
@@ -261,7 +285,7 @@
     <button class="btn" id="pause-resume">Continuar</button>
     <button class="btn ghost" id="pause-journal">Diário</button>
     <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
-    <div class="controls"><b>W</b><b>S</b> andar · <b>A</b><b>D</b> lateral · <b>←</b><b>→</b>/mouse olhar · <b>R</b><b>F</b> cima/baixo<br><b>Tab</b> mapa · <b>J</b> diário · <b>M</b> som</div>
+    <div class="controls"><b>W</b><b>S</b> andar · <b>A</b><b>D</b> lateral · <b>←</b><b>→</b>/mouse olhar · <b>R</b><b>F</b> cima/baixo<br><b>E</b> armário · <b>L</b> lanterna · <b>Tab</b> mapa · <b>J</b> diário · <b>M</b> som</div>
   </div>
 </div>
 
@@ -281,7 +305,7 @@
     <h2 id="end-title"></h2>
     <div id="end-text"></div>
     <div id="end-stats"></div>
-    <button class="btn" id="btn-restart">Descer outra vez</button>
+    <button class="btn" id="btn-restart">Entrar outra vez</button>
   </div>
 </div>
 
@@ -307,7 +331,7 @@ const VILLAIN_SPRITE_HEIGHT = 1.6;
 const villainImg = new Image();
 let villainImgReady = false;
 let villainSprite = null;   // foto sem as faixas pretas (canvas)
-let villainSpriteRed = null;   // mesma foto banhada de vermelho (usada dentro da masmorra)
+let villainSpriteRed = null;   // mesma foto banhada de vermelho (usada dentro da IFMT)
 villainImg.onload = () => {
   if (!villainImg.naturalWidth) return;
   villainSprite = cutoutVillain(villainImg);
@@ -358,7 +382,7 @@ const TRAP_PERIOD = 2.6, TRAP_WARN = 1.6, TRAP_UP = 2.0;
 const TS = 64;              // tamanho das texturas
 const WALL_H = 1.35;        // altura das paredes (em tiles)
 const EYE = .58;            // altura dos olhos do jogador
-const PITCH_MAX = .45;      // quanto dá para olhar para cima/baixo (fração da altura da tela)
+const PITCH_MAX = 1.1;      // quanto dá para olhar para cima/baixo (radianos, ~63°)
 
 const rand  = (a,b) => a + Math.random()*(b-a);
 const randi = (a,b) => a + Math.floor(Math.random()*(b-a+1));
@@ -373,195 +397,211 @@ function rgb(a, j=0, al){
 }
 
 /* =====================================================================
-   NÍVEIS
+   NÍVEIS — os blocos da IFMT abandonada, descendo até o subsolo
+   pal: wall = pintura de cima, band = barrado de baixo, floor/floor2 = lajotas,
+        top = forro do teto, deco = o que aparece nas paredes decoradas
+   battery/powerbank = quantos itens de bateria aparecem; lockers = armários
    ===================================================================== */
 const LEVELS = [
-  { name:'Os Salões da Entrada', epigraph:'“Um, dois, três… quem entrou não sai mais.” — cantiga de roda de Pedra Alta',
-    cells:7, doors:[2], oil:4, torch:0, drain:.85, loops:3, rooms:1, traps:1, firstAppear:20,
-    pal:{floor:[70,58,47], brick:[92,74,58], top:[34,28,23], mortar:[34,27,21], deco:'debris'},
+  { name:'Bloco A · Entrada', epigraph:'“Um, dois, três… quem entrou não sai mais.” — cantiga dos alunos da IFMT',
+    cells:7, doors:[2], battery:4, powerbank:0, drain:.85, loops:3, rooms:1, traps:1, lockers:6, firstAppear:20,
+    pal:{wall:[150,146,128], band:[58,92,76], floor:[122,114,98], floor2:[80,74,66], top:[120,118,110], deco:'board'},
     v:{speed:2.3, chase:[22,30], hide:[12,18], spawn:[8,13]},
     whispers:['…corre…','…não sou eu que quero…'], push:'Volte para a luz. Ela não enxerga na luz.' },
-  { name:'As Galerias Úmidas', epigraph:'A água goteja no ritmo de uma cantiga de ninar.',
-    cells:8, doors:[3], oil:5, torch:1, drain:1.0, loops:5, rooms:2, traps:2, firstAppear:15,
-    pal:{floor:[56,62,54], brick:[70,80,68], top:[26,30,26], mortar:[25,29,25], deco:'water'},
+  { name:'Corredor das Salas', epigraph:'Nos armários ainda há cadernos de quem nunca voltou para buscar.',
+    cells:8, doors:[3], battery:5, powerbank:1, drain:1.0, loops:5, rooms:2, traps:2, lockers:8, firstAppear:15,
+    pal:{wall:[140,142,146], band:[58,74,112], floor:[108,104,96], floor2:[68,64,60], top:[114,114,110], deco:'chalk'},
     v:{speed:2.5, chase:[24,32], hide:[10,15], spawn:[7,12]},
-    whispers:['…ela está cantando…','…suba…'], push:'Não deixe ela ouvir o seu nome.' },
-  { name:'O Poço dos Ecos', epigraph:'Cada grito volta. Às vezes, volta rindo.',
-    cells:9, doors:[2,3], oil:6, torch:1, drain:1.15, loops:6, rooms:2, traps:3, firstAppear:11,
-    pal:{floor:[62,54,51], brick:[82,69,65], top:[30,25,24], mortar:[30,25,24], deco:'cracks'},
+    whispers:['…ela está fazendo a chamada…','…sai daqui…'], push:'Não responda quando ela chamar o seu nome.' },
+  { name:'Laboratórios', epigraph:'Cada grito volta pelos dutos. Às vezes, volta rindo.',
+    cells:9, doors:[2,3], battery:6, powerbank:1, drain:1.15, loops:6, rooms:2, traps:3, lockers:8, firstAppear:11,
+    pal:{wall:[168,170,166], band:[64,116,116], floor:[98,106,106], floor2:[60,66,66], top:[118,122,120], deco:'lab'},
     v:{speed:2.7, chase:[26,34], hide:[8,13], spawn:[7,11]},
-    whispers:['…mantenha a luz acesa…','…ela está ouvindo…'], push:'Suba. Enquanto ainda há luz.' },
-  { name:'As Criptas Silenciosas', epigraph:'Aqui, até o silêncio brinca de esconde-esconde.',
-    cells:10, doors:[2,4], oil:7, torch:1, drain:1.3, loops:8, rooms:2, traps:4, firstAppear:9,
-    pal:{floor:[54,54,64], brick:[70,70,86], top:[25,25,32], mortar:[26,26,33], deco:'crypt'},
+    whispers:['…mantenha a luz acesa…','…ela está ouvindo…'], push:'Vai embora. Enquanto a bateria ainda dura.' },
+  { name:'Biblioteca', epigraph:'Aqui, até o silêncio brinca de esconde-esconde.',
+    cells:10, doors:[2,4], battery:7, powerbank:1, drain:1.3, loops:8, rooms:2, traps:4, lockers:9, firstAppear:9,
+    pal:{wall:[132,112,90], band:[82,54,36], floor:[104,76,54], floor2:[72,52,38], top:[102,94,84], deco:'books'},
     v:{speed:2.9, chase:[28,36], hide:[7,11], spawn:[6,10]},
     whispers:['…não aceite as balas…','…não sozinho… não no escuro…'], push:'Por favor… vá embora antes que ela te veja.' },
-  { name:'A Câmara do Guardião', epigraph:'No fundo da caixa de brinquedos, alguém ainda espera.',
-    cells:11, doors:[2,4], oil:8, torch:2, drain:1.45, loops:8, rooms:1, traps:4, firstAppear:7, final:true,
-    pal:{floor:[50,44,57], brick:[68,58,80], top:[23,19,28], mortar:[24,20,29], deco:'veins'},
+  { name:'Subsolo · Sala 13', epigraph:'No fundo da IFMT, alguém ainda espera a chamada.',
+    cells:11, doors:[2,4], battery:8, powerbank:2, drain:1.45, loops:8, rooms:1, traps:4, lockers:8, firstAppear:7, final:true,
+    pal:{wall:[98,94,98], band:[84,32,36], floor:[84,80,84], floor2:[54,50,56], top:[74,70,76], deco:'graffiti'},
     v:{speed:3.1, chase:[30,40], hide:[6,9], spawn:[6,9]},
     whispers:['…não arrebente o laço…','…Aninha…','…Jojo, chega…'], push:'Eu não vou deixar ela ficar com mais ninguém.' },
 ];
 
 /* =====================================================================
-   HISTÓRIA — fragmentos espalhados pela masmorra
-   João Vitão foi à IFMT Abandonada buscar a filha e foi amaldiçoado
-   pela Menina Jojo: virou o "pegador" eterno da caixa de brinquedos dela.
+   HISTÓRIA — fragmentos espalhados pela IFMT abandonada
+   João Vitão e a Menina Jojo estudavam na IFMT. Ela era bruxa: ele
+   disse "não" para ela e virou o "pegador" eterno do jogo dela, preso
+   no campus para sempre.
+   kind 'stone' = escrito numa lousa (aparece como quadro-negro)
    ===================================================================== */
 const PAGES = [
-  // I — exploradores: o monstro de luz vermelha
-  { lvl:0, kind:'paper', label:'Diário de Bastião, caçador de tesouros', title:'Terceiro dia',
-    text:`Vimos o guardião hoje. Uma coisa que flutua sem tocar o chão, com uma luz vermelha em volta, e um rosto que não consegui encarar por muito tempo.
+  // I — exploradores: o aluno de luz vermelha
+  { lvl:0, kind:'paper', label:'Diário de Bastião, explorador urbano', title:'Primeira noite na IFMT',
+    text:`Viemos filmar o campus abandonado. Metade das portas está no chão, e os armários ainda estão cheios de cadernos.
 
-Martim diz que é João Vitão, o ferreiro de Pedra Alta que entrou na IFMT Abandonada e nunca mais voltou do mesmo jeito.
+Vimos ele hoje. Um garoto de uniforme que flutua sem tocar o chão, com uma luz vermelha em volta, e um rosto que não consegui encarar por muito tempo.
 
-As velhas da vila dizem que foi coisa da Menina Jojo. Eu ri quando ouvi. Aqui embaixo ninguém ri.` },
-  { lvl:0, kind:'stone', label:'Inscrição arranhada na pedra', title:'',
-    text:`NÃO DESÇA.
-ELE ESTÁ AQUI EMBAIXO.
+Martim diz que é João Vitão, o aluno que sumiu aqui dentro. As tias da cantina da cidade falam da Menina Jojo. Eu ri quando ouvi. Aqui dentro ninguém ri.` },
+  { lvl:0, kind:'stone', label:'Escrito a giz numa lousa', title:'',
+    text:`NÃO ENTRE.
+ELE AINDA ESTÁ AQUI.
 A LUZ DELE É VERMELHA.
-QUANDO VER VERMELHO, CORRA.` },
-  { lvl:0, kind:'paper', label:'Carta rasgada de Martim', title:'Para minha mãe, se eu não voltar',
-    text:`Acordei na entrada da masmorra, com a luz do dia no rosto. Não lembro de ter subido.
+QUANDO VER VERMELHO, CORRA.
+SE NÃO DER, SE ESCONDA NOS ARMÁRIOS.` },
+  { lvl:0, kind:'paper', label:'Rascunho de mensagem no celular de Martim — nunca enviada', title:'Mãe',
+    text:`Acordei na entrada, com a luz do dia no rosto. Não lembro de ter saído.
 
-Bastião jura que o monstro nos pegou no escuro. Mas então por que estamos vivos? Por que a minha tocha estava acesa de novo, e cheia de óleo?
+O Bastião jura que o garoto de luz vermelha pegou a gente no escuro. Mas então por que a gente tá vivo? Por que o meu celular tá com 100%? Eu tinha 12%.
 
 E tinha uma bala vermelha no meu bolso, dessas de cantina de escola. Eu não comprei bala nenhuma.
 
-Amanhã descemos outra vez. Dizem que o ouro fica lá no fundo.` },
+Amanhã a gente volta. O vídeo vai bombar.` },
 
-  // II — a vila e as histórias sobre a Menina Jojo
-  { lvl:1, kind:'paper', label:'Livro de registros da vila de Pedra Alta', title:'Ano da Seca',
-    text:`A menina Aninha, filha do ferreiro João Vitão, de nove anos, sumiu na IFMT Abandonada. As crianças que brincavam com ela disseram que ela foi atrás de uma risada.
+  // II — a escola e as histórias sobre a Menina Jojo
+  { lvl:1, kind:'paper', label:'Livro de ocorrências da coordenação', title:'Ocorrência nº 13',
+    text:`A aluna Ana Clara (Aninha), do 2º ano, desapareceu durante o intervalo. Os colegas dizem que ela desceu para o subsolo atrás de uma risada.
 
-O ferreiro entrou no prédio abandonado com um machado e uma lanterna. Voltou três dias depois, carregando a filha adormecida. No cabelo dela havia uma fita vermelha que não era dela.
+O aluno João Vitão, da mesma turma, desceu atrás dela com a lanterna do celular. Voltou horas depois carregando a colega desmaiada. No cabelo dela havia uma fita vermelha que não era dela.
 
-Ele não disse uma palavra a ninguém. Na lua nova seguinte, caminhou até a boca da mina velha como quem atende a um chamado, e desceu. Nunca mais subiu.` },
-  { lvl:1, kind:'paper', label:'Caderno de Dona Cotinha, benzedeira', title:'Sobre a Menina Jojo',
-    text:`Parece uma menina de oito ou nove anos. Anda descalça, de vestido vermelho, com o cabelo branco de pó de giz e uma fita amarrada num laço. Ri igualzinho criança.
+Ele não falou com ninguém. No dia seguinte, o porteiro viu João atravessar o portão e, no mesmo instante, aparecer de novo no meio do pátio. Tentou onze vezes. Na semana seguinte, sumiu de vez.` },
+  { lvl:1, kind:'paper', label:'Caderno de receitas de Dona Cotinha, merendeira', title:'Sobre a Menina Jojo',
+    text:`Anda de uniforme velho, descalça, com uma fita vermelha no cabelo e o bolso cheio de balas. Ri igualzinho criança. Ninguém da secretaria lembra de ter feito a matrícula dela.
 
-Não é criança. Minha avó já contava dela, e a avó da minha avó também. Ela mora na IFMT Abandonada desde antes de existir Pedra Alta.
+Quando comecei na cantina, trinta anos atrás, ela já estava aqui. Com a mesma cara. Dizem que é bruxa, e eu acredito.
 
-O que ela quer é companhia. Quem brinca com ela nunca mais quer ir embora. Quem diz não, ela guarda. E o lugar onde ela guarda as coisas dela é a mina velha. Ela chama de caixa de brinquedos.` },
-  { lvl:1, kind:'stone', label:'Cantiga de roda riscada na parede', title:'',
+O que ela quer é colega. Quem aceita as balas dela vira retrato: uma foto 3x4 a mais no mural da sala 13. Quem diz não, ela guarda. Pra ela, a IFMT inteira é a sala de aula dela.` },
+  { lvl:1, kind:'stone', label:'Cantiga riscada numa lousa', title:'',
     text:`JOJO, JOJO, DO PRÉDIO ABANDONADO,
 DE PÉ NO CHÃO E FITA NO LAÇO,
 QUEM CHUPA BALA VIRA RETRATO,
-QUEM DIZ QUE NÃO VAI PRO BURACO.
+QUEM DIZ QUE NÃO FICA TRANCADO.
 
 UM, DOIS, TRÊS…
 QUEM ENTROU NÃO SAI MAIS.` },
   { lvl:1, kind:'paper', label:'Diário de Bastião — última página', title:'',
-    text:`Martim foi sozinho, antes do amanhecer. Ouvi quando ele gritou, muito lá embaixo.
+    text:`Martim desceu sozinho para o subsolo, antes do amanhecer. Ouvi quando ele gritou, muito lá embaixo.
 
-Depois ouvi outra coisa. Uma menina rindo. Longe, como se a risada descesse pelas pedras lá de cima.
+Depois ouvi outra coisa. Uma menina rindo, como se a risada viesse de todas as salas ao mesmo tempo.
 
-O monstro estava aqui, do meu lado, parado entre mim e a escada, com a luz vermelha piscando. Tremia inteiro, como alguém lutando contra uma corda amarrada no pescoço.
+Me enfiei num armário do corredor. O garoto de luz vermelha parou bem na frente. Pelas frestas eu via a luz dele tremendo, como alguém lutando contra uma corda amarrada no pescoço.
 
-Como se estivesse se segurando para não me pegar.` },
+Ficou ali um tempão. Depois foi embora. Acho que ele fingiu que não me viu.` },
 
-  // III — as regras dela e o começo do diário de João Vitão
-  { lvl:2, kind:'paper', label:'Caderno de Dona Cotinha, benzedeira', title:'As regras da IFMT',
-    text:`Se ouvir uma menina rindo nos corredores da IFMT, não responda.
+  // III — as regras dela e o caderno de João Vitão
+  { lvl:2, kind:'paper', label:'Caderno de receitas de Dona Cotinha, merendeira', title:'As regras da IFMT',
+    text:`Se ouvir uma menina rindo nos corredores, não responda.
 Nunca aceite as balas que ela oferecer.
 Nunca pise dentro do círculo de giz desenhado no chão.
-Se ela chamar seu nome três vezes, não olhe para trás.
-Na luz forte ela não enxerga. Leve sempre fogo.
+Se ela fizer a chamada e disser o seu nome, não responda “presente”.
+Na luz forte ela não enxerga. Deixe a lanterna do celular sempre ligada.
+Se ela estiver perto, entre num armário e prenda a respiração.
 
-E a regra que quase ninguém sabe: tudo o que a Jojo dá é uma coleira. Uma fita, uma bala, um brinquedo. Coleira devolvida é coleira partida. Ela odeia quando devolvem.` },
-  { lvl:2, kind:'paper', label:'Diário de João Vitão', title:'A sala 13',
-    text:`Achei a sala 13 no terceiro dia, no fim do corredor do bloco velho. Um círculo de giz no chão e, no meio, a mesa do professor.
+E a regra que quase ninguém sabe: tudo o que a Jojo dá é uma coleira. Uma fita, uma bala, um bilhete. Coleira devolvida é coleira partida. Ela odeia quando devolvem.` },
+  { lvl:2, kind:'paper', label:'Caderno de matemática de João Vitão — últimas folhas', title:'A sala 13',
+    text:`Achei a sala 13 no fim do corredor do subsolo. Nem sabia que existia uma sala 13. Um círculo de giz no chão e, no meio, uma carteira.
 
-A menina estava sentada na mesa, balançando os pés, trançando o cabelo da minha Aninha com uma fita vermelha. No quadro de avisos havia bonecas de pano penduradas por alfinetes. Cada uma tinha o rosto de alguém que sumiu de Pedra Alta.
+A menina estava sentada na mesa do professor, balançando os pés, trançando o cabelo da Aninha com uma fita vermelha. No mural atrás dela, dezenas de fotos 3x4. Cada uma era de um aluno que sumiu da IFMT.
 
-“Ela vai ficar comigo”, disse a menina. “Ela é minha amiguinha agora.”
+“Ela vai ficar comigo”, disse a menina. “Ela é minha colega agora.”
 
 Eu disse não.` },
-  { lvl:2, kind:'paper', label:'Diário de João Vitão', title:'O preço',
+  { lvl:2, kind:'paper', label:'Caderno de matemática de João Vitão', title:'O preço',
     text:`Ela não ficou brava. Ficou contente, como criança que ganhou um jogo novo.
 
-“Então leva ela. Mas alguém tem que brincar comigo. Você vai brincar de pega-pega, Joãozinho. Pra sempre, lá na minha caixa de brinquedos. Toda vez que alguém entrar, você corre atrás. Você é o pegador.”
+“Então leva ela. Mas alguém tem que brincar comigo. Você vai brincar de pega-pega, Joãozinho. Pra sempre, aqui na escola. Você nunca mais sai da IFMT. Toda vez que alguém entrar, você corre atrás. Você é o pegador.”
 
-Eu aceitei. Ela deu o último nó na fita do cabelo da Aninha e bateu palmas.
+Eu aceitei. Ela amarrou a outra ponta da fita na minha carteira, deu sete voltas e bateu palmas.
 
 Foi assim que eu virei o que vocês chamam de monstro.` },
-  { lvl:2, kind:'stone', label:'Desenho a carvão numa pedra baixa', title:'',
-    text:`Uma menina de vestido, desenhada com traço de criança.
-Os olhos foram pintados de vermelho com o dedo.
+  { lvl:2, kind:'stone', label:'Desenho a giz numa lousa', title:'',
+    text:`Uma menina de uniforme, desenhada com traço de criança.
+Os olhos foram pintados com giz vermelho.
 Na mão ela segura uma corda.
-A outra ponta está amarrada no pescoço de um homem grande.
+A outra ponta está amarrada no pescoço de um garoto de mochila.
 
-Embaixo, com letra caprichada: “EU E O JOÃOZINHO”.` },
+Embaixo, com letra caprichada e um coração:
+“EU E O JOÃOZINHO”.` },
 
   // IV — como a maldição funciona
-  { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'O pegador',
+  { lvl:3, kind:'paper', label:'Caderno de matemática de João Vitão', title:'O pegador',
     text:`Quando alguém entra, a luz vermelha acende em mim e as minhas pernas correm sozinhas. Não consigo parar. É o jogo dela.
 
 Mas o jogo só manda pegar. Não diz o que fazer depois.
 
-Então eu carrego vocês até a entrada, onde o ar é bom, e encho a tocha de vocês enquanto dormem. Deixo óleo pelos corredores também. Na luz ela não enxerga. É a única trapaça que ela ainda não percebeu.` },
-  { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'O rapaz',
+Então eu carrego vocês até a entrada e ponho o celular de vocês pra carregar na tomada da secretaria, a única que ainda tem energia. Deixo baterias pelos corredores também. Na luz ela não enxerga. É a única trapaça que ela ainda não percebeu.` },
+  { lvl:3, kind:'paper', label:'Caderno de matemática de João Vitão', title:'O rapaz',
     text:`O rapaz, Martim, chegou lá no fundo antes de mim. A Jojo chegou antes de nós dois.
 
 Ela ofereceu balas, e ele estava com fome.
 
-Guardei o chapéu dele ao lado da lanterna de Aninha. Lá em cima, na sala 13, deve haver uma boneca nova pendurada no quadro, de chapéu.
+Guardei o boné dele do lado da minha mochila. No mural da sala 13 tem uma foto 3x4 nova, de boné.
 
-Foi o único que eu não consegui trazer de volta. Não vou deixar que haja outro.` },
-  { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'Ela visita',
-    text:`Às vezes ouço ela rindo lá em cima, nos corredores da IFMT, e a risada desce pelas pedras até aqui.
+Foi o único que eu não consegui levar de volta. Não vou deixar que haja outro.` },
+  { lvl:3, kind:'paper', label:'Caderno de matemática de João Vitão', title:'A chamada',
+    text:`Às vezes ouço ela rindo nos corredores lá de cima, e a risada desce pelas escadas até aqui.
 
-Às vezes ela desce. Senta na pedra do laço, balança os pés descalços e canta a cantiga de roda. Pergunta se eu estou me divertindo. Pergunta quando vou trazer um amigo novo.
+Toda noite ela senta na mesa do professor, balança os pés descalços e faz a chamada. Só tem um nome na lista.
 
-Eu não respondo. Regra número um.` },
+“João Vitão?”
+
+Eu nunca respondo “presente”. Regra número quatro.` },
   { lvl:3, kind:'paper', label:'Bilhete com letra de criança, preso com fita vermelha', title:'',
     text:`Joãozinho,
 
-você tá muito devagar. Faz tempo que você não me traz amigo novo. Você tá trapaceando, né? Eu sei que tá.
+você tá muito devagar. Faz tempo que você não me traz colega novo. Você tá trapaceando, né? Eu sei que tá.
 
-Se não trouxer logo, eu fico triste. E quando eu fico triste eu vou buscar brinquedo sozinha.
+Se não trouxer logo, eu fico triste. E quando eu fico triste eu vou buscar a Aninha de volta.
 
 Beijo,
 Jojo` },
 
   // V — a fita, o laço e a saída
-  { lvl:4, kind:'paper', label:'Diário de João Vitão — a última página', title:'Aninha',
-    text:`Aninha cresceu lá em cima. Eu via pela fresta do poço, inverno após inverno. Ficou moça, ficou velha, morreu em casa, com o cabelo branco.
+  { lvl:4, kind:'paper', label:'Bilhete de Aninha, passado por baixo da porta da sala 13', title:'João',
+    text:`João, sou eu. Já faz anos. Eu me formei, fui embora, mas nunca tirei a fita do cabelo. Tinha medo de que, se eu tirasse, você sumisse de vez.
 
-Nunca tirou a fita vermelha. Tinha medo de que, se tirasse, eu fosse embora de vez. Não sabia que era justamente a fita que me prendia.
+Falei com a Dona Cotinha. Ela disse que tudo que a Jojo dá é uma coleira, e que coleira devolvida é coleira partida.
 
-Enterraram a fita com ela. E a outra ponta do laço continua aqui embaixo, dando sete voltas na pedra da câmara.` },
-  { lvl:4, kind:'paper', label:'Diário de João Vitão', title:'Coleira devolvida',
-    text:`Uma vez, Dona Cotinha gritou pela boca do poço, achando que eu não ouvia:
+Eu não consigo entrar. Toda vez que tento descer, acordo lá fora, no portão.
 
-“Tudo o que a Jojo dá é uma coleira, João! Coleira devolvida é coleira partida!”
+Alguém vai conseguir. Espera.
 
-Se alguém desatar o laço, sem rasgar, sem cortar, e levar a fita de volta até a sala 13… eu estaria livre.
+— Aninha` },
+  { lvl:4, kind:'paper', label:'Caderno de matemática de João Vitão — a última folha', title:'Coleira devolvida',
+    text:`Se alguém desatar o laço da minha carteira, sem rasgar, sem cortar, e entregar a fita na mão dela… eu estaria livre.
 
-Mas quem levar vai ter que olhar para ela. E ela vai querer brincar.
+Mas quem entregar vai ter que olhar para ela. E ela vai querer brincar.
 
-Se romperem o laço à força, o jogo não acaba. Só troca de pegador.` },
-  { lvl:4, kind:'stone', label:'Inscrição na pedra do laço', title:'', final:true,
-    text:`CAIXA DE BRINQUEDOS DA JOJO.
+Se arrebentarem o laço à força, o jogo não acaba. Só troca de pegador.` },
+  { lvl:4, kind:'stone', label:'Escrito na lousa da sala 13', title:'', final:true,
+    text:`SALA 13 · TURMA DA JOJO
 
-AQUI BRINCA JOÃO VITÃO,
-FERREIRO DE PEDRA ALTA,
-PAI DE ANINHA.
+ALUNO: JOÃO VITÃO
+SITUAÇÃO: NUNCA SAI
 
-QUEM ROMPER O LAÇO
+QUEM ARREBENTAR O LAÇO
 VIRA O PEGADOR.` },
 ];
 const SEAL_PAGE = PAGES.findIndex(p => p.final);
 const PAGES_FOR_TRUTH = 12;   // páginas lidas para liberar o final "A Coleira Devolvida"
 
-// quando o witch.mp3 toca: é a Menina Jojo, lá de cima, na IFMT Abandonada
+// quando o witch.mp3 toca: é a Menina Jojo, em algum lugar do prédio
 const JOJO_ECHOES = [
-  'Uma risada de menina desce pelas pedras, de muito longe.',
+  'Uma risada de menina ecoa pelos corredores vazios.',
   'Alguém cantarola ao longe: “…um, dois, três, quem entrou não sai mais…”',
   '“João… vem brincar comigo…”',
-  'Uma voz de criança, abafada pela terra: “Tá quente… tá frio… tá quente…”',
-  'Passos descalços, leves, em algum corredor que você não vê.',
-  '“Não precisa ter medo. É só brincadeira.”',
+  'Uma voz de criança, lá do subsolo: “Tá quente… tá frio… tá quente…”',
+  'Passos descalços, leves, no andar de cima.',
+  'Ao longe, alguém faz a chamada: “João Vitão?” Ninguém responde.',
+];
+
+// cena de abertura (10 s) antes do primeiro nível
+const INTRO = [
+  { kicker:'IFMT · alguns anos atrás', title:'João Vitão era só mais um aluno.', sub:'A Menina Jojo também estudava lá. E era bruxa.' },
+  { kicker:'', title:'Ele disse “não” para ela.', sub:'Naquela noite, ela o amaldiçoou: ele nunca mais sairia da escola.' },
+  { kicker:'Hoje', title:'A IFMT está abandonada.', sub:'Mas alguém ainda anda pelos corredores.' },
 ];
 
 /* =====================================================================
@@ -569,10 +609,10 @@ const JOJO_ECHOES = [
    ===================================================================== */
 const SCRIPT = {
   start: { lines: [
-    { s:'n', t:'No centro da câmara, sobre uma pedra marcada com a mão pequena de uma criança, a figura flutua. A luz vermelha dele pisca, fraca. Pela primeira vez, ele não corre atrás de você.' },
-    { s:'n', t:'Uma fita vermelha desbotada dá sete voltas na pedra e termina num laço apertado. Ao lado, uma lanterna pequena e enferrujada e um chapéu velho de explorador.' },
-    { s:'n', cond:() => G.autoSeal, t:'Gravado na pedra: “Caixa de brinquedos da Jojo. Aqui brinca João Vitão, ferreiro de Pedra Alta, pai de Aninha.”' },
-    { s:'j', t:'Aqui embaixo, perto do laço, o jogo dela fica fraco. Eu consigo pensar. Consigo falar.' },
+    { s:'n', t:'No meio da sala 13, dentro de um círculo de giz, há uma carteira escolar. A figura flutua ao lado dela. A luz vermelha dele pisca, fraca. Pela primeira vez, ele não corre atrás de você.' },
+    { s:'n', t:'Uma fita vermelha desbotada dá sete voltas na carteira e termina num laço apertado. No chão, uma mochila velha e um boné de explorador. No mural, dezenas de fotos 3x4.' },
+    { s:'n', cond:() => G.autoSeal, t:'Na lousa, em letra redonda de criança: “Sala 13 · Turma da Jojo. Aluno: João Vitão. Situação: nunca sai.”' },
+    { s:'j', t:'Aqui, perto da minha carteira, o jogo dela fica fraco. Eu consigo pensar. Consigo falar.' },
     { s:'j', t:'Não tenha medo. Eu nunca quis pegar ninguém.' },
   ], choices: [
     { label:'Confrontá-lo', to:'confront' },
@@ -580,24 +620,24 @@ const SCRIPT = {
     { label:'Fugir', to:'flee' },
   ]},
   confront: { lines: [
-    { s:'n', t:'Você ergue a tocha contra ele. Ele não recua. A luz vermelha dele treme, como uma vela num vento que você não sente.' },
+    { s:'n', t:'Você aponta a luz do celular direto para ele. Ele não recua. A luz vermelha dele treme, como uma lâmpada com mau contato.' },
     { s:'j', t:'Faça o que precisa fazer. Só não arrebente o laço. É isso que ela quer.' },
-    { s:'n', t:'Em algum lugar muito acima, atravessando pedra e terra, uma menina dá uma risadinha.' },
+    { s:'n', t:'Em algum lugar do prédio, atravessando paredes e corredores, uma menina dá uma risadinha.' },
   ], choices: [
     { label:'Arrancar a fita e romper o laço', to:'end_open' },
-    { label:'Baixar a tocha', to:'listen' },
+    { label:'Baixar o celular', to:'listen' },
   ]},
   listen: { lines: [
-    { s:'n', t:'Você baixa a tocha. Ele parece surpreso, como alguém que esqueceu como é ser ouvido.' },
-    { s:'j', t:'A Menina Jojo mora na IFMT Abandonada desde antes de existir Pedra Alta. Parece uma criança. Não é.' },
-    { s:'j', t:'Ela levou minha Aninha para brincar. Eu fui buscar. Ela disse que eu podia levar a menina… se ficasse no lugar dela.' },
-    { s:'j', t:'Então virei o pegador do jogo dela. Toda vez que alguém entra aqui, a luz vermelha acende e eu corro. Não consigo parar.' },
+    { s:'n', t:'Você baixa o celular. Ele parece surpreso, como alguém que esqueceu como é ser ouvido.' },
+    { s:'j', t:'A Menina Jojo estudava aqui. Pelo menos parecia. Ninguém lembra de quando ela entrou. Ela nunca saiu.' },
+    { s:'j', t:'Ela levou a Aninha, minha amiga, pra “brincar” aqui embaixo. Eu vim buscar. Ela disse que eu podia levar a Aninha… se ficasse no lugar dela.' },
+    { s:'j', t:'Aí eu virei o pegador do jogo dela. Nunca mais consegui sair da IFMT. Toda vez que alguém entra aqui, a luz vermelha acende e eu corro. Não consigo parar.' },
     { s:'j', t:() => G.rescues > 0
-        ? `Mas o jogo só manda pegar. Cada um que eu peguei, inclusive você, ${G.rescues} ${G.rescues===1?'vez':'vezes'}, eu levei até a entrada e enchi a tocha. É a única trapaça que ela nunca percebeu.`
-        : 'Mas o jogo só manda pegar. Cada um que eu peguei, eu levei até a entrada e enchi a tocha. É a única trapaça que ela nunca percebeu.' },
-    { s:'n', cond:() => G.pages.size >= PAGES_FOR_TRUTH, t:'Você lembra do caderno da benzedeira. Das regras da IFMT. Tudo o que ela dá é uma coleira. Coleira devolvida é coleira partida.' },
+        ? `Mas o jogo só manda pegar. Cada um que eu peguei, inclusive você, ${G.rescues} ${G.rescues===1?'vez':'vezes'}, eu levei até a entrada e carreguei o celular. É a única trapaça que ela nunca percebeu.`
+        : 'Mas o jogo só manda pegar. Cada um que eu peguei, eu levei até a entrada e carreguei o celular. É a única trapaça que ela nunca percebeu.' },
+    { s:'n', cond:() => G.pages.size >= PAGES_FOR_TRUTH, t:'Você lembra do caderno da Dona Cotinha. Do bilhete da Aninha. Tudo o que ela dá é uma coleira. Coleira devolvida é coleira partida.' },
   ], choices: [
-    { label:'Prometer contar a verdade lá em cima e partir', to:'end_promise' },
+    { label:'Prometer contar a verdade lá fora e ir embora', to:'end_promise' },
     { label:'Desatar o laço e devolver a fita à Menina Jojo', to:'end_rest', req:() => G.pages.size >= PAGES_FOR_TRUTH, locked:'você ainda não conhece as regras dela' },
   ]},
   flee: { lines: [ { s:'n', t:'Você dá as costas e corre.' } ], next:'end_flee' },
@@ -605,29 +645,29 @@ const SCRIPT = {
 
 const ENDINGS = {
   end_open: { title:'O Novo Pegador', paras:[
-    'Você agarra a fita e puxa. O laço não desata. Ele arrebenta, e a pedra racha no meio.',
-    'João Vitão solta um suspiro longo, de cem invernos. A luz vermelha se apaga nele… e acende em você.',
-    'Lá em cima, nos corredores da IFMT, uma menina bate palmas. “Oba! Amigo novo!”',
-    'Suas pernas começam a querer correr. Alguém acaba de entrar na masmorra, lá longe, com uma tocha na mão.',
+    'Você agarra a fita e puxa. O laço não desata. Ele arrebenta, e a carteira racha no meio.',
+    'João Vitão solta um suspiro longo, de anos e anos. A luz vermelha se apaga nele… e acende em você.',
+    'Em algum corredor, uma menina bate palmas. “Oba! Colega novo!”',
+    'Suas pernas começam a querer correr. Lá fora, alguém acaba de pular o muro da IFMT, com o celular na mão.',
     'Agora o pegador é você.' ]},
   end_promise: { title:'O Jogo Continua', paras:[
     'Ele sorri, ou faz algo muito parecido com isso.',
-    '“Então conte a eles. Conte sobre a Jojo. Que ninguém mais responda quando ouvir uma menina rindo na IFMT.”',
-    'Ele guia você de volta pela escuridão. Nos corredores, a luz vermelha dele não se apaga nem uma vez, e ele segura o jogo com as duas mãos para não correr atrás de você.',
-    'Na saída, você se vira. A luz vermelha fica pequena no fundo do poço, cada vez menor, até sumir.',
-    'No portão da IFMT, atrás das grades enferrujadas, alguém de vestido vermelho acena para você. Você não acena de volta.' ]},
+    '“Então conte pra todo mundo. Conte sobre a Jojo. Que ninguém mais responda quando ouvir uma menina rindo na IFMT.”',
+    'Ele guia você de volta pelos corredores escuros. A luz vermelha dele não se apaga nem uma vez, e ele segura o jogo com as duas mãos para não correr atrás de você.',
+    'No portão, você se vira. A luz vermelha fica pequena no fundo do pátio, cada vez menor, até sumir.',
+    'Numa janela do segundo andar, alguém de fita vermelha no cabelo acena para você. Você não acena de volta.' ]},
   end_rest: { title:'A Coleira Devolvida', paras:[
     '“Você sabe o que está pedindo?”',
     '“Sei”, você responde. “Coleira devolvida é coleira partida.”',
-    'Seus dedos desfazem as sete voltas da fita, uma por uma, sem rasgar. A cada volta, a luz vermelha dele fica mais fraca, até sobrar só a luz branca e cansada de um homem.',
-    'Você sobe com a fita no bolso e entra na IFMT Abandonada. Na sala 13, no meio do círculo de giz, uma menina descalça espera sentada na mesa do professor, balançando os pés.',
+    'Seus dedos desfazem as sete voltas da fita, uma por uma, sem rasgar. A cada volta, a luz vermelha dele fica mais fraca, até sobrar só um garoto cansado, de uniforme.',
+    'Quando você termina, ela já está ali: uma menina descalça, sentada na mesa do professor, balançando os pés.',
     '“Isso é meu”, ela diz, emburrada. Você estende a fita. Pelas regras dela, ela não tem escolha a não ser pegar.',
-    'Muito abaixo de vocês, João Vitão fecha os olhos pela primeira vez em cem invernos. Longe, na escuridão, uma lanterna pequena se acende, esperando por ele. Ele vai até ela e não olha para trás.',
-    'A Menina Jojo guarda a fita no bolso do vestido e sorri para você. “Tudo bem. Você brinca comigo outro dia.”' ]},
+    'João Vitão olha para a porta da sala 13 pela primeira vez em anos. Sai andando pelo corredor, atravessa o pátio, passa pelo portão… e não acorda de volta lá dentro.',
+    'A Menina Jojo guarda a fita no bolso do uniforme e sorri para você. “Tudo bem. Você brinca comigo outro dia.”' ]},
   end_flee: { title:'O Eco', paras:[
-    'Corredores, escadas, escuridão. Atrás de você, nenhum som. Tão perto do laço, ele consegue não correr atrás. Por pouco.',
-    'Na saída, o sol queima seus olhos. Na sua bolsa há um frasco de óleo que não estava lá antes, e um bilhete escrito com uma letra antiga e cuidadosa:',
-    '“Obrigado por ir embora. Não passe pela IFMT.”',
+    'Corredores, escadas, escuridão. Atrás de você, nenhum som. Tão perto da carteira dele, ele consegue não correr atrás. Por pouco.',
+    'No portão, a luz do dia queima seus olhos. Seu celular está com 100% de bateria, e no bolso há um bilhete escrito com uma letra caprichada de aluno:',
+    '“Obrigado por ir embora. Não volte à IFMT.”',
     'O único caminho para casa passa em frente à IFMT. Lá dentro, uma menina ri.' ]},
 };
 
@@ -638,7 +678,7 @@ const Sound = (() => {
   let ac = null, master, sfx, echoIn, noiseBuf;
   let muted = false;
   try { muted = localStorage.getItem('jv_muted') === '1'; } catch(e) {}
-  const tm = { drip:2, crackle:.2, heart:.3, step:0 };
+  const tm = { heart:.3, step:0 };
 
   function init(){
     if (ac){ if (ac.state === 'suspended') ac.resume(); return; }
@@ -703,8 +743,6 @@ const Sound = (() => {
       if (ac) master.gain.setTargetAtTime(muted ? 0 : .9, ac.currentTime, .08);
       return muted;
     },
-    drip(){ const f = rand(1300,2300); tone('sine', f, f*.42, .09, .07); },
-    crackle(){ noise(.02, rand(.015,.045), 'highpass', 2600, .7, 0, .002, master); },
     step(){ noise(.07, rand(.035,.055), 'lowpass', rand(280,420), 1, 0, .004); },
     heartbeat(v){ tone('sine', 62, 38, .18, v, master); tone('sine', 56, 36, .16, v*.7, master, .27); },
     whisper(){
@@ -714,25 +752,21 @@ const Sound = (() => {
       }
     },
     key(){ tone('triangle', 988, 0, .25, .1); tone('triangle', 1319, 0, .25, .09, null, .08); tone('triangle', 1976, 0, .6, .07, null, .16); },
-    oil(){ for (let i = 0; i < 3; i++) tone('sine', 320 - i*60, 120, .08, .1, null, i*.07); noise(.35, .08, 'bandpass', 700, .8, 0, .1, null, 1600); },
+    oil(){ tone('triangle', 880, 0, .08, .08); tone('triangle', 1320, 0, .14, .07, null, .08); },   // pegou bateria
+    light(on){ tone('sine', on ? 1100 : 800, on ? 1400 : 600, .06, .045); },   // botão da lanterna
+    locker(){ tone('square', 180, 110, .06, .05); noise(.18, .14, 'bandpass', 1400, 2, 0, .004); tone('triangle', 95, 70, .25, .1); },
     page(){ noise(.16, .1, 'highpass', 3000, .7); noise(.14, .07, 'highpass', 4200, .7, .13); },
     door(){ noise(1.2, .22, 'lowpass', 260, 1, 0, .05); tone('sawtooth', 72, 46, 1, .04); tone('square', 150, 60, .1, .08); },
     locked(){ tone('square', 170, 120, .07, .05); tone('square', 150, 110, .07, .05, null, .1); },
     trap(){ tone('square', 520, 90, .12, .1); noise(.2, .18, 'highpass', 1500); },
-    torchOut(){ noise(.9, .18, 'highpass', 1800, .5, 0, .01); tone('sine', 90, 40, .5, .14); },
-    relight(){ noise(.6, .16, 'bandpass', 400, .8, 0, .25, null, 1400); },
+    torchOut(){ tone('sine', 660, 0, .12, .08); tone('sine', 440, 0, .12, .08, null, .14); tone('sine', 220, 110, .4, .08, null, .28); },   // celular desligando
+    relight(){ [523, 659, 784].forEach((f, i) => tone('sine', f, 0, .25, .06, null, i*.12)); },   // celular religando
     pushback(){ tone('sine', 70, 28, 2.6, .32, master); noise(2.6, .12, 'lowpass', 220, 1, 0, .8, master); api.whisper(); },
     stairs(){ for (let i = 0; i < 5; i++){ tone('sine', 115, 60, .09, .16, null, i*.33); noise(.06, .05, 'lowpass', 500, 1, i*.33); } },
     appear(){ noise(2.2, .1, 'bandpass', 500, 2, 0, 1.2, sfx, 1800); tone('sine', 220, 110, 2.5, .05); },
     ending(){ [220, 277.2, 329.6, 440].forEach((f,i) => tone('sine', f, 0, 4.5, .045, null, i*.35)); },
     update(dt, info){
       if (!ac || muted) return;
-      tm.drip -= dt;
-      if (tm.drip <= 0){ api.drip(); tm.drip = rand(1.5, 6); }
-      if (info.torchLit){
-        tm.crackle -= dt;
-        if (tm.crackle <= 0){ api.crackle(); tm.crackle = rand(.05, .38); }
-      }
       if (info.walking){ tm.step -= dt; if (tm.step <= 0){ api.step(); tm.step = .42; } } else tm.step = .1;
       let interval = 0, vol = 0;
       if (info.near != null && info.near < 7){ const k = 1 - info.near/7; interval = 1.3 - k*.8; vol = .1 + k*.38; }
@@ -759,7 +793,7 @@ const Tracks = (() => {
   let stepsVol = 0;
   const all = [menuMusic, gameMusic, scream, round, witch, steps];
   let witchT = rand(20, 40), scene = 'menu';
-  const start = a => { const p = a.play(); if (p && p.catch) p.catch(() => {}); };
+  const start = a => { const p = a.play(); if (p && p.catch) p.catch(() => {}); return p; };
   function play(a, vol){
     if (Sound.muted) return;
     if (vol != null) a.volume = vol;
@@ -784,7 +818,7 @@ const Tracks = (() => {
       if (Sound.muted) return;
       const cur = scene === 'menu' ? menuMusic : gameMusic, other = scene === 'menu' ? gameMusic : menuMusic;
       if (!other.paused) other.pause();
-      if (cur.paused) start(cur);
+      if (cur.paused) return start(cur);
     },
     setMuted(m){ all.forEach(a => { a.muted = m; }); if (!m) api.startMusic(); },
     scream(){ playFor(scream, 1, 1); },   // só 1 segundo do grito
@@ -826,8 +860,8 @@ const G = {
   shake:0, flick:0, flickT:0, flickTarget:0, dip:0,
   graceT:0, hintT:0, autoSeal:false, resume:'play', showMap:true, mapT:0
 };
-const P = { x:1.5, y:1.5, a:0, pitch:0, r:.24, walkT:0, fuel:100, out:false, outT:0, invT:0, speed:3.6, turn:3, moving:false };
-const V = { x:-9, y:-9, state:'hidden', timer:10, alpha:0, path:[], repath:0, moving:false, emitT:0, whisper:null };
+const P = { x:1.5, y:1.5, a:0, pitch:0, r:.24, walkT:0, fuel:100, out:false, outT:0, invT:0, speed:3.6, turn:3, moving:false, hidden:null, hideCd:0, light:true };   // fuel = bateria do celular; light = lanterna ligada
+const V = { x:-9, y:-9, state:'hidden', timer:10, alpha:0, path:[], repath:0, moving:false, emitT:0, whisper:null, sawHide:false };
 let L = null;
 let parts = [];
 
@@ -1053,14 +1087,36 @@ function tryGenerate(li, cfg, force){
   });
 
   const fuelSpots = [startIdx];
-  for (let o = 0; o < cfg.oil + cfg.torch; o++){
+  for (let o = 0; o < cfg.battery + cfg.powerbank; o++){
     const j = choose(allFloor, [x => cellish(x) && dAll[x] >= 5, x => dAll[x] >= 3, () => true], fuelSpots, 14);
     if (j == null) break;
-    fuelSpots.push(j); put(o < cfg.oil ? 'oil' : 'torch', j);
+    fuelSpots.push(j); put(o < cfg.battery ? 'battery' : 'powerbank', j);
+  }
+
+  // armários: paredes internas coladas num corredor, longe da entrada, das portas, da saída e da sala 13
+  const lockers = [], lockerAt = new Set();
+  const lockerOk = j => {
+    const x = j % W, y = (j / W) | 0;
+    if (map[j] !== T_WALL || x < 1 || y < 1 || x > W - 2 || y > H - 2 || inCh(x, y)) return false;
+    let floor = 0;
+    for (let k = 0; k < 4; k++){
+      const n = I(x + DX[k], y + DY[k]);
+      if (map[n] === T_DOOR || map[n] === T_EXIT || n === startIdx) return false;
+      if (map[n] === T_FLOOR) floor++;
+    }
+    return floor > 0;
+  };
+  const wallPool = [];
+  for (let j = 0; j < N; j++) if (lockerOk(j)) wallPool.push(j);
+  for (let k = 0; k < cfg.lockers; k++){
+    const free = wallPool.filter(j => !lockerAt.has(j));
+    if (!free.length) break;
+    const j = spread(free, lockers.map(l => l.j), 10);
+    lockerAt.add(j); lockers.push({ x:j % W, y:(j / W) | 0, j });
   }
 
   return { li, cfg, W, H, map, roomMask, doors, doorAt, items, traps, start:{ x:1, y:1 }, exit, seal, chamber,
-           totalKeys:placedKeys, path, explored:new Uint8Array(N) };
+           lockers, lockerAt, totalKeys:placedKeys, path, explored:new Uint8Array(N) };
 }
 
 /* =====================================================================
@@ -1082,50 +1138,77 @@ function crack(g, w=TS, h=TS){
   g.stroke();
 }
 
+// parede de escola: pintura clara em cima, barrado escuro embaixo.
+// (as paredes são desenhadas "esticadas": a textura cobre a altura toda da parede)
 function wallTex(p, variant){
   return makeTex(g => {
-    g.fillStyle = rgb(p.mortar); g.fillRect(0, 0, TS, TS);
-    for (let r = 0; r < 4; r++){
-      const off = (r % 2)*16;
-      for (let bx = -32; bx < TS + 32; bx += 32){
-        const j = randi(-13, 9);
-        g.fillStyle = rgb(p.brick, j); g.fillRect(bx + off + 1, r*16 + 1, 30, 14);
-        g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(bx + off + 1, r*16 + 1, 30, 1.5);
-        g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(bx + off + 1, r*16 + 13, 30, 2);
-      }
+    const band = 38;
+    g.fillStyle = rgb(p.wall); g.fillRect(0, 0, TS, TS);
+    g.fillStyle = rgb(p.band); g.fillRect(0, band, TS, TS - band);
+    g.fillStyle = rgb(p.band, 28); g.fillRect(0, band - 2, TS, 2);          // friso
+    g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(0, TS - 3, TS, 3);           // rodapé
+    g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, 0, TS, 2);               // sombra do forro
+    // umidade escorrendo do teto
+    for (let k = randi(2, 5); k > 0; k--){
+      const x = rand(0, TS), w = rand(3, 10), h = rand(8, 34);
+      const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(45,48,32,.4)'); gr.addColorStop(1, 'rgba(45,48,32,0)');
+      g.fillStyle = gr; g.fillRect(x, 0, w, h);
     }
-    speckle(g, 110);
-    if (Math.random() < .6) crack(g);
+    // tinta descascando
+    for (let k = randi(1, 4); k > 0; k--){ g.fillStyle = rgb(p.wall, -38, .8); g.beginPath(); g.ellipse(rand(4,60), rand(4,34), rand(2,6), rand(1.5,4), rand(0,3), 0, TAU); g.fill(); }
+    speckle(g, 90);
+    if (Math.random() < .5) crack(g);
     if (variant === 1){
       switch (p.deco){
-        case 'water':
-          for (let k = 0; k < 70; k++){ g.fillStyle = `rgba(${randi(60,90)},${randi(100,130)},${randi(40,60)},.45)`; const s = rand(1.5,4); g.fillRect(rand(0,TS), rand(36,TS), s, s); }
-          g.fillStyle = 'rgba(120,160,180,.18)'; for (let k = 0; k < 4; k++) g.fillRect(rand(4,60), 0, 1.5, rand(20,64));
+        case 'board': {   // quadro de avisos com papéis
+          g.fillStyle = '#5a3d24'; g.fillRect(8, 7, 48, 26); g.fillStyle = '#8a6440'; g.fillRect(10, 9, 44, 22);
+          for (let k = 0; k < 5; k++){
+            const x = rand(11, 44), y = rand(10, 22);
+            g.fillStyle = pick(['#d8d2c2','#cfc59a','#c9d4d6','#e0c8c8']); g.fillRect(x, y, rand(6,10), rand(7,10));
+            g.fillStyle = pick(['#c0392b','#2e86c1','#27ae60']); g.fillRect(x + 2, y, 2, 2);
+          }
           break;
-        case 'crypt':
-          g.strokeStyle = 'rgba(225,225,235,.22)'; g.lineWidth = 1;
-          for (let k = 0; k <= 4; k++){ const a = k/4*Math.PI/2; g.beginPath(); g.moveTo(0,0); g.lineTo(Math.cos(a)*34, Math.sin(a)*34); g.stroke(); }
-          for (let r = 9; r <= 31; r += 8){ g.beginPath(); for (let k = 0; k <= 4; k++){ const a = k/4*Math.PI/2; const X = Math.cos(a)*r, Y = Math.sin(a)*r; k ? g.lineTo(X,Y) : g.moveTo(X,Y); } g.stroke(); }
-          // nicho com vela apagada
-          g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(24, 26, 16, 20);
-          g.fillStyle = '#b7ab93'; g.fillRect(30, 36, 4, 10);
+        }
+        case 'chalk': {   // lousa com contas e rabiscos
+          g.fillStyle = '#6b4a2c'; g.fillRect(4, 6, 56, 30); g.fillStyle = '#23392e'; g.fillRect(6, 8, 52, 26);
+          g.strokeStyle = 'rgba(230,235,225,.55)'; g.lineWidth = 1;
+          for (let k = 0; k < 4; k++){ g.beginPath(); let x = rand(9, 16); g.moveTo(x, 12 + k*5); for (let s = 0; s < 6; s++){ x += rand(3, 6); g.lineTo(x, 12 + k*5 + rand(-1.5, 1.5)); } g.stroke(); }
+          g.fillStyle = 'rgba(230,235,225,.4)'; g.fillRect(6, 34, 52, 2);
           break;
-        case 'veins':
-          g.strokeStyle = 'rgba(150,90,200,.35)'; g.lineWidth = 1.6;
-          for (let v = 0; v < 3; v++){ g.beginPath(); let x = rand(0,TS), y = rand(0,TS); g.moveTo(x,y); for (let k = 0; k < 6; k++){ x += rand(-12,12); y += rand(-12,12); g.lineTo(x,y); } g.stroke(); }
+        }
+        case 'lab': {     // azulejos brancos + cartaz da tabela periódica
+          g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 1;
+          for (let x = 0; x <= TS; x += 8){ g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 36); g.stroke(); }
+          for (let y = 0; y <= 36; y += 8){ g.beginPath(); g.moveTo(0, y); g.lineTo(TS, y); g.stroke(); }
+          g.fillStyle = '#d9d6cc'; g.fillRect(14, 8, 36, 22);
+          for (let r = 0; r < 4; r++) for (let c = 0; c < 8; c++) if (!(r === 0 && c > 0 && c < 7)){ g.fillStyle = pick(['#d98f7a','#8fb5d9','#9bd98f','#d9d18f']); g.fillRect(16 + c*4.2, 10 + r*4.8, 3.4, 3.8); }
           break;
-        case 'cracks':
-          for (let k = 0; k < 4; k++) crack(g);
+        }
+        case 'books': {   // estante de livros (ocupa a parede inteira)
+          g.fillStyle = '#3a2618'; g.fillRect(0, 0, TS, TS);
+          for (let sh = 0; sh < 4; sh++){
+            const y = 3 + sh*15;
+            g.fillStyle = '#5c3d26'; g.fillRect(0, y + 12, TS, 3);
+            for (let x = 2; x < TS - 2;){
+              const w = rand(2.5, 5.5), h = rand(8, 12);
+              g.fillStyle = rgb(pick([[120,40,34],[40,70,110],[46,90,56],[140,110,50],[90,60,90],[150,140,120]]), randi(-20, 10));
+              g.fillRect(x, y + 12 - h, w, h); x += w + .6;
+              if (Math.random() < .08) x += rand(3, 8);   // falhas na prateleira
+            }
+          }
+          g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, 3, TS); g.fillRect(TS - 3, 0, 3, TS);
           break;
-        default: // argola de ferro enferrujada
-          g.strokeStyle = '#3d2e22'; g.lineWidth = 4; g.beginPath(); g.arc(32, 36, 9, 0, TAU); g.stroke();
-          g.strokeStyle = '#6b4b30'; g.lineWidth = 2; g.beginPath(); g.arc(32, 36, 9, Math.PI*1.1, Math.PI*1.9); g.stroke();
-          g.fillStyle = '#2a211a'; g.fillRect(28, 22, 8, 6);
+        }
+        default: {        // pichação vermelha
+          g.fillStyle = 'rgba(170,18,18,.85)'; g.font = 'bold 15px sans-serif'; g.textAlign = 'center';
+          g.save(); g.translate(32, 26); g.rotate(rand(-.15, .15)); g.fillText(pick(['JOJO','SALA 13','CORRE']), 0, 0); g.restore();
+          for (let k = 0; k < 3; k++){ g.fillRect(rand(10, 54), rand(26, 34), 1.5, rand(4, 12)); }   // escorrido
+        }
       }
     } else if (variant === 2){
-      // marcas de contagem de dias riscadas na pedra
-      g.strokeStyle = 'rgba(225,215,195,.35)'; g.lineWidth = 1.2;
-      const x0 = rand(8, 24), y0 = rand(20, 32);
+      // riscos de giz / caneta: contagem de dias, "1 2 3"
+      g.strokeStyle = 'rgba(235,235,225,.45)'; g.lineWidth = 1.2;
+      const x0 = rand(8, 24), y0 = rand(14, 22);
       for (let grp = 0; grp < 3; grp++){
         const gx = x0 + grp*13;
         for (let k = 0; k < 4; k++){ g.beginPath(); g.moveTo(gx + k*2.5, y0); g.lineTo(gx + k*2.5 + rand(-.5,.5), y0 + 12); g.stroke(); }
@@ -1135,82 +1218,107 @@ function wallTex(p, variant){
   });
 }
 
+// fileira de armários de metal (onde dá para se esconder)
+function lockerTex(){
+  return makeTex(g => {
+    g.fillStyle = '#23292e'; g.fillRect(0, 0, TS, TS);
+    for (let k = 0; k < 2; k++){
+      const x = k*32 + 1, col = pick([[74,94,110],[64,84,98],[82,98,106]]);
+      const gr = g.createLinearGradient(x, 0, x + 30, 0); gr.addColorStop(0, rgb(col, 14)); gr.addColorStop(1, rgb(col, -16));
+      g.fillStyle = gr; g.fillRect(x, 2, 30, TS - 6);
+      g.fillStyle = 'rgba(0,0,0,.8)';
+      for (let s = 0; s < 5; s++) g.fillRect(x + 7, 6 + s*3, 16, 1.4);        // frestas de cima
+      for (let s = 0; s < 3; s++) g.fillRect(x + 7, TS - 16 + s*3, 16, 1.2);  // frestas de baixo
+      g.fillStyle = '#cfcab8'; g.fillRect(x + 11, 24, 8, 4);                  // plaquinha do número
+      g.fillStyle = '#15181b'; g.fillRect(x + 24, 30, 2.5, 9);                // puxador
+      g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x, 2, 1.5, TS - 6);
+      g.fillStyle = 'rgba(120,70,40,.4)'; for (let r = 0; r < 5; r++) g.fillRect(x + rand(0, 26), rand(8, 58), rand(1, 3), rand(1, 4));   // ferrugem
+    }
+    speckle(g, 40);
+  });
+}
+
+// piso: lajotas quadriculadas (corredores) ou taco de madeira (salas de aula)
 function floorPaint(g, p, room){
-  g.fillStyle = rgb(p.floor, -22); g.fillRect(0, 0, TS, TS);
-  const base = randi(-4,4);
-  let stones;
-  if (room) stones = [[0,0,32,32],[32,0,32,32],[0,32,32,32],[32,32,32,32]];
-  else { const sx = randi(22,42), s1 = randi(20,44), s2 = randi(20,44); stones = [[0,0,sx,s1],[0,s1,sx,TS-s1],[sx,0,TS-sx,s2],[sx,s2,TS-sx,TS-s2]]; }
-  for (const [x,y,w,h] of stones){
-    const j = base + randi(-8,7);
-    g.fillStyle = rgb(p.floor, j); g.fillRect(x + 1.5, y + 1.5, w - 3, h - 3);
-    g.fillStyle = rgb(p.floor, j + 12, .5); g.fillRect(x + 1.5, y + 1.5, w - 3, 1.5);
-    g.fillStyle = rgb(p.floor, j - 20, .6); g.fillRect(x + 1.5, y + h - 3, w - 3, 1.5);
+  if (room){
+    g.fillStyle = '#2a1c12'; g.fillRect(0, 0, TS, TS);
+    for (let r = 0; r < 8; r++){
+      const off = (r % 2)*16;
+      for (let x = -32; x < TS; x += 32){ g.fillStyle = rgb([98,70,46], randi(-12, 8)); g.fillRect(x + off + .5, r*8 + .5, 31, 7); }
+    }
+  } else {
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++){
+      g.fillStyle = rgb((r + c) % 2 ? p.floor : p.floor2, randi(-7, 6)); g.fillRect(c*16, r*16, 16, 16);
+    }
+    g.fillStyle = 'rgba(0,0,0,.28)';
+    for (let k = 0; k <= 4; k++){ g.fillRect(k*16 - .5, 0, 1, TS); g.fillRect(0, k*16 - .5, TS, 1); }
   }
-  speckle(g, 80);
+  for (let k = randi(2, 5); k > 0; k--){ g.fillStyle = 'rgba(30,24,18,.18)'; g.beginPath(); g.ellipse(rand(0,TS), rand(0,TS), rand(6,14), rand(4,9), rand(0,3), 0, TAU); g.fill(); }
+  speckle(g, 70);
 }
 function floorTex(p, variant){
   return makeTex(g => {
     floorPaint(g, p, variant === 'room');
     if (variant === 'b'){
-      switch (p.deco){
-        case 'water':
-          g.fillStyle = 'rgba(60,95,120,.45)'; g.beginPath(); g.ellipse(rand(20,44), rand(20,44), rand(12,20), rand(8,13), rand(0,3), 0, TAU); g.fill();
-          g.strokeStyle = 'rgba(170,205,225,.2)'; g.lineWidth = 1; g.beginPath(); g.ellipse(30, 28, 8, 4, 0, 3.4, 5.6); g.stroke();
-          break;
-        case 'veins':
-          g.strokeStyle = 'rgba(150,85,200,.35)'; g.lineWidth = 1.6; g.beginPath();
-          { let x = rand(0,TS), y = rand(0,TS); g.moveTo(x,y); for (let k = 0; k < 6; k++){ x += rand(-12,12); y += rand(-12,12); g.lineTo(x,y); } }
-          g.stroke(); break;
-        case 'crypt':
-          for (let k = 0; k < 4; k++){ g.fillStyle = `rgba(${randi(120,150)},${randi(70,90)},${randi(45,55)},.6)`; const x = rand(8,56), y = rand(8,56); g.beginPath(); g.moveTo(x,y); g.lineTo(x + rand(3,7), y + rand(-3,2)); g.lineTo(x + rand(1,4), y + rand(3,6)); g.fill(); }
-          break;
-        default:
-          for (let k = 0; k < 3; k++) crack(g);
-          for (let k = randi(3,6); k > 0; k--){ const x = rand(6,58), y = rand(6,58), r = rand(1.5,3.5); g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(x+1, y+1.5, r, r*.7, 0, 0, TAU); g.fill(); g.fillStyle = rgb(p.floor, 22); g.beginPath(); g.ellipse(x, y, r, r*.7, 0, 0, TAU); g.fill(); }
+      // lajotas quebradas e folhas de caderno jogadas
+      for (let k = 0; k < 2; k++) crack(g);
+      for (let k = randi(2, 4); k > 0; k--){
+        g.save(); g.translate(rand(10, 54), rand(10, 54)); g.rotate(rand(0, TAU));
+        g.fillStyle = 'rgba(215,210,195,.85)'; g.fillRect(-6, -8, 12, 16);
+        g.strokeStyle = 'rgba(80,110,160,.5)'; g.lineWidth = .8; for (let l = 0; l < 4; l++){ g.beginPath(); g.moveTo(-5, -5 + l*4); g.lineTo(5, -5 + l*4); g.stroke(); }
+        g.restore();
       }
     }
   });
 }
+// forro de placas com estrutura de metal; 'beam' = luminária fluorescente queimada
 function ceilTex(p, variant){
   return makeTex(g => {
-    g.fillStyle = rgb(p.top, 4); g.fillRect(0, 0, TS, TS);
-    for (let k = 0; k < 14; k++){ g.fillStyle = rgb(p.top, randi(-6,10), .6); g.beginPath(); g.ellipse(rand(0,TS), rand(0,TS), rand(6,16), rand(4,10), rand(0,3), 0, TAU); g.fill(); }
-    speckle(g, 60);
+    g.fillStyle = rgb(p.top); g.fillRect(0, 0, TS, TS);
+    for (let k = 0; k < 4; k++){ g.fillStyle = rgb(p.top, randi(-10, 6), .6); g.fillRect((k % 2)*32 + 1, ((k/2)|0)*32 + 1, 30, 30); }
+    for (let k = randi(0, 2); k > 0; k--){   // manchas de infiltração
+      const x = rand(8, 56), y = rand(8, 56), r = rand(4, 10);
+      g.strokeStyle = 'rgba(110,80,40,.35)'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke();
+      g.fillStyle = 'rgba(110,80,40,.15)'; g.fill();
+    }
+    if (Math.random() < .12){ g.fillStyle = '#0a0a0a'; g.fillRect(33, 1, 30, 30); }   // placa caída
+    g.fillStyle = 'rgba(40,40,40,.7)'; g.fillRect(0, 31, TS, 2); g.fillRect(31, 0, 2, TS); g.fillRect(0, 0, TS, 1); g.fillRect(0, 0, 1, TS);
+    speckle(g, 40);
     if (variant === 'beam'){
-      g.fillStyle = '#2b1e14'; g.fillRect(0, 22, TS, 20);
-      g.fillStyle = '#3a291b'; g.fillRect(0, 22, TS, 3);
-      g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(0, 39, TS, 3);
-      g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1; for (let k = 0; k < 3; k++){ g.beginPath(); g.moveTo(0, 27 + k*5); g.lineTo(TS, 27 + k*5 + rand(-1,1)); g.stroke(); }
+      g.fillStyle = '#9a9c98'; g.fillRect(12, 20, 40, 24);
+      g.fillStyle = '#c9ccc8'; g.fillRect(15, 23, 34, 5); g.fillRect(15, 35, 34, 5);   // lâmpadas apagadas
+      g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(15, 26, 4, 2); g.fillRect(45, 38, 4, 2);
     }
   });
 }
 function exitTex(p){
   return makeTex(g => {
-    floorPaint(g, p, true);
+    floorPaint(g, p, false);
     g.fillStyle = '#0e0a07'; g.fillRect(6, 6, 52, 52);
-    for (let k = 0; k < 5; k++){ g.fillStyle = rgb(p.floor, 4 - k*12); g.fillRect(8, 8 + k*10, 48, 6); g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(8, 14 + k*10, 48, 4); }
+    for (let k = 0; k < 5; k++){ g.fillStyle = rgb(p.floor, 4 - k*14); g.fillRect(8, 8 + k*10, 48, 6); g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(8, 14 + k*10, 48, 4); }
     const gr = g.createLinearGradient(0, 8, 0, 58); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.9)');
     g.fillStyle = gr; g.fillRect(8, 8, 48, 50);
-    g.strokeStyle = rgb(p.brick, 20); g.lineWidth = 3; g.strokeRect(5, 5, 54, 54);
+    g.strokeStyle = '#d6c23a'; g.lineWidth = 3; g.strokeRect(5, 5, 54, 54);   // faixa amarela de escada
   });
 }
+// armadilha: poça d'água com fio desencapado
 function trapTex(p){
   return makeTex(g => {
     floorPaint(g, p, false);
-    g.fillStyle = '#2b2826'; g.fillRect(8, 8, 48, 48);
-    g.strokeStyle = '#4a443e'; g.lineWidth = 2; g.strokeRect(8, 8, 48, 48);
-    g.fillStyle = '#0c0a09';
-    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++){ g.beginPath(); g.arc(18 + i*14, 18 + j*14, 3.2, 0, TAU); g.fill(); }
+    g.fillStyle = 'rgba(40,62,82,.65)'; g.beginPath(); g.ellipse(32, 34, 24, 16, .3, 0, TAU); g.fill();
+    g.strokeStyle = 'rgba(170,200,225,.3)'; g.lineWidth = 1; g.beginPath(); g.ellipse(28, 30, 10, 5, .3, 3.4, 5.6); g.stroke();
+    g.strokeStyle = '#111'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 12); g.bezierCurveTo(20, 18, 16, 40, 34, 34); g.stroke();
+    g.strokeStyle = '#c8a226'; g.lineWidth = 1; g.beginPath(); g.moveTo(31, 33); g.lineTo(37, 36); g.moveTo(32, 35); g.lineTo(36, 31); g.stroke();
   });
 }
+// claraboia quebrada na entrada: luz do dia entrando pelo forro
 function holeTex(p){
   return makeTex(g => {
     g.fillStyle = rgb(p.top); g.fillRect(0, 0, TS, TS);
-    const gr = g.createRadialGradient(32, 32, 2, 32, 32, 26);
-    gr.addColorStop(0, '#dfe6ee'); gr.addColorStop(.55, '#8f9aa8'); gr.addColorStop(1, rgb(p.top));
-    g.fillStyle = gr; g.beginPath(); g.arc(32, 32, 26, 0, TAU); g.fill();
-    g.strokeStyle = '#6b4c2e'; g.lineWidth = 3; g.beginPath(); g.moveTo(22, 0); g.lineTo(24, TS); g.moveTo(42, 0); g.lineTo(40, TS); g.stroke();
+    const gr = g.createRadialGradient(32, 32, 2, 32, 32, 28);
+    gr.addColorStop(0, '#eef2f6'); gr.addColorStop(.6, '#9aa6b4'); gr.addColorStop(1, rgb(p.top));
+    g.fillStyle = gr; g.fillRect(4, 4, 56, 56);
+    g.fillStyle = 'rgba(40,40,40,.8)'; g.fillRect(0, 31, TS, 2); g.fillRect(31, 0, 2, TS);
   });
 }
 function doorTex(req, have){
@@ -1237,45 +1345,47 @@ function doorTex(req, have){
     }
   });
 }
+// chão da sala 13: círculo de giz com desenhos de criança e a fita vermelha dando sete voltas na carteira
 function sealTexture(p){
   const S = 7*TS;
   const c = makeCanvas(S, S, g => {
-    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++){ g.save(); g.translate(x*TS, y*TS); floorPaint(g, { floor:p.floor.map(v => v - 8) }, true); g.restore(); }
+    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++){ g.save(); g.translate(x*TS, y*TS); floorPaint(g, { floor:p.floor.map(v => v - 10), floor2:p.floor2.map(v => v - 10) }, false); g.restore(); }
     const cx = S/2, cy = S/2, R = TS;
-    g.strokeStyle = 'rgba(0,0,0,.6)'; g.lineWidth = 2;
-    for (let k = 0; k < 9; k++){
-      let a = k/9*TAU + rand(-.2,.2), r = R*.9;
-      g.beginPath(); g.moveTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
-      for (let s = 0; s < 5; s++){ r += R*rand(.3,.5); a += rand(-.25,.25); g.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r); }
-      g.stroke();
-    }
-    g.strokeStyle = 'rgba(170,130,215,.55)'; g.lineWidth = 4;
+    g.strokeStyle = 'rgba(235,235,225,.7)'; g.lineWidth = 4;
     g.beginPath(); g.arc(cx, cy, R*2.75, 0, TAU); g.stroke();
     g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, R*1.35, 0, TAU); g.stroke();
-    g.strokeStyle = 'rgba(190,150,235,.6)'; g.lineWidth = 3;
-    for (let k = 0; k < 18; k++){
-      const a = k/18*TAU;
+    // desenhos de giz entre os círculos: estrelas, corações e bonequinhos
+    g.strokeStyle = 'rgba(235,235,225,.65)'; g.lineWidth = 2.5;
+    for (let k = 0; k < 12; k++){
+      const a = k/12*TAU;
       g.save(); g.translate(cx + Math.cos(a)*R*2.05, cy + Math.sin(a)*R*2.05); g.rotate(a + Math.PI/2); g.beginPath();
-      for (let s = 0; s < 3; s++){ g.moveTo(rand(-9,9), rand(-11,11)); g.lineTo(rand(-9,9), rand(-11,11)); }
+      switch (k % 3){
+        case 0: for (let s = 0; s < 5; s++){ const t = s*TAU*2/5 - Math.PI/2; g[s ? 'lineTo' : 'moveTo'](Math.cos(t)*11, Math.sin(t)*11); } g.closePath(); break;
+        case 1: g.moveTo(0, 9); g.bezierCurveTo(-14, -2, -6, -12, 0, -4); g.bezierCurveTo(6, -12, 14, -2, 0, 9); break;
+        default: g.arc(0, -9, 4, 0, TAU); g.moveTo(0, -5); g.lineTo(0, 5); g.moveTo(-6, -1); g.lineTo(6, -1); g.moveTo(0, 5); g.lineTo(-5, 12); g.moveTo(0, 5); g.lineTo(5, 12);
+      }
       g.stroke(); g.restore();
     }
-    g.fillStyle = '#0b090d'; g.beginPath(); g.arc(cx, cy, R*.95, 0, TAU); g.fill();
-    g.strokeStyle = '#4a3f55'; g.lineWidth = 5; g.stroke();
-    g.strokeStyle = 'rgba(0,0,0,.95)'; g.lineWidth = 3;
-    g.beginPath(); g.moveTo(cx - R*.6, cy - R*.3); g.lineTo(cx - R*.1, cy + R*.05); g.lineTo(cx + R*.2, cy - R*.1); g.lineTo(cx + R*.7, cy + R*.35); g.stroke();
+    // a carteira vista de cima, com a fita vermelha em sete voltas
+    g.fillStyle = '#3a2a1c'; g.fillRect(cx - R*.5, cy - R*.36, R, R*.72);
+    g.fillStyle = '#6b4c30'; g.fillRect(cx - R*.46, cy - R*.32, R*.92, R*.64);
+    g.strokeStyle = 'rgba(190,20,24,.9)'; g.lineWidth = 3;
+    for (let k = 0; k < 7; k++){ g.beginPath(); g.ellipse(cx, cy, R*(.6 + k*.07), R*(.46 + k*.06), .05*k, 0, TAU); g.stroke(); }
+    g.fillStyle = 'rgba(190,20,24,.95)'; g.beginPath(); g.ellipse(cx + R*.2, cy - R*.1, 7, 4, .6, 0, TAU); g.ellipse(cx + R*.32, cy - R*.02, 7, 4, -.6, 0, TAU); g.fill();
   });
   return { data:toTex(c), w:S };
 }
 
-// índices de textura de chão/teto
+// índices de textura de chão/teto/parede
 const F_A = 0, F_B = 1, F_ROOM = 2, F_EXIT = 3, F_TRAP = 4, F_SEAL = 5;
 const C_A = 0, C_BEAM = 1, C_HOLE = 2;
+const W_LOCKER = 4;
 const hash = (x, y) => ((x*73856093) ^ (y*19349663)) >>> 0;
 
 function buildAssets(lv){
   const p = lv.cfg.pal, N = lv.W*lv.H;
   lv.tex = {
-    walls:[wallTex(p,0), wallTex(p,0), wallTex(p,1), wallTex(p,2)],
+    walls:[wallTex(p,0), wallTex(p,0), wallTex(p,1), wallTex(p,2), lockerTex()],
     floors:[floorTex(p,'a'), floorTex(p,'b'), floorTex(p,'room'), exitTex(p), trapTex(p)],
     ceils:[ceilTex(p,'a'), ceilTex(p,'beam'), holeTex(p)],
     doors:{}
@@ -1285,7 +1395,7 @@ function buildAssets(lv){
   lv.wallId = new Uint8Array(N); lv.floorId = new Uint8Array(N); lv.ceilId = new Uint8Array(N);
   for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++){
     const j = y*lv.W + x, h = hash(x, y);
-    lv.wallId[j] = h % 9 === 0 ? 2 : h % 13 === 0 ? 3 : h % 2;
+    lv.wallId[j] = lv.lockerAt.has(j) ? W_LOCKER : h % 9 === 0 ? 2 : h % 13 === 0 ? 3 : h % 2;
     lv.floorId[j] = lv.roomMask[j] === 1 ? F_SEAL : lv.roomMask[j] === 2 ? F_ROOM : (h % 5 === 0 ? F_B : F_A);
     lv.ceilId[j] = (h >> 3) % 4 === 0 ? C_BEAM : C_A;
   }
@@ -1295,7 +1405,7 @@ function buildAssets(lv){
 }
 
 /* =====================================================================
-   SPRITES (billboards) — itens, espinhos, escada de corda etc.
+   SPRITES (billboards) — itens, faíscas, escada da entrada etc.
    ===================================================================== */
 function silhouette(src){
   return makeCanvas(src.width, src.height, g => { g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#000'; g.fillRect(0, 0, src.width, src.height); });
@@ -1311,49 +1421,59 @@ const SPR = {
     g.fillRect(22, 13, 36, 6); g.fillRect(46, 19, 5, 9); g.fillRect(54, 19, 4, 6);
     g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(24, 13, 26, 2);
   }),
-  oil: sprite(32, 48, .2, .3, g => {
-    g.fillStyle = '#6b4a2a'; g.fillRect(12, 2, 8, 7);
-    g.fillStyle = 'rgba(190,210,200,.45)'; g.fillRect(10, 9, 12, 9);
-    const gr = g.createRadialGradient(12, 28, 2, 16, 31, 15); gr.addColorStop(0, '#ffd27a'); gr.addColorStop(1, '#a4520f');
-    g.fillStyle = gr; g.beginPath(); g.arc(16, 31, 14, 0, TAU); g.fill();
-    g.strokeStyle = 'rgba(230,240,235,.5)'; g.lineWidth = 1.5; g.stroke();
-    g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(11, 26, 3, 0, TAU); g.fill();
+  battery: sprite(24, 44, .13, .24, g => {        // bateria (+35%)
+    g.fillStyle = '#b8b8b8'; g.fillRect(8, 1, 8, 5);
+    g.fillStyle = '#1d1f22'; g.fillRect(3, 6, 18, 37);
+    g.fillStyle = '#3fbf5a'; g.fillRect(3, 6, 18, 16);
+    g.fillStyle = 'rgba(255,255,255,.25)'; g.fillRect(5, 7, 3, 35);
+    g.fillStyle = '#e8e8e8'; g.fillRect(10, 11, 4, 1.5); g.fillRect(11.25, 9.75, 1.5, 4);
   }),
-  torch: sprite(24, 64, .14, .4, g => {
-    g.fillStyle = '#6d4a2b'; g.fillRect(9, 16, 6, 48);
-    g.fillStyle = '#3a2a1c'; g.fillRect(6, 2, 12, 16);
-    g.strokeStyle = '#8a6a44'; g.lineWidth = 1.5; for (let k = 0; k < 3; k++){ g.beginPath(); g.moveTo(6, 5 + k*5); g.lineTo(18, 7 + k*5); g.stroke(); }
+  powerbank: sprite(36, 56, .2, .3, g => {        // carregador portátil (+65%)
+    g.fillStyle = '#1a1c1f'; g.beginPath(); g.roundRect(3, 3, 30, 50, 5); g.fill();
+    g.strokeStyle = '#4b5057'; g.lineWidth = 1.5; g.stroke();
+    for (let k = 0; k < 4; k++){ g.fillStyle = '#47b6ff'; g.beginPath(); g.arc(11 + k*4.5, 44, 1.4, 0, TAU); g.fill(); }
+    g.fillStyle = '#0a0b0c'; g.fillRect(13, 3, 10, 3);
+    g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(6, 6, 3, 44);
   }),
   page: sprite(48, 40, .3, .25, g => {
     g.fillStyle = '#dccaa3'; g.fillRect(2, 2, 44, 36);
     g.fillStyle = '#b39a70'; g.beginPath(); g.moveTo(46, 38); g.lineTo(34, 38); g.lineTo(46, 26); g.fill();
     g.strokeStyle = 'rgba(60,40,20,.6)'; g.lineWidth = 1.5; for (let k = 0; k < 5; k++){ g.beginPath(); g.moveTo(7, 9 + k*6); g.lineTo(k === 4 ? 26 : 40, 9 + k*6); g.stroke(); }
   }),
-  stone: sprite(40, 48, .26, .32, g => {
-    g.fillStyle = '#5b5752'; g.beginPath(); g.moveTo(4, 46); g.lineTo(4, 12); g.quadraticCurveTo(20, -4, 36, 12); g.lineTo(36, 46); g.fill();
-    g.strokeStyle = 'rgba(195,215,250,.85)'; g.lineWidth = 1.6; for (let k = 0; k < 4; k++){ g.beginPath(); g.moveTo(10, 18 + k*7); g.lineTo(30 - (k % 2)*6, 18 + k*7); g.stroke(); }
+  stone: sprite(48, 52, .34, .36, g => {           // lousinha num cavalete (páginas "escritas na lousa")
+    g.strokeStyle = '#5a3d24'; g.lineWidth = 3; g.beginPath(); g.moveTo(10, 30); g.lineTo(4, 52); g.moveTo(38, 30); g.lineTo(44, 52); g.stroke();
+    g.fillStyle = '#6b4a2c'; g.fillRect(2, 2, 44, 32); g.fillStyle = '#243a2f'; g.fillRect(5, 5, 38, 26);
+    g.strokeStyle = 'rgba(235,240,230,.85)'; g.lineWidth = 1.4; for (let k = 0; k < 4; k++){ g.beginPath(); g.moveTo(9, 10 + k*5.5); g.lineTo(38 - (k % 2)*8, 10 + k*5.5); g.stroke(); }
   }),
-  spikes: sprite(64, 32, .62, .3, g => {
-    for (let i = 0; i < 5; i++){ const x = 6 + i*13; g.fillStyle = '#d2ccc2'; g.beginPath(); g.moveTo(x - 5, 32); g.lineTo(x, 0); g.lineTo(x + 5, 32); g.fill(); g.fillStyle = '#8a857d'; g.beginPath(); g.moveTo(x, 32); g.lineTo(x, 0); g.lineTo(x + 5, 32); g.fill(); }
+  spikes: sprite(64, 32, .62, .3, g => {          // faíscas do fio desencapado
+    g.lineCap = 'round';
+    for (let b = 0; b < 4; b++){
+      g.strokeStyle = b % 2 ? 'rgba(160,210,255,.9)' : 'rgba(255,255,255,.95)'; g.lineWidth = b % 2 ? 3 : 1.6;
+      g.beginPath(); let x = 8 + b*15, y = 32; g.moveTo(x, y);
+      for (let s = 0; s < 5; s++){ x += rand(-6, 6); y -= rand(4, 7); g.lineTo(x, y); }
+      g.stroke();
+    }
   }),
-  ladder: sprite(32, 128, .42, WALL_H, g => {
-    g.strokeStyle = '#6b4c2e'; g.lineWidth = 3; g.beginPath(); g.moveTo(8, 0); g.lineTo(9, 128); g.moveTo(24, 0); g.lineTo(23, 128); g.stroke();
-    g.lineWidth = 3.5; for (let y = 10; y < 128; y += 14){ g.beginPath(); g.moveTo(8, y); g.lineTo(24, y + 1); g.stroke(); }
+  ladder: sprite(32, 128, .42, WALL_H, g => {    // escada de alumínio embaixo da claraboia (entrada)
+    g.strokeStyle = '#9aa1a8'; g.lineWidth = 3; g.beginPath(); g.moveTo(8, 0); g.lineTo(6, 128); g.moveTo(24, 0); g.lineTo(26, 128); g.stroke();
+    g.lineWidth = 3; for (let y = 10; y < 128; y += 14){ g.beginPath(); g.moveTo(7, y); g.lineTo(25, y); g.stroke(); }
   }),
-  lantern: sprite(32, 40, .2, .26, g => {
-    g.strokeStyle = '#5a4a3c'; g.lineWidth = 2.5; g.beginPath(); g.arc(16, 9, 7, Math.PI, 0); g.stroke();
-    g.fillStyle = '#3b3027'; g.fillRect(6, 9, 20, 28); g.fillStyle = 'rgba(255,190,110,.35)'; g.fillRect(10, 13, 12, 18);
-    g.fillStyle = '#2a211a'; g.fillRect(4, 35, 24, 4);
+  bag: sprite(36, 40, .26, .3, g => {             // mochila de João Vitão
+    g.fillStyle = '#2d3e5c'; g.beginPath(); g.roundRect(4, 6, 28, 33, 7); g.fill();
+    g.fillStyle = '#23324b'; g.beginPath(); g.roundRect(8, 22, 20, 14, 3); g.fill();
+    g.strokeStyle = '#1a2436'; g.lineWidth = 3; g.beginPath(); g.arc(18, 8, 6, Math.PI, 0); g.stroke();
+    g.fillStyle = '#c9c9c9'; g.fillRect(16, 24, 4, 1.5);
   }),
-  hat: sprite(48, 24, .34, .17, g => {
-    g.fillStyle = '#4a3a2c'; g.beginPath(); g.ellipse(24, 19, 23, 5, 0, 0, TAU); g.fill();
-    g.fillStyle = '#3d2f23'; g.beginPath(); g.moveTo(10, 19); g.quadraticCurveTo(12, 1, 24, 2); g.quadraticCurveTo(36, 1, 38, 19); g.fill();
-    g.fillStyle = '#2a1f16'; g.fillRect(11, 14, 26, 3);
+  cap: sprite(48, 24, .32, .16, g => {            // boné de Martim
+    g.fillStyle = '#7a1f1f'; g.beginPath(); g.ellipse(22, 16, 16, 12, 0, Math.PI, 0); g.fill();
+    g.fillStyle = '#5c1717'; g.beginPath(); g.ellipse(36, 17, 11, 3.5, 0, 0, TAU); g.fill();
+    g.fillStyle = '#e6e6e6'; g.fillRect(19, 7, 6, 3);
   }),
   glowCold: glowCanvas(150, 190, 255),
   glowRed: glowCanvas(255, 40, 24),
   glowWarm: glowCanvas(255, 190, 110),
   glowGold: glowCanvas(255, 215, 120),
+  glowWhite: glowCanvas(220, 235, 255),
 };
 // Espectro de fallback (8 quadros da barra do manto ondulando)
 const SPECTER = [];
@@ -1390,7 +1510,7 @@ let cw = 0, ch = 0, dpr = 1, RW = 320, RH = 180, FOC = 240, PLANE = .66;
 // campo de visão horizontal em graus (slider no título e na pausa; lembrado entre sessões)
 let FOV_DEG = 75;
 try { const f = +localStorage.getItem('jv-fov'); if (f >= 50 && f <= 120) FOV_DEG = f; } catch (e) {}
-let imgData, buf, zbuf, rowF, rowC;
+let imgData, buf, zbuf;
 
 function resize(){
   dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -1404,14 +1524,15 @@ function resize(){
   low.width = RW; low.height = RH;
   imgData = lctx.createImageData(RW, RH);
   buf = new Uint32Array(imgData.data.buffer);
-  zbuf = new Float32Array(RW); rowF = new Float32Array(RH); rowC = new Float32Array(RH);
+  zbuf = new Float32Array(RW);
 }
 addEventListener('resize', resize);
 resize();
 
 function lightRadius(){
-  if (P.out) return .9;
-  let R = 1.6 + 3.1*Math.sqrt(P.fuel/100);
+  if (P.hidden) return .8;   // dentro do armário o celular fica desligado
+  if (P.out || !P.light) return .9;   // sem lanterna, só o brilho da tela
+  let R = 1.8 + 3.2*Math.sqrt(P.fuel/100);
   R *= 1 + G.flick;
   if (G.dip > 0) R *= .6;
   return R;
@@ -1467,6 +1588,37 @@ function openDirAngle(tx, ty){
    e volta mais tarde.
    ===================================================================== */
 const tileOf = (x, y) => Math.floor(y)*L.W + Math.floor(x);
+const SEARCH_WHISPERS = ['…cadê você…', '…eu sei que você tá aqui…', '…um, dois, três…'];
+
+// armário na parede logo à frente (até ~0.75 da porta), olhando mais ou menos para ele
+function nearbyLocker(){
+  const tx = Math.floor(P.x), ty = Math.floor(P.y), fx = Math.cos(P.a), fy = Math.sin(P.a);
+  let best = null, bd = .75;
+  for (let k = 0; k < 4; k++){
+    const nx = tx + DX[k], ny = ty + DY[k];
+    if (!L.lockerAt.has(ny*L.W + nx)) continue;
+    const gap = k === 0 ? nx - P.x : k === 1 ? P.x - (nx + 1) : k === 2 ? ny - P.y : P.y - (ny + 1);
+    if (gap > bd || fx*DX[k] + fy*DY[k] < .35) continue;
+    bd = gap; best = { x:nx, y:ny, k };
+  }
+  return best;
+}
+function toggleHide(){
+  if (G.state !== 'play') return;
+  if (P.hidden){ P.hidden = null; P.hideCd = .4; Sound.locker(); return; }
+  if (P.hideCd > 0) return;
+  const lk = nearbyLocker();
+  if (!lk) return;
+  // de dentro você olha para fora; se ele não viu, a busca dele termina um tile à frente da porta
+  const ox = Math.floor(P.x) - DX[lk.k], oy = Math.floor(P.y) - DY[lk.k];
+  const peek = solidAt(ox, oy) ? tileOf(P.x, P.y) : oy*L.W + ox;
+  P.hidden = Object.assign(lk, { a:Math.atan2(-DY[lk.k], -DX[lk.k]), peek });
+  P.a = P.hidden.a; P.pitch = 0;
+  // se ele estava perto e viu você entrar, não adianta: ele abre o armário
+  V.sawHide = V.state === 'chase' && Math.hypot(P.x - V.x, P.y - V.y) < 2.6;
+  Sound.locker();
+  if (!G.hideTip){ G.hideTip = true; toast('Dentro do armário. Fique quieto… Aqui dentro o celular fica desligado.', 3400); }
+}
 const ghostPass = j => L.map[j] !== T_WALL;          // fantasma atravessa portas
 
 function villainPathTo(target){
@@ -1476,9 +1628,9 @@ function villainPathTo(target){
   for (let j = target; j >= 0 && r.dist[j] > 0; j = r.prev[j]) path.push(j);
   V.path = path.reverse();
 }
-function villainHide(){ V.state = 'hidden'; V.timer = rand(...L.cfg.v.hide); V.path = []; }
+function villainHide(){ V.state = 'hidden'; V.timer = rand(...L.cfg.v.hide); V.path = []; V.sawHide = false; }
 function villainChase(){
-  V.state = 'chase'; V.timer = rand(...L.cfg.v.chase); V.repath = 0; V.path = [];
+  V.state = 'chase'; V.timer = rand(...L.cfg.v.chase); V.repath = 0; V.path = []; V.sawHide = false;
   V.whisper = { text:pick(L.cfg.whispers), t:0 };
   Sound.whisper();
 }
@@ -1526,23 +1678,34 @@ function updateVillain(dt){
   const dP = Math.hypot(P.x - V.x, P.y - V.y);
   switch (V.state){
     case 'hidden':
-      V.timer -= dt;
+      if (!P.hidden) V.timer -= dt;   // com você no armário, ele não aparece
       if (V.timer <= 0 && G.graceT <= 0 && V.alpha < .05) spawnVillain();
       break;
-    case 'chase':
+    case 'chase': {
       V.timer -= dt; V.repath -= dt;
-      if (V.repath <= 0){ V.repath = .3; villainPathTo(tileOf(P.x, P.y)); }
+      // você entrou no armário sem ele ver: ele vai até a frente dele e procura
+      const lost = P.hidden && !V.sawHide;
+      if (V.repath <= 0){ V.repath = .3; villainPathTo(lost ? P.hidden.peek : tileOf(P.x, P.y)); }
       if (V.path.length) followPath(dt, vc.speed);
-      else if (dP > .01){   // mesmo tile que você: vai direto
+      else if (lost){
+        V.state = 'search'; V.timer = rand(3.5, 5.5); V.moving = false;
+        V.whisper = { text:pick(SEARCH_WHISPERS), t:0 }; Sound.whisper();
+      } else if (dP > .01){   // mesmo tile que você: vai direto
         const s = Math.min(dP, vc.speed*dt);
         V.x += (P.x - V.x)/dP*s; V.y += (P.y - V.y)/dP*s; V.moving = true;
       }
       // só desiste quando o tempo acaba e você está longe
-      if (V.timer <= 0 && dP > 5) villainHide();
+      if (V.state === 'chase' && V.timer <= 0 && dP > 5) villainHide();
+      break;
+    }
+    case 'search':   // parado na frente do armário, procurando
+      V.moving = false; V.timer -= dt;
+      if (!P.hidden){ V.state = 'chase'; V.timer = Math.max(V.timer, 6); V.repath = 0; }
+      else if (V.timer <= 0) villainHide();
       break;
   }
   if (V.whisper){ V.whisper.t += dt; if (V.whisper.t > 3.5) V.whisper = null; }
-  if (V.state !== 'hidden' && V.alpha > .6 && dP < .55 && G.graceT <= 0) pushback();
+  if (V.state !== 'hidden' && V.alpha > .6 && dP < .55 && G.graceT <= 0 && (!P.hidden || V.sawHide)) pushback();
   emitVillain(dt);
 }
 
@@ -1562,8 +1725,6 @@ function updateParticles(dt){
     if (p.type === 'gold') p.vz -= dt*1.2;
   }
 }
-// brasas da tocha na tela (espaço da tela, não do mundo)
-let embers = [];
 
 /* =====================================================================
    INPUT: teclado, mouse (pointer lock / arrastar) e toque
@@ -1588,7 +1749,9 @@ addEventListener('keydown', e => {
       else if ('123'.includes(k)) Dialog.choose(+k - 1);
       break;
     case 'play':
-      if (k === 'j') openJournal();
+      if (k === 'e') toggleHide();
+      else if (k === 'l') toggleLight();
+      else if (k === 'j') openJournal();
       else if (k === 'p' || k === 'escape') setPause(true);
       break;
     case 'paused':
@@ -1652,14 +1815,14 @@ dpadEl.addEventListener('pointermove', e => { if (e.pointerId === dpad.id) updDp
    ===================================================================== */
 const $ = id => document.getElementById(id);
 const hudEl = $('hud'), fuelFill = $('fuel-fill'), fuelBox = $('fuel-box'), keysEl = $('keys-count'), keysChip = $('keys-chip');
-const pagesEl = $('pages-count'), bookBtn = $('book'), toastEl = $('toast'), fadeEl = $('fade');
+const pagesEl = $('pages-count'), bookBtn = $('book'), toastEl = $('toast'), fadeEl = $('fade'), battPct = $('batt-pct'), actEl = $('act');
 const pageModal = $('page-modal'), journalModal = $('journal-modal'), mm = $('minimap'), mctx = mm.getContext('2d');
 const hudCache = {};
 function updateHUD(){
   const f = Math.round(P.fuel);
-  if (hudCache.f !== f){ fuelFill.style.width = f + '%'; hudCache.f = f; }
-  const state = P.out ? 'out' : f < 25 ? 'low' : '';
-  if (hudCache.s !== state){ fuelBox.classList.toggle('low', state === 'low'); fuelBox.classList.toggle('out', state === 'out'); hudCache.s = state; }
+  if (hudCache.f !== f){ fuelFill.style.width = f + '%'; battPct.textContent = f + '%'; hudCache.f = f; }
+  const state = P.out ? 'out' : f < 10 ? 'crit' : f < 25 ? 'low' : '';
+  if (hudCache.s !== state){ for (const c of ['low','crit','out']) fuelBox.classList.toggle(c, state === c); hudCache.s = state; }
   const k = `${G.keys}/${L ? L.totalKeys : 0}`;
   if (hudCache.k !== k){ keysEl.textContent = k; hudCache.k = k; }
   const p = `${G.pages.size}/${PAGES.length}`;
@@ -1678,6 +1841,16 @@ const SOUND_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5
 function renderSoundBtn(){ $('btn-sound').innerHTML = Sound.muted ? SOUND_OFF : SOUND_ON; }
 function toggleMute(){ Sound.init(); Sound.toggle(); Tracks.setMuted(Sound.muted); renderSoundBtn(); toast(Sound.muted ? 'Som desligado' : 'Som ligado', 1400); }
 renderSoundBtn();
+// aviso "E — esconder no armário" (no celular, é o próprio botão)
+function updateActPrompt(){
+  const m = G.state !== 'play' || !L ? '' : P.hidden ? 'out' : nearbyLocker() ? 'in' : '';
+  if (actEl.dataset.m === m) return;
+  actEl.dataset.m = m;
+  actEl.classList.toggle('on', !!m);
+  actEl.innerHTML = m === 'out' ? '<b>E</b>Sair do armário' : m ? '<b>E</b>Esconder no armário' : '';
+}
+actEl.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); toggleHide(); });
+
 function toggleMap(){ G.showMap = !G.showMap; mm.classList.toggle('on', G.showMap && !!L && hudEl.classList.contains('on')); drawMinimap(); }
 
 function openPage(id, isNew){
@@ -1726,6 +1899,16 @@ $('journal-close').onclick = closeModals;
 bookBtn.onclick = e => { e.currentTarget.blur(); if (G.state === 'play') openJournal(); };
 $('btn-sound').onclick = e => { e.currentTarget.blur(); toggleMute(); };
 $('btn-map').onclick = e => { e.currentTarget.blur(); toggleMap(); };
+$('btn-light').onclick = e => { e.currentTarget.blur(); toggleLight(); };
+function toggleLight(){
+  if (G.state !== 'play' || P.hidden) return;
+  if (P.out){ toast('O celular está descarregado.', 1600); return; }
+  P.light = !P.light; Sound.light(P.light); updateLightBtn();
+}
+function updateLightBtn(){
+  const b = $('btn-light');
+  b.classList.toggle('off', !P.light); b.setAttribute('aria-pressed', P.light);
+}
 $('btn-pause').onclick = e => { e.currentTarget.blur(); if (G.state === 'play') setPause(true); };
 $('pause-resume').onclick = () => setPause(false);
 $('pause-journal').onclick = () => { setPause(false); openJournal(); };
@@ -1769,7 +1952,7 @@ function drawMinimap(){
     const j = y*L.W + x;
     if (!L.explored[j]) continue;
     const t = L.map[j];
-    if (t === T_WALL) mctx.fillStyle = 'rgba(90,70,52,.55)';
+    if (t === T_WALL) mctx.fillStyle = L.lockerAt.has(j) ? '#6f90aa' : 'rgba(90,70,52,.55)';
     else if (t === T_DOOR) mctx.fillStyle = L.doorAt.get(j).open ? 'rgba(214,190,150,.45)' : '#d0662a';
     else if (t === T_EXIT) mctx.fillStyle = '#ffd27a';
     else mctx.fillStyle = L.roomMask[j] === 1 ? 'rgba(170,140,210,.5)' : 'rgba(214,190,150,.45)';
@@ -1777,7 +1960,7 @@ function drawMinimap(){
   }
   for (const it of L.items){
     if (it.taken || !L.explored[it.y*L.W + it.x]) continue;
-    mctx.fillStyle = it.type === 'key' ? '#ffcf6a' : it.type === 'page' ? '#f3e6c8' : '#e07a2a';
+    mctx.fillStyle = it.type === 'key' ? '#ffcf6a' : it.type === 'page' ? '#f3e6c8' : '#5fd36a';
     mctx.beginPath(); mctx.arc(ox + (it.x + .5)*s, oy + (it.y + .5)*s, s*.28, 0, TAU); mctx.fill();
   }
   const px = ox + P.x*s, py = oy + P.y*s;
@@ -1794,7 +1977,7 @@ function buildLevel(li){
   buildAssets(L);
   G.li = li; G.keys = 0;
   P.x = L.start.x + .5; P.y = L.start.y + .5; P.a = openDirAngle(L.start.x, L.start.y); P.pitch = 0;
-  P.fuel = 100; P.out = false; P.invT = 0;
+  P.fuel = 100; P.out = false; P.invT = 0; P.hidden = null; P.hideCd = 0;
   V.state = 'hidden'; V.alpha = 0; V.timer = L.cfg.firstAppear; V.x = V.y = -9; V.path = []; V.whisper = null;
   G.graceT = 4;
   parts = [];
@@ -1816,15 +1999,26 @@ async function startLevel(li){
   await sleep(2700);
   await fadeTo(0, 1300);
   G.state = 'play';
-  if (li === 0) toast('Encontre as chaves e a escada para descer. Não deixe a tocha apagar.', 4800);
-  else toast(`Esta profundeza exige ${L.totalKeys} chaves.`, 3200);
+  if (li === 0) toast(`Ache as chaves e a escada para descer. Não deixe a bateria acabar. Perto de um armário, ${document.body.classList.contains('touch') ? 'toque em Esconder' : 'aperte E'} para se esconder.`, 6000);
+  else toast(`Este andar exige ${L.totalKeys} chaves.`, 3200);
 }
 
-function beginGame(){
+// cena de abertura (10 s): quem é João Vitão e por que ele não sai da IFMT
+async function playIntro(){
+  G.state = 'cutscene'; releasePointer();
+  setFade(INTRO[0]);
+  await fadeTo(1, 400);
+  await sleep(3000);
+  for (let i = 1; i < INTRO.length; i++){ setFade(INTRO[i]); await sleep(3300); }
+}
+
+async function beginGame(){
   if (G.state !== 'title' && G.state !== 'end') return;
   Sound.init();
-  $('end').classList.remove('on');
   G.pages = new Set(); G.time = 0; G.rescues = 0; G.autoSeal = false;
+  P.light = true; updateLightBtn();
+  await playIntro();
+  $('end').classList.remove('on');
   startLevel(0);
 }
 $('btn-start').onclick = beginGame;
@@ -1851,15 +2045,15 @@ async function pushback(){
   jumpEl.classList.remove('on');
   await sleep(2300);
   P.x = L.start.x + .5; P.y = L.start.y + .5; P.a = openDirAngle(L.start.x, L.start.y); P.pitch = 0;
-  P.fuel = Math.max(P.fuel, 75); P.out = false; P.invT = 1;
+  P.fuel = Math.max(P.fuel, 75); P.out = false; P.invT = 1; P.hidden = null; P.light = true; updateLightBtn();
   villainHide(); V.alpha = 0; V.timer += 4; V.x = V.y = -9; V.whisper = null;
   G.graceT = 10;
   setFade({});
   await fadeTo(0, 1300);
   G.state = 'play';
   toast(G.rescues === 1
-    ? 'Você desperta na entrada. Sua tocha está acesa… e cheia de óleo. Quem fez isso?'
-    : 'Você desperta na entrada outra vez. A tocha, de novo, reabastecida.', 5000);
+    ? 'Você acorda na entrada. O celular está com a bateria cheia… Quem carregou?'
+    : 'Você acorda na entrada outra vez. O celular, de novo, carregado.', 5000);
 }
 
 function nextLevel(){ Sound.stairs(); startLevel(L.li + 1); }
@@ -1872,13 +2066,13 @@ function takeItem(it){
       for (let k = 0; k < 14; k++) emit(it.x + .5, it.y + .5, .3, rand(-.6,.6), rand(-.6,.6), rand(.6,1.4), rand(.4,.8), .05, 'gold');
       toast(G.keys >= L.totalKeys ? `Chave encontrada (${G.keys}/${L.totalKeys}). Agora, a porta.` : `Chave encontrada (${G.keys}/${L.totalKeys})`, 2400);
       break;
-    case 'oil':
+    case 'battery':
       addFuel(35); Sound.oil();
-      toast(pick(['Um frasco de óleo. A chama cresce.','Óleo — deixado bem no meio do corredor.','Mais óleo. Quem teria deixado isto aqui?']), 2400);
+      toast(pick(['Uma bateria. +35%.','Bateria, deixada bem no meio do corredor. +35%.','Mais uma bateria. Quem deixou isto aqui? +35%.']), 2400);
       break;
-    case 'torch':
+    case 'powerbank':
       addFuel(65); Sound.oil();
-      toast('Uma tocha extra, ainda seca. Alguém a deixou aqui de propósito.', 3000);
+      toast('Um carregador portátil, ainda carregado. Alguém deixou aqui de propósito. +65%.', 3000);
       break;
     case 'page':
       G.pages.add(it.page); Sound.page(); flashBook();
@@ -1893,7 +2087,7 @@ function addFuel(n){
 
 /* ---------- Confronto final ---------- */
 function startFinal(){
-  G.state = 'final'; releasePointer();
+  G.state = 'final'; releasePointer(); P.hidden = null;
   clearTimeout(toastTimer); toastEl.classList.remove('on');
   V.state = 'final'; V.x = L.seal.x + .5; V.y = L.seal.y + .5; V.path = []; V.alpha = 0; V.whisper = null;
   if (P.out || P.fuel < 30){ P.out = false; P.fuel = Math.max(P.fuel, 30); }
@@ -1979,7 +2173,7 @@ async function showEnding(id){
   }
   const m = Math.floor(G.time/60), s = Math.floor(G.time % 60);
   $('end-stats').innerHTML = `Páginas encontradas: ${G.pages.size}/${PAGES.length} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>` +
-    (G.rescues ? `João Vitão levou você de volta à entrada ${G.rescues} ${G.rescues === 1 ? 'vez' : 'vezes'}. Sua tocha nunca voltou vazia.` : 'O pegador nunca alcançou você.');
+    (G.rescues ? `João Vitão levou você de volta à entrada ${G.rescues} ${G.rescues === 1 ? 'vez' : 'vezes'}. Seu celular nunca voltou descarregado.` : 'O pegador nunca alcançou você.');
   $('end').classList.add('on'); $('end').scrollTop = 0;
   L = null;
   setFade({});
@@ -1993,7 +2187,7 @@ async function showEnding(id){
 function update(dt){
   G.t += dt;
   if (G.shake > 0) G.shake = Math.max(0, G.shake - dt);
-  const amp = P.out ? .15 : .025 + (P.fuel < 30 ? (30 - P.fuel)/30*.13 : 0);
+  const amp = P.out ? .04 : P.fuel < 15 ? .06 : .004;   // lanterna de LED: quase não treme
   G.flickT -= dt;
   if (G.flickT <= 0){ G.flickTarget = (Math.random()*2 - 1)*amp; G.flickT = rand(.04,.12); }
   G.flick = lerp(G.flick, G.flickTarget, Math.min(1, dt*18));
@@ -2010,32 +2204,41 @@ function update(dt){
   }
   updateParticles(dt);
 
-  // brasas saindo da tocha (tela)
-  if (L && !P.out && Math.random() < dt*10) embers.push({ x:rand(-.02,.02), y:0, vx:rand(-.05,.05), vy:rand(-.28,-.14), life:rand(.5,1), max:1 });
-  for (let i = embers.length - 1; i >= 0; i--){ const e = embers[i]; e.life -= dt; e.x += e.vx*dt; e.y += e.vy*dt; e.vx += rand(-.2,.2)*dt; if (e.life <= 0) embers.splice(i,1); }
+  updateActPrompt();
 
   G.mapT -= dt;
   if (G.mapT <= 0){ G.mapT = .15; drawMinimap(); }
 
   const near = (L && G.state === 'play' && V.alpha > .3) ? Math.hypot(P.x - V.x, P.y - V.y) : null;
   Tracks.update(dt, G.state, near);
-  Sound.update(dt, { near, out:G.state === 'play' && P.out, torchLit:!!L && !P.out && (G.state === 'play' || G.state === 'final'), walking:G.state === 'play' && P.moving });
+  Sound.update(dt, { near, out:G.state === 'play' && P.out, walking:G.state === 'play' && P.moving });
 }
 
 function updatePlay(dt){
   G.time += dt;
   // girar
   let turn = 0;
-  if (keys['arrowleft'] || keys['q']) turn -= 1;
-  if (keys['arrowright'] || keys['e']) turn += 1;
+  if (keys['arrowleft']) turn -= 1;
+  if (keys['arrowright']) turn += 1;
   turn += dpad.x*.9;
   P.a += turn*P.turn*dt + lookDX*.0028;
   // olhar para cima/baixo (mouse, arrastar ou R/F)
   let tilt = 0;
   if (keys['r'] || keys['pageup']) tilt += 1;
   if (keys['f'] || keys['pagedown']) tilt -= 1;
-  P.pitch = clamp(P.pitch + tilt*1.1*dt - lookDY*.003, -PITCH_MAX, PITCH_MAX);
+  const lim = pitchLimit();
+  P.pitch = clamp(P.pitch + tilt*1.4*dt - lookDY*.0028, -lim, lim);
   lookDX = lookDY = 0;
+  if (P.hideCd > 0) P.hideCd -= dt;
+  // no armário: não anda, o celular fica desligado e só dá para espiar pelas frestas
+  if (P.hidden){
+    P.a = P.hidden.a + clamp(angDiff(P.hidden.a, P.a), -.5, .5);
+    P.moving = false;
+    if (P.invT > 0) P.invT -= dt;
+    updateVillain(dt);
+    updateHUD();
+    return;
+  }
   // andar
   let fwd = 0, str = 0;
   if (keys['w'] || keys['arrowup']) fwd += 1;
@@ -2055,18 +2258,18 @@ function updatePlay(dt){
   }
   if (P.invT > 0) P.invT -= dt;
 
-  // combustível
+  // bateria do celular
   if (!P.out){
-    P.fuel -= L.cfg.drain*dt;
+    P.fuel -= L.cfg.drain*dt*(P.light ? 1 : .25);   // sem a lanterna, só a tela gasta
     if (P.fuel < 20 && G.dip <= 0 && Math.random() < dt*1.2) G.dip = rand(.08,.18);
     if (P.fuel <= 0){
       P.fuel = 0; P.out = true; P.outT = 6;
       Sound.torchOut(); G.shake = .2;
-      toast('Sua tocha se apagou! Fique calmo… as brasas ainda estão quentes.', 4200);
+      toast('A bateria acabou! O celular desligou… espere ele religar.', 4200);
     }
   } else {
     P.outT -= dt;
-    if (P.outT <= 0){ P.out = false; P.fuel = 22; Sound.relight(); toast('Você sopra as brasas. A chama volta, fraca.', 3000); }
+    if (P.outT <= 0){ P.out = false; P.fuel = 22; Sound.relight(); toast('O celular religou no modo economia. 22%.', 3000); }
   }
 
   for (const it of L.items){
@@ -2095,7 +2298,7 @@ function updatePlay(dt){
       P.invT = 1.3; G.shake = .4; Sound.trap();
       P.fuel = Math.max(0, P.fuel - 15);
       movePlayer(-dirX*.3, -dirY*.3);
-      toast('Espinhos! Você tropeça e quase deixa a tocha cair.', 2400);
+      toast('Choque! Um fio desencapado na poça. Você quase deixa o celular cair.', 2400);
     }
   }
 
@@ -2108,59 +2311,74 @@ function updatePlay(dt){
 
 /* =====================================================================
    RENDERIZAÇÃO 3D — raycasting com chão/teto texturizados e
-   iluminação por pixel (tocha quente + luz fria do fantasma)
+   iluminação por pixel (lanterna branca do celular + luz vermelha do João Vitão)
    ===================================================================== */
 const LUTS = 24, LUTN = LUTS*24, AMB = .012;
 const lut = new Float32Array(LUTN);
 let R_ = {};   // parâmetros da câmera no quadro atual (usados pelos sprites)
+// tabela de paredes por direção horizontal (preenchida a cada quadro)
+const TBL_MAX = 8192;
+const tblD = new Float32Array(TBL_MAX), tblHX = new Float32Array(TBL_MAX), tblHY = new Float32Array(TBL_MAX);
+const tblU = new Uint8Array(TBL_MAX), tblSide = new Uint8Array(TBL_MAX), tblTex = new Array(TBL_MAX).fill(null);
+let colAx = new Float32Array(0);   // deslocamento horizontal de cada coluna (em unidades de foco)
+
+// limite do olhar para cima/baixo: o raio mais inclinado da tela nunca aponta para trás
+function pitchLimit(){ const a = (RH/2 + 2)/FOC; return Math.min(PITCH_MAX, Math.acos(.12/Math.sqrt(1 + a*a)) - Math.atan(a)); }
 
 function renderWorld(){
   const W = RW, H = RH, map = L.map, MW = L.W, MH = L.H;
   const shakeA = G.shake > 0 ? (Math.random() - .5)*G.shake*.05 : 0;
   const ang = P.a + shakeA;
   const dirX = Math.cos(ang), dirY = Math.sin(ang);
-  const planeX = -dirY*PLANE, planeY = dirX*PLANE;
   const posX = P.x, posY = P.y;
   const eye = EYE + (P.moving ? Math.sin(P.walkT)*.018 : 0);
-  const hor = H*(.5 + P.pitch) + (G.shake > 0 ? (Math.random() - .5)*G.shake*H*.04 : 0);
-  R_ = { dirX, dirY, planeX, planeY, eye, hor };
+  // câmera inclinada de verdade (olhar para cima/baixo): cada pixel lança o próprio raio 3D,
+  // então as paredes não entortam como no truque antigo de só deslocar o horizonte
+  const pitch = clamp(P.pitch, -pitchLimit(), pitchLimit());
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+  const cy0 = H/2 + (G.shake > 0 ? (Math.random() - .5)*G.shake*H*.04 : 0);   // centro óptico vertical
+  R_ = { dirX, dirY, eye, cp, sp, cy0 };
 
-  // tabela de luz da tocha (recalculada a cada quadro por causa da tremulação)
-  const Rl = lightRadius(), kl = P.out ? .45 : 1;
+  // tabela de luz da lanterna (recalculada a cada quadro por causa da bateria fraca)
+  const lightOff = P.out || !P.light;
+  const Rl = lightRadius(), kl = P.hidden ? .25 : lightOff ? .45 : 1;
   for (let i = 0; i < LUTN; i++){
     const v = 1 - (i/LUTS)/Rl;
     lut[i] = (v > 0 ? Math.min(1, Math.pow(v, 1.35)*1.3)*kl : 0) + AMB;
   }
-  const WR = P.out ? .9 : 1, WG = P.out ? .42 : .8, WB = P.out ? .25 : .58;
+  // luz branca do LED; desligado, sobra só o brilho azulado da tela
+  const dim = lightOff || P.hidden, WR = dim ? .55 : .95, WG = dim ? .62 : .98, WB = dim ? .8 : 1;
 
   // luz vermelha do fantasma (pulsa; atravessa as paredes, então você vê ele chegando)
   const vOn = V.alpha > .05 && V.state !== 'hidden' && L;
   const vPulse = .85 + .15*Math.sin(G.t*4.2);
   const vx = V.x, vy = V.y, vI = vOn ? V.alpha*vPulse*(V.state === 'final' ? 1.6 : 1.9) : 0, VL2 = V.state === 'final' ? 9 : 7.5;
-  // selo: escuridão que respira
+  // sala 13: escuridão que respira em volta da carteira
   const sealOn = !!L.seal, scx = sealOn ? L.seal.x + .5 : 0, scy = sealOn ? L.seal.y + .5 : 0;
   const sealDark = .7 + .15*Math.sin(G.t*.8);
   const sealTex = sealOn ? L.tex.seal.data : null, sealW = sealOn ? L.tex.seal.w : 0;
   const sx0 = sealOn ? L.chamber.x0 : 0, sy0 = sealOn ? L.chamber.y0 : 0;
 
-  for (let y = 0; y < H; y++){
-    const d = y + .5 - hor;
-    rowF[y] = d > 0 ? eye*FOC/d : 0;
-    rowC[y] = d < 0 ? (WALL_H - eye)*FOC/(-d) : 0;
-  }
   const floors = L.tex.floors, ceils = L.tex.ceils, walls = L.tex.walls;
   const floorId = L.floorId, ceilId = L.ceilId, wallId = L.wallId, explored = L.explored;
+  const invF = 1/FOC;
 
-  for (let x = 0; x < W; x++){
-    const camX = 2*x/W - 1;
-    const rdx = dirX + planeX*camX, rdy = dirY + planeY*camX;
-    const rlen = Math.sqrt(rdx*rdx + rdy*rdy);
+  // 1) tabela de paredes por direção horizontal. As paredes vão do chão ao teto, então
+  //    qual parede um raio acerta só depende da direção horizontal dele (q = tangente do
+  //    ângulo em relação ao olhar). Cada direção é traçada uma vez; os pixels só consultam.
+  const aX = (W/2)*invF, aY = (H/2 + 2)*invF;
+  const cyMin = cp - Math.abs(sp)*aY, cyMax = cp + Math.abs(sp)*aY;
+  const qMax = aX/cyMin;
+  const N = Math.min(TBL_MAX, Math.ceil(2*qMax*FOC*cyMax) + 2), qScale = N/(2*qMax);   // ~1 amostra por pixel na pior linha
+  for (let i = 0; i < N; i++){
+    const q = -qMax + (i + .5)/qScale, nrm = 1/Math.sqrt(1 + q*q);
+    const rdx = (dirX - dirY*q)*nrm, rdy = (dirY + dirX*q)*nrm;    // direção unitária: t = distância
     let mapX = posX | 0, mapY = posY | 0;
     const ddx = rdx === 0 ? 1e30 : Math.abs(1/rdx), ddy = rdy === 0 ? 1e30 : Math.abs(1/rdy);
-    let stepX, stepY, sdx, sdy;
+    let stepX, stepY, sdx, sdy, side = 0;
     if (rdx < 0){ stepX = -1; sdx = (posX - mapX)*ddx; } else { stepX = 1; sdx = (mapX + 1 - posX)*ddx; }
     if (rdy < 0){ stepY = -1; sdy = (posY - mapY)*ddy; } else { stepY = 1; sdy = (mapY + 1 - posY)*ddy; }
-    let side = 0, perp = 30, tex = null, u = 0, stretch = false;
+    let D = 1e9, tex = null, u = 0;
     explored[mapY*MW + mapX] = 1;
     for (let it = 0; it < 80; it++){
       const cur = sdx < sdy ? sdx : sdy;
@@ -2169,8 +2387,8 @@ function renderWorld(){
       const idx = mapY*MW + mapX, t = map[idx];
       if (cur < Rl + .6) explored[idx] = 1;
       if (t === T_WALL){
-        perp = side === 0 ? sdx - ddx : sdy - ddy;
-        let wx = side === 0 ? posY + perp*rdy : posX + perp*rdx; wx -= Math.floor(wx);
+        D = cur;
+        let wx = side === 0 ? posY + cur*rdy : posX + cur*rdx; wx -= Math.floor(wx);
         u = (wx*TS) | 0;
         if (side === 0 && rdx > 0) u = TS - 1 - u;
         if (side === 1 && rdy < 0) u = TS - 1 - u;
@@ -2180,108 +2398,100 @@ function renderWorld(){
       if (t === T_DOOR){
         const d = L.doorAt.get(idx);
         if (d.anim >= 1) continue;
-        if (d.axis === 'x'){
-          const tt = (mapX + .5 - posX)/rdx; if (tt <= 0) continue;
-          const hy = posY + tt*rdy; if (Math.floor(hy) !== mapY) continue;
-          const f = hy - mapY; if (f < d.anim) continue;
-          perp = tt; u = ((f - d.anim)*TS) | 0; side = 0;
-        } else {
-          const tt = (mapY + .5 - posY)/rdy; if (tt <= 0) continue;
-          const hx = posX + tt*rdx; if (Math.floor(hx) !== mapX) continue;
-          const f = hx - mapX; if (f < d.anim) continue;
-          perp = tt; u = ((f - d.anim)*TS) | 0; side = 1;
-        }
+        const tt = d.axis === 'x' ? (mapX + .5 - posX)/rdx : (mapY + .5 - posY)/rdy;
+        if (tt <= 0) continue;
+        const f = d.axis === 'x' ? posY + tt*rdy - mapY : posX + tt*rdx - mapX;
+        if (f < 0 || f >= 1 || f < d.anim) continue;
+        D = tt; u = ((f - d.anim)*TS) | 0; side = d.axis === 'x' ? 0 : 1;
         tex = L.tex.doors[d.req + '_' + Math.min(G.keys, d.req)];
-        stretch = true;
         break;
       }
     }
-    if (perp < .02) perp = .02;
-    zbuf[x] = perp;
+    tblD[i] = D; tblTex[i] = tex; tblU[i] = u; tblSide[i] = side;
+    tblHX[i] = posX + D*rdx; tblHY[i] = posY + D*rdy;
+  }
+  // z-buffer dos sprites: raio horizontal na altura dos olhos de cada coluna (distância para a frente)
+  for (let x = 0; x < W; x++){
+    const q = (x + .5 - W/2)*invF*cp;
+    const i = clamp(((q + qMax)*qScale) | 0, 0, N - 1);
+    const z = tblD[i]/Math.sqrt(1 + q*q);
+    zbuf[x] = z < .02 ? .02 : z > 30 ? 30 : z;
+  }
 
-    const top = hor - (WALL_H - eye)*FOC/perp, bot = hor + eye*FOC/perp;
-    const y0 = Math.max(0, Math.ceil(top - .5)), y1 = Math.min(H, Math.ceil(bot - .5));
-
-    // parede
-    if (tex){
-      const dist = perp*rlen;
-      let bi = (dist*LUTS) | 0; let b = bi < LUTN ? lut[bi] : AMB;
-      const sh = side ? .74 : 1;
-      let mr = b*WR*sh, mg = b*WG*sh, mb = b*WB*sh;
-      if (vOn){
-        const hx = posX + perp*rdx, hy = posY + perp*rdy, ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey;
-        if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; }
+  // 2) cada pixel: parede/porta (da tabela) ou chão/teto — o que o raio 3D encontrar primeiro
+  if (colAx.length !== W) colAx = new Float32Array(W);
+  for (let x = 0; x < W; x++) colAx[x] = (x + .5 - W/2)*invF;
+  const invWH = 1/WALL_H;
+  for (let y = 0; y < H; y++){
+    const ay = (cy0 - y - .5)*invF;
+    const cy = cp - sp*ay, rz = sp + cp*ay;   // parte do raio na direção do olhar (horizontal) e vertical
+    const tFC = rz < -1e-6 ? -eye/rz : rz > 1e-6 ? (WALL_H - eye)/rz : 1e9;   // quando ele bate no chão/teto
+    const iScale = qScale/cy, iOff = qMax*qScale, cy2 = cy*cy, row = y*W;
+    for (let x = 0; x < W; x++){
+      const ax = colAx[x];
+      let i = (ax*iScale + iOff) | 0; if (i < 0) i = 0; else if (i >= N) i = N - 1;
+      const hl = Math.sqrt(cy2 + ax*ax);                           // tamanho da parte horizontal do raio
+      const D = tblD[i], tW = D/hl;
+      let hx, hy, dist, c, mr, mg, mb, b;
+      if (tW < tFC && D < 1e8){
+        // parede/porta: textura esticada na altura toda
+        const tex = tblTex[i];
+        hx = tblHX[i]; hy = tblHY[i]; dist = D;
+        const bi = (dist*LUTS) | 0; b = bi < LUTN ? lut[bi] : AMB;
+        let zf = (eye + tW*rz)*invWH; if (zf < 0) zf = 0; else if (zf > .999) zf = .999;
+        const v = TS - 1 - ((zf*TS) | 0);
+        c = tex[v*TS + tblU[i]];
+        const sh = tblSide[i] ? .74 : 1;
+        mr = b*WR*sh; mg = b*WG*sh; mb = b*WB*sh;
+        if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; } }
+      } else {
+        if (tFC >= 1e8){ buf[row + x] = 0xff000000; continue; }
+        hx = posX + tFC*(dirX*cy - dirY*ax); hy = posY + tFC*(dirY*cy + dirX*ax); dist = tFC*hl;
+        const tx = hx | 0, ty = hy | 0;
+        if (hx < 0 || hy < 0 || tx >= MW || ty >= MH){ buf[row + x] = 0xff000000; continue; }
+        const bi = (dist*LUTS) | 0; b = bi < LUTN ? lut[bi] : AMB;
+        if (rz < 0){
+          // chão
+          const fid = floorId[ty*MW + tx];
+          if (fid === F_SEAL) c = sealTex[(((hy - sy0)*TS) | 0)*sealW + (((hx - sx0)*TS) | 0)];
+          else c = floors[fid][(((hy - ty)*TS) | 0)*TS + (((hx - tx)*TS) | 0)];
+          mr = b*WR; mg = b*WG; mb = b*WB;
+          if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; } }
+          if (sealOn && fid === F_SEAL){ const ex = hx - scx, ey = hy - scy, m = 1 - sealDark*Math.exp(-(ex*ex + ey*ey)*.9); mr *= m; mg *= m; mb *= m; }
+        } else {
+          // teto
+          const cid = ceilId[ty*MW + tx];
+          c = ceils[cid][(((hy - ty)*TS) | 0)*TS + (((hx - tx)*TS) | 0)];
+          if (cid === C_HOLE){ b = Math.max(b, .55); mr = b*.85; mg = b*.9; mb = b; }   // luz do dia pela claraboia
+          else { mr = b*WR*.85; mg = b*WG*.85; mb = b*WB*.85; }
+          if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k*.7; mr += vl; mg += vl*.1; mb += vl*.06; } }
+        }
       }
-      mr *= 256; mg *= 256; mb *= 256;
-      const pxPerUnit = FOC/perp;
-      for (let y = y0; y < y1; y++){
-        const z = eye - (y + .5 - hor)/pxPerUnit;          // altura do ponto na parede
-        let v;
-        if (stretch) v = TS - 1 - ((clamp(z/WALL_H, 0, .999)*TS) | 0);
-        else { v = ((z*TS) | 0) % TS; if (v < 0) v += TS; v = TS - 1 - v; }
-        const c = tex[v*TS + u];
-        let r = ((c & 255)*mr) >> 8, g = (((c >> 8) & 255)*mg) >> 8, bb = (((c >> 16) & 255)*mb) >> 8;
-        if (r > 255) r = 255; if (g > 255) g = 255; if (bb > 255) bb = 255;
-        buf[y*W + x] = 0xff000000 | (bb << 16) | (g << 8) | r;
-      }
-    } else {
-      for (let y = y0; y < y1; y++) buf[y*W + x] = 0xff000000;
-    }
-
-    // chão
-    for (let y = Math.max(y1, 0); y < H; y++){
-      const rd = rowF[y];
-      if (rd <= 0) continue;
-      const fx = posX + rd*rdx, fy = posY + rd*rdy;
-      const tx = fx | 0, ty = fy | 0;
-      if (tx < 0 || ty < 0 || tx >= MW || ty >= MH){ buf[y*W + x] = 0xff000000; continue; }
-      const fid = floorId[ty*MW + tx];
-      let c;
-      if (fid === F_SEAL) c = sealTex[(((fy - sy0)*TS) | 0)*sealW + (((fx - sx0)*TS) | 0)];
-      else c = floors[fid][(((fy - ty)*TS) | 0)*TS + (((fx - tx)*TS) | 0)];
-      const bi = (rd*rlen*LUTS) | 0; const b = bi < LUTN ? lut[bi] : AMB;
-      let mr = b*WR, mg = b*WG, mb = b*WB;
-      if (vOn){ const ex = fx - vx, ey = fy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; } }
-      if (sealOn && fid === F_SEAL){ const ex = fx - scx, ey = fy - scy, m = 1 - sealDark*Math.exp(-(ex*ex + ey*ey)*.9); mr *= m; mg *= m; mb *= m; }
       let r = ((c & 255)*mr) | 0, g = (((c >> 8) & 255)*mg) | 0, bb = (((c >> 16) & 255)*mb) | 0;
       if (r > 255) r = 255; if (g > 255) g = 255; if (bb > 255) bb = 255;
-      buf[y*W + x] = 0xff000000 | (bb << 16) | (g << 8) | r;
-    }
-
-    // teto
-    for (let y = 0; y < y0 && y < H; y++){
-      const rd = rowC[y];
-      if (rd <= 0) continue;
-      const fx = posX + rd*rdx, fy = posY + rd*rdy;
-      const tx = fx | 0, ty = fy | 0;
-      if (tx < 0 || ty < 0 || tx >= MW || ty >= MH){ buf[y*W + x] = 0xff000000; continue; }
-      const cid = ceilId[ty*MW + tx];
-      const c = ceils[cid][(((fy - ty)*TS) | 0)*TS + (((fx - tx)*TS) | 0)];
-      const bi = (rd*rlen*LUTS) | 0; let b = bi < LUTN ? lut[bi] : AMB;
-      let mr, mg, mb;
-      if (cid === C_HOLE){ b = Math.max(b, .55); mr = b*.85; mg = b*.9; mb = b; }   // luz do dia lá em cima
-      else { mr = b*WR*.85; mg = b*WG*.85; mb = b*WB*.85; }
-      if (vOn){ const ex = fx - vx, ey = fy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k*.7; mr += vl; mg += vl*.1; mb += vl*.06; } }
-      let r = ((c & 255)*mr) | 0, g = (((c >> 8) & 255)*mg) | 0, bb = (((c >> 16) & 255)*mb) | 0;
-      if (r > 255) r = 255; if (g > 255) g = 255; if (bb > 255) bb = 255;
-      buf[y*W + x] = 0xff000000 | (bb << 16) | (g << 8) | r;
+      buf[row + x] = 0xff000000 | (bb << 16) | (g << 8) | r;
     }
   }
   lctx.putImageData(imgData, 0, 0);
 }
 
-// projeta e desenha um billboard, recortado coluna a coluna pelo z-buffer
+// projeta e desenha um billboard (com a inclinação da câmera), recortado coluna a coluna pelo z-buffer
 function billboard(img, sil, wx, wy, zBottom, ww, wh, alpha, bright, additive){
-  const { dirX, dirY, eye, hor } = R_;
+  const { dirX, dirY, eye, cp, sp, cy0 } = R_;
   const sx = wx - P.x, sy = wy - P.y;
-  const depth = dirX*sx + dirY*sy;
+  const depth = dirX*sx + dirY*sy;                 // distância horizontal à frente
   if (depth < .12) return null;
-  const lat = (dirX*sy - dirY*sx)/PLANE;
-  const scrX = RW/2*(1 + lat/depth);
-  const k = FOC/depth;
-  const pw = ww*k, ph = wh*k;
-  const left = scrX - pw/2, top = hor - (zBottom + wh - eye)*k;
-  if (left > RW || left + pw < 0 || pw < .3) return null;
+  const rt = dirX*sy - dirY*sx;                    // deslocamento para a direita
+  // coordenadas de câmera de um ponto na altura z: "frente" e "cima"
+  const fwd = z => cp*depth + sp*(z - eye), up = z => cp*(z - eye) - sp*depth;
+  const fm = fwd(zBottom + wh/2);
+  if (fm < .08) return null;
+  const k = FOC/fm;
+  const scrX = RW/2 + rt*k, pw = ww*k;
+  const zt = zBottom + wh, fT = Math.max(.05, fwd(zt)), fB = Math.max(.05, fwd(zBottom));
+  const top = cy0 - up(zt)/fT*FOC, ph = cy0 - up(zBottom)/fB*FOC - top;
+  const left = scrX - pw/2;
+  if (left > RW || left + pw < 0 || pw < .3 || ph <= 0) return null;
   const x0 = Math.max(0, Math.floor(left)), x1 = Math.min(RW - 1, Math.ceil(left + pw) - 1);
   const iw = img.width || img.naturalWidth, ih = img.height || img.naturalHeight;
   lctx.globalCompositeOperation = additive ? 'lighter' : 'source-over';
@@ -2335,15 +2545,15 @@ function renderSprites(){
     const x = tr.x + .5, y = tr.y + .5, d = dist(x, y);
     if (d > 10) continue;
     const k = Math.min(1, (ph - TRAP_UP)/.07);
-    add(d, () => billboard(SPR.spikes.img, SPR.spikes.sil, x, y, -SPR.spikes.wh*(1 - k), SPR.spikes.ww, SPR.spikes.wh, 1, lightAt(d), false));
+    add(d, () => billboard(SPR.spikes.img, SPR.spikes.sil, x, y, -SPR.spikes.wh*(1 - k), SPR.spikes.ww, SPR.spikes.wh, 1, 1, false));   // faísca brilha sozinha
   }
   { const x = L.start.x + .5, y = L.start.y + .5, d = dist(x, y);
     if (d < 14) add(d, () => billboard(SPR.ladder.img, SPR.ladder.sil, x, y, 0, SPR.ladder.ww, SPR.ladder.wh, 1, Math.max(lightAt(d), .35), false)); }
   if (L.seal){
     const lx = L.seal.x - .6, ly = L.seal.y + 1.5, hx = L.seal.x + 1.6, hy = L.seal.y + 1.5;
     const d1 = dist(lx, ly), d2 = dist(hx, hy);
-    add(d1, () => billboard(SPR.lantern.img, SPR.lantern.sil, lx, ly, 0, SPR.lantern.ww, SPR.lantern.wh, 1, Math.max(lightAt(d1), V.state === 'final' ? .5 : 0), false));
-    add(d2, () => billboard(SPR.hat.img, SPR.hat.sil, hx, hy, 0, SPR.hat.ww, SPR.hat.wh, 1, Math.max(lightAt(d2), V.state === 'final' ? .5 : 0), false));
+    add(d1, () => billboard(SPR.bag.img, SPR.bag.sil, lx, ly, 0, SPR.bag.ww, SPR.bag.wh, 1, Math.max(lightAt(d1), V.state === 'final' ? .5 : 0), false));
+    add(d2, () => billboard(SPR.cap.img, SPR.cap.sil, hx, hy, 0, SPR.cap.ww, SPR.cap.wh, 1, Math.max(lightAt(d2), V.state === 'final' ? .5 : 0), false));
   }
   for (const p of parts){
     const d = dist(p.x, p.y);
@@ -2380,64 +2590,64 @@ function renderSprites(){
   return villainScreen;
 }
 
-/* ---------- Tocha na mão (primeira pessoa) ---------- */
-function drawHandTorch(){
+/* ---------- Celular na mão (primeira pessoa) ---------- */
+function drawHandPhone(){
   const s = ch/900;
-  const bobX = P.moving ? Math.cos(P.walkT*.5)*14*s : 0, bobY = P.moving ? Math.abs(Math.sin(P.walkT*.5))*16*s : 0;
-  const sway = Math.sin(G.t*1.3)*5*s;
-  const bx = cw*.78 + bobX + sway, by = ch + 10*s + bobY;
-  const tipX = bx - 70*s, tipY = by - 330*s;
-  // cabo
+  const bobX = P.moving ? Math.cos(P.walkT*.5)*12*s : 0, bobY = P.moving ? Math.abs(Math.sin(P.walkT*.5))*14*s : 0;
+  const sway = Math.sin(G.t*1.3)*4*s;
+  const w = 150*s, h = 290*s;
   ctx.save();
-  ctx.lineCap = 'round';
-  ctx.strokeStyle = '#3a2716'; ctx.lineWidth = 34*s;
-  ctx.beginPath(); ctx.moveTo(bx + 30*s, by + 40*s); ctx.lineTo(tipX, tipY + 40*s); ctx.stroke();
-  ctx.strokeStyle = '#5b3d22'; ctx.lineWidth = 12*s;
-  ctx.beginPath(); ctx.moveTo(bx + 22*s, by + 40*s); ctx.lineTo(tipX - 6*s, tipY + 40*s); ctx.stroke();
-  // pano enrolado
-  ctx.fillStyle = '#261a10';
-  ctx.beginPath(); ctx.ellipse(tipX, tipY + 30*s, 30*s, 42*s, -.2, 0, TAU); ctx.fill();
-  ctx.strokeStyle = 'rgba(120,85,50,.6)'; ctx.lineWidth = 3*s;
-  for (let k = 0; k < 4; k++){ ctx.beginPath(); ctx.moveTo(tipX - 28*s, tipY + (10 + k*14)*s); ctx.lineTo(tipX + 28*s, tipY + (18 + k*14)*s); ctx.stroke(); }
-  // mão com luva de couro segurando o cabo
-  const hx = lerp(bx + 30*s, tipX, .3), hy = lerp(by + 40*s, tipY + 40*s, .3);
-  ctx.save(); ctx.translate(hx, hy); ctx.rotate(-.2);
-  ctx.fillStyle = '#20150d';
-  ctx.beginPath(); ctx.moveTo(-10*s, 60*s); ctx.lineTo(80*s, 140*s); ctx.lineTo(130*s, 60*s); ctx.lineTo(40*s, 10*s); ctx.closePath(); ctx.fill();   // manga
-  const gg = ctx.createLinearGradient(-40*s, 0, 40*s, 0);
-  gg.addColorStop(0, '#3b271a'); gg.addColorStop(1, '#261910');
-  ctx.fillStyle = gg;
-  for (let k = 0; k < 4; k++){
-    ctx.beginPath(); ctx.ellipse(-26*s + k*3*s, -22*s + k*17*s, 24*s, 10*s, .15, 0, TAU); ctx.fill();   // dedos
-  }
-  ctx.beginPath(); ctx.ellipse(10*s, 12*s, 34*s, 44*s, -.2, 0, TAU); ctx.fill();                       // palma
-  ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 2*s;
-  for (let k = 1; k < 4; k++){ ctx.beginPath(); ctx.moveTo(-46*s, -30*s + k*17*s); ctx.lineTo(-8*s, -26*s + k*17*s); ctx.stroke(); }
-  ctx.restore();
-  // chama
-  ctx.globalCompositeOperation = 'lighter';
+  ctx.translate(cw*.78 + bobX + sway, ch*.8 + bobY); ctx.rotate(-.08);
+  // manga do moletom e palma da mão, atrás do celular
+  ctx.fillStyle = '#1b1d22';
+  ctx.beginPath(); ctx.moveTo(-20*s, 130*s); ctx.lineTo(60*s, 460*s); ctx.lineTo(280*s, 460*s); ctx.lineTo(130*s, 90*s); ctx.closePath(); ctx.fill();
+  const skin = '#8d5a3c', skinDark = 'rgba(0,0,0,.28)';
+  ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(30*s, 150*s, 95*s, 72*s, -.4, 0, TAU); ctx.fill();
+  // corpo e tela
+  ctx.fillStyle = '#0d0f12'; ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 20*s); ctx.fill();
+  ctx.strokeStyle = '#2a2f36'; ctx.lineWidth = 3*s; ctx.stroke();
+  const sx = -w/2 + 8*s, sy = -h/2 + 8*s, sw = w - 16*s, sh = h - 16*s;
   if (!P.out){
-    const fs = (.55 + .45*Math.min(1, P.fuel/45))*(1 + G.flick*2.2)*s;
-    const fx = tipX, fy = tipY;
-    const gl = ctx.createRadialGradient(fx, fy - 40*fs, 0, fx, fy - 40*fs, 260*fs);
-    gl.addColorStop(0, 'rgba(255,150,50,.45)'); gl.addColorStop(1, 'rgba(255,90,20,0)');
-    ctx.fillStyle = gl; ctx.fillRect(fx - 260*fs, fy - 300*fs, 520*fs, 520*fs);
-    const wob = Math.sin(G.t*11)*.15 + Math.sin(G.t*17)*.08;
-    ctx.fillStyle = 'rgba(255,90,20,.85)';
-    ctx.beginPath(); ctx.ellipse(fx, fy - 48*fs, 36*fs, 80*fs, wob, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(255,170,60,.9)';
-    ctx.beginPath(); ctx.ellipse(fx, fy - 38*fs, 24*fs, 56*fs, wob*.7, 0, TAU); ctx.fill();
-    ctx.fillStyle = 'rgba(255,240,170,.95)';
-    ctx.beginPath(); ctx.ellipse(fx, fy - 26*fs, 12*fs, 28*fs, wob*.4, 0, TAU); ctx.fill();
-    for (const e of embers){
-      const a = e.life/e.max;
-      ctx.fillStyle = `rgba(255,${150 + (a*80)|0},60,${a})`;
-      ctx.beginPath(); ctx.arc(fx + e.x*ch, fy - 60*fs + e.y*ch, 2.5*s, 0, TAU); ctx.fill();
-    }
+    const gr = ctx.createLinearGradient(0, sy, 0, sy + sh); gr.addColorStop(0, '#1d2b3f'); gr.addColorStop(1, '#0e1522');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.roundRect(sx, sy, sw, sh, 14*s); ctx.fill();
+    ctx.fillStyle = 'rgba(230,238,248,.92)'; ctx.textAlign = 'center';
+    ctx.font = `600 ${Math.round(40*s)}px sans-serif`; ctx.fillText('03:13', 0, -h*.16);
+    ctx.font = `${Math.round(13*s)}px sans-serif`; ctx.fillStyle = 'rgba(200,215,235,.7)'; ctx.fillText(P.light ? 'Lanterna ligada' : 'Lanterna desligada', 0, -h*.16 + 24*s);
+    // bateria no canto da tela
+    const f = Math.round(P.fuel), bw = 26*s, bh = 12*s, bx = sw/2 - 44*s, by = sy + 10*s;
+    ctx.strokeStyle = 'rgba(230,238,248,.85)'; ctx.lineWidth = 1.5*s; ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle = f < 10 ? '#ff4a3a' : f < 25 ? '#f0b43c' : '#5fd36a'; ctx.fillRect(bx + 2*s, by + 2*s, (bw - 4*s)*f/100, bh - 4*s);
+    ctx.font = `${Math.round(11*s)}px sans-serif`; ctx.fillStyle = 'rgba(230,238,248,.85)'; ctx.textAlign = 'right'; ctx.fillText(f + '%', bx - 4*s, by + 10*s);
+    // brilho da tela
+    ctx.globalCompositeOperation = 'lighter';
+    const gl = ctx.createRadialGradient(0, 0, 0, 0, 0, 220*s); gl.addColorStop(0, 'rgba(120,160,220,.10)'); gl.addColorStop(1, 'rgba(120,160,220,0)');
+    ctx.fillStyle = gl; ctx.fillRect(-220*s, -220*s, 440*s, 440*s);
+    ctx.globalCompositeOperation = 'source-over';
   } else {
-    ctx.fillStyle = `rgba(255,70,20,${.35 + .25*Math.sin(G.t*5)})`;
-    ctx.beginPath(); ctx.ellipse(tipX, tipY + 5*s, 22*s, 12*s, 0, 0, TAU); ctx.fill();
+    // descarregado: tela preta com a bateria vazia piscando
+    ctx.fillStyle = '#030405'; ctx.beginPath(); ctx.roundRect(sx, sy, sw, sh, 14*s); ctx.fill();
+    if (Math.sin(G.t*5) > 0){
+      ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = 3*s; ctx.strokeRect(-26*s, -12*s, 52*s, 24*s); ctx.fillStyle = '#ff4a3a'; ctx.fillRect(26*s, -5*s, 5*s, 10*s);
+    }
   }
+  // polegar na borda esquerda, dedos na direita
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.ellipse(-w/2 + 2*s, 50*s, 20*s, 52*s, .25, 0, TAU); ctx.fill();
+  for (let k = 0; k < 4; k++){ ctx.beginPath(); ctx.ellipse(w/2 + 4*s, -30*s + k*36*s, 22*s, 15*s, -.1, 0, TAU); ctx.fill(); }
+  ctx.fillStyle = skinDark; for (let k = 0; k < 4; k++){ ctx.fillRect(w/2 - 10*s, -30*s + k*36*s, 3*s, 12*s); }
+  ctx.restore();
+}
+
+/* ---------- Dentro do armário: só as frestas da porta ---------- */
+function drawLockerView(){
+  const n = 7, gap = ch*.05, sh = ch*.018, sw = cw*.46, x0 = (cw - sw)/2, y0 = ch*.5 - (n - 1)*gap/2;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, cw, ch);
+  for (let k = 0; k < n; k++) ctx.rect(x0, y0 + k*gap - sh/2, sw, sh);
+  const gr = ctx.createLinearGradient(0, 0, cw, 0); gr.addColorStop(0, '#07090b'); gr.addColorStop(.5, '#161b20'); gr.addColorStop(1, '#07090b');
+  ctx.fillStyle = gr; ctx.fill('evenodd');
+  ctx.fillStyle = 'rgba(130,150,170,.2)';
+  for (let k = 0; k < n; k++) ctx.fillRect(x0, y0 + k*gap + sh/2, sw, 2*dpr);
   ctx.restore();
 }
 
@@ -2472,7 +2682,8 @@ function render(){
     }
   }
 
-  if (G.state !== 'final') drawHandTorch();
+  if (P.hidden && G.state === 'play') drawLockerView();
+  else if (G.state !== 'final') drawHandPhone();
 
   // pânico quando a tocha apaga / dano
   if ((P.out && G.state === 'play') || P.invT > .9){
@@ -2494,6 +2705,21 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// música do menu já na abertura; se o navegador exigir um clique antes do som,
+// mostra a tela "Clique para entrar" e a música começa no mesmo clique
+(function audioGate(){
+  const gate = $('gate');
+  const open = () => { gate.classList.remove('on'); Sound.init(); Tracks.startMusic(); };
+  gate.addEventListener('pointerdown', e => { e.stopPropagation(); open(); });
+  // tecla na tela de entrada só entra; não começa o jogo junto
+  addEventListener('keydown', e => {
+    if (!gate.classList.contains('on')) return;
+    e.stopImmediatePropagation(); e.preventDefault(); open();
+  }, true);
+  const p = Tracks.startMusic();
+  if (p && p.then) p.then(null, () => gate.classList.add('on'));
+})();
 
 (function titleEmbers(){
   const t = $('title');
