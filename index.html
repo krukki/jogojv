@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#060403">
-<title>A Masmorra de João Vitão</title>
+<title>João Vitão: A história não contada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
@@ -86,6 +86,7 @@
   h1{font-family:Cinzel,serif;font-weight:600;font-size:clamp(30px,6.4vw,64px);letter-spacing:.06em;line-height:1.1;color:#f0d9a8;
     text-shadow:0 0 30px rgba(255,140,40,.35),0 2px 0 #000;margin:14px 0 12px}
   h1 span{display:block;font-size:.42em;letter-spacing:.35em;color:var(--amber);margin-bottom:6px}
+  h1 span.sub{font-size:.36em;letter-spacing:.28em;margin:14px 0 0}
   .lede{font-size:clamp(18px,2.4vw,22px);font-style:italic;color:#bfae94;max-width:560px;line-height:1.45}
   .btn{margin-top:28px;font-family:Cinzel,serif;font-size:16px;letter-spacing:.3em;text-transform:uppercase;color:#f3dcae;
     padding:14px 34px;border:1px solid rgba(227,164,82,.55);background:linear-gradient(rgba(90,45,15,.35),rgba(30,15,6,.5));
@@ -101,6 +102,17 @@
   #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:30;display:flex;flex-direction:column;
     align-items:center;justify-content:center;text-align:center;padding:24px 16px;transition-property:opacity;transition-duration:1s}
   #fade.block{pointer-events:auto}
+  /* jumpscare: o rosto dele cobre a tela inteira, banhado de vermelho, tremendo */
+  #jumpscare{position:fixed;inset:0;z-index:28;display:none;background:#000;overflow:hidden;pointer-events:none}
+  #jumpscare.on{display:block;animation:js-shake .08s linear infinite}
+  #jumpscare canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 38%;
+    filter:contrast(1.35) saturate(1.3);animation:js-zoom 1s cubic-bezier(.2,.9,.3,1) forwards}
+  #jumpscare .tint{position:absolute;inset:0;background:#ff2a1a;mix-blend-mode:multiply}
+  #jumpscare .vig{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(90,0,0,0) 35%,rgba(40,0,0,.9) 100%)}
+  #jumpscare .flash{position:absolute;inset:0;background:#ff4030;animation:js-flash .18s ease-out forwards}
+  @keyframes js-zoom{0%{transform:scale(1.9)}14%{transform:scale(1.02)}100%{transform:scale(1.14)}}
+  @keyframes js-shake{0%{transform:translate(0,0)}25%{transform:translate(-14px,9px)}50%{transform:translate(12px,-11px)}75%{transform:translate(-9px,-7px)}100%{transform:translate(0,0)}}
+  @keyframes js-flash{from{opacity:.9}to{opacity:0}}
   #fade-title{font-family:Cinzel,serif;font-size:clamp(26px,5vw,46px);color:#f0d9a8;letter-spacing:.06em;margin:12px 0;text-shadow:0 0 24px rgba(255,140,40,.3)}
   #fade-sub{font-size:clamp(18px,2.6vw,23px);font-style:italic;color:#a8977f;max-width:560px}
   #fade.whisper #fade-title{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;color:var(--cold);
@@ -211,8 +223,8 @@
 <div class="screen on" id="title">
   <img id="title-ghost" alt="" hidden>
   <div class="kicker">Um conto de luz e sombra</div>
-  <h1><span>A Masmorra de</span>João Vitão</h1>
-  <p class="lede">Dizem que no fundo da masmorra de Pedra Alta vive um guardião pálido que não deixa ninguém passar. Sua tocha não vai durar para sempre.</p>
+  <h1>João Vitão<span class="sub">A história não contada</span></h1>
+  <p class="lede">Na IFMT Abandonada vive uma menina que não envelhece: a Menina Jojo. Quem a contraria, ela guarda para sempre na sua caixa de brinquedos, debaixo da terra. João Vitão a contrariou. Sua tocha não vai durar para sempre.</p>
   <button class="btn" id="btn-start">Descer</button>
   <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
   <div class="controls">
@@ -222,6 +234,7 @@
   </div>
 </div>
 
+<div id="jumpscare"><div class="tint"></div><div class="vig"></div><div class="flash"></div></div>
 <div id="fade"><div class="kicker" id="fade-kicker"></div><div id="fade-title"></div><div id="fade-sub"></div></div>
 
 <div class="modal" id="page-modal">
@@ -363,190 +376,259 @@ function rgb(a, j=0, al){
    NÍVEIS
    ===================================================================== */
 const LEVELS = [
-  { name:'Os Salões da Entrada', epigraph:'A escuridão lembra de todos que entraram.',
+  { name:'Os Salões da Entrada', epigraph:'“Um, dois, três… quem entrou não sai mais.” — cantiga de roda de Pedra Alta',
     cells:7, doors:[2], oil:4, torch:0, drain:.85, loops:3, rooms:1, traps:1, firstAppear:20,
     pal:{floor:[70,58,47], brick:[92,74,58], top:[34,28,23], mortar:[34,27,21], deco:'debris'},
     v:{speed:2.3, chase:[22,30], hide:[12,18], spawn:[8,13]},
-    whispers:['…volte…','…não desça…'], push:'Volte para a luz.' },
-  { name:'As Galerias Úmidas', epigraph:'A água goteja como alguém contando os dias.',
+    whispers:['…corre…','…não sou eu que quero…'], push:'Volte para a luz. Ela não enxerga na luz.' },
+  { name:'As Galerias Úmidas', epigraph:'A água goteja no ritmo de uma cantiga de ninar.',
     cells:8, doors:[3], oil:5, torch:1, drain:1.0, loops:5, rooms:2, traps:2, firstAppear:15,
     pal:{floor:[56,62,54], brick:[70,80,68], top:[26,30,26], mortar:[25,29,25], deco:'water'},
     v:{speed:2.5, chase:[24,32], hide:[10,15], spawn:[7,12]},
-    whispers:['…aqui não é lugar para você…','…suba…'], push:'Aqui não é lugar para você.' },
-  { name:'O Poço dos Ecos', epigraph:'Cada grito volta. Nenhum volta igual.',
+    whispers:['…ela está cantando…','…suba…'], push:'Não deixe ela ouvir o seu nome.' },
+  { name:'O Poço dos Ecos', epigraph:'Cada grito volta. Às vezes, volta rindo.',
     cells:9, doors:[2,3], oil:6, torch:1, drain:1.15, loops:6, rooms:2, traps:3, firstAppear:11,
     pal:{floor:[62,54,51], brick:[82,69,65], top:[30,25,24], mortar:[30,25,24], deco:'cracks'},
     v:{speed:2.7, chase:[26,34], hide:[8,13], spawn:[7,11]},
     whispers:['…mantenha a luz acesa…','…ela está ouvindo…'], push:'Suba. Enquanto ainda há luz.' },
-  { name:'As Criptas Silenciosas', epigraph:'Aqui, até o silêncio parece vigiar.',
+  { name:'As Criptas Silenciosas', epigraph:'Aqui, até o silêncio brinca de esconde-esconde.',
     cells:10, doors:[2,4], oil:7, torch:1, drain:1.3, loops:8, rooms:2, traps:4, firstAppear:9,
     pal:{floor:[54,54,64], brick:[70,70,86], top:[25,25,32], mortar:[26,26,33], deco:'crypt'},
     v:{speed:2.9, chase:[28,36], hide:[7,11], spawn:[6,10]},
-    whispers:['…por favor, vá embora…','…não sozinho… não no escuro…'], push:'Por favor… vá embora.' },
-  { name:'A Câmara do Guardião', epigraph:'No fundo de tudo, alguém ainda espera.',
+    whispers:['…não aceite as balas…','…não sozinho… não no escuro…'], push:'Por favor… vá embora antes que ela te veja.' },
+  { name:'A Câmara do Guardião', epigraph:'No fundo da caixa de brinquedos, alguém ainda espera.',
     cells:11, doors:[2,4], oil:8, torch:2, drain:1.45, loops:8, rooms:1, traps:4, firstAppear:7, final:true,
     pal:{floor:[50,44,57], brick:[68,58,80], top:[23,19,28], mortar:[24,20,29], deco:'veins'},
     v:{speed:3.1, chase:[30,40], hide:[6,9], spawn:[6,9]},
-    whispers:['…não toque no selo…','…Aninha…','…eu prometi…'], push:'Eu não vou perder mais ninguém.' },
+    whispers:['…não arrebente o laço…','…Aninha…','…Jojo, chega…'], push:'Eu não vou deixar ela ficar com mais ninguém.' },
 ];
 
 /* =====================================================================
    HISTÓRIA — fragmentos espalhados pela masmorra
+   João Vitão foi à IFMT Abandonada buscar a filha e foi amaldiçoado
+   pela Menina Jojo: virou o "pegador" eterno da caixa de brinquedos dela.
    ===================================================================== */
 const PAGES = [
+  // I — exploradores: o monstro de luz vermelha
   { lvl:0, kind:'paper', label:'Diário de Bastião, caçador de tesouros', title:'Terceiro dia',
-    text:`Vimos o guardião hoje. Uma coisa pálida que flutua sem tocar o chão, com um rosto que não consegui encarar por muito tempo.
+    text:`Vimos o guardião hoje. Uma coisa que flutua sem tocar o chão, com uma luz vermelha em volta, e um rosto que não consegui encarar por muito tempo.
 
-Martim diz que é João Vitão, o ferreiro de Pedra Alta que enlouqueceu e se trancou aqui embaixo com o ouro da vila.
+Martim diz que é João Vitão, o ferreiro de Pedra Alta que entrou na IFMT Abandonada e nunca mais voltou do mesmo jeito.
 
-Quando a nossa tocha falhou, ele estava lá. Parado. Olhando. Corremos até perder o fôlego.` },
+As velhas da vila dizem que foi coisa da Menina Jojo. Eu ri quando ouvi. Aqui embaixo ninguém ri.` },
   { lvl:0, kind:'stone', label:'Inscrição arranhada na pedra', title:'',
     text:`NÃO DESÇA.
 ELE ESTÁ AQUI EMBAIXO.
-ELE NÃO DORME.
-ELE NÃO DEIXA NINGUÉM PASSAR.` },
+A LUZ DELE É VERMELHA.
+QUANDO VER VERMELHO, CORRA.` },
   { lvl:0, kind:'paper', label:'Carta rasgada de Martim', title:'Para minha mãe, se eu não voltar',
     text:`Acordei na entrada da masmorra, com a luz do dia no rosto. Não lembro de ter subido.
 
-Bastião jura que o fantasma nos agarrou no escuro e nos arrastou pelos corredores. Mas então por que estamos vivos? Por que a minha tocha estava acesa de novo, e cheia de óleo?
+Bastião jura que o monstro nos pegou no escuro. Mas então por que estamos vivos? Por que a minha tocha estava acesa de novo, e cheia de óleo?
 
-Não importa. Amanhã descemos outra vez. Dizem que o ouro fica lá no fundo.` },
+E tinha uma bala vermelha no meu bolso, dessas de cantina de escola. Eu não comprei bala nenhuma.
+
+Amanhã descemos outra vez. Dizem que o ouro fica lá no fundo.` },
+
+  // II — a vila e as histórias sobre a Menina Jojo
   { lvl:1, kind:'paper', label:'Livro de registros da vila de Pedra Alta', title:'Ano da Seca',
-    text:`Os mineiros romperam a galeria funda em busca de prata. Três não voltaram.
+    text:`A menina Aninha, filha do ferreiro João Vitão, de nove anos, sumiu na IFMT Abandonada. As crianças que brincavam com ela disseram que ela foi atrás de uma risada.
 
-O ferreiro João Vitão desceu atrás deles. A filha dele, Aninha, de nove anos, foi junto segurando a lanterna, porque ninguém mais teve coragem.
+O ferreiro entrou no prédio abandonado com um machado e uma lanterna. Voltou três dias depois, carregando a filha adormecida. No cabelo dela havia uma fita vermelha que não era dela.
 
-Só ele voltou. Não disse uma palavra a ninguém. Na semana seguinte, desceu de novo com ferramentas e pedras — e nunca mais subiu.` },
+Ele não disse uma palavra a ninguém. Na lua nova seguinte, caminhou até a boca da mina velha como quem atende a um chamado, e desceu. Nunca mais subiu.` },
+  { lvl:1, kind:'paper', label:'Caderno de Dona Cotinha, benzedeira', title:'Sobre a Menina Jojo',
+    text:`Parece uma menina de oito ou nove anos. Anda descalça, de vestido vermelho, com o cabelo branco de pó de giz e uma fita amarrada num laço. Ri igualzinho criança.
+
+Não é criança. Minha avó já contava dela, e a avó da minha avó também. Ela mora na IFMT Abandonada desde antes de existir Pedra Alta.
+
+O que ela quer é companhia. Quem brinca com ela nunca mais quer ir embora. Quem diz não, ela guarda. E o lugar onde ela guarda as coisas dela é a mina velha. Ela chama de caixa de brinquedos.` },
+  { lvl:1, kind:'stone', label:'Cantiga de roda riscada na parede', title:'',
+    text:`JOJO, JOJO, DO PRÉDIO ABANDONADO,
+DE PÉ NO CHÃO E FITA NO LAÇO,
+QUEM CHUPA BALA VIRA RETRATO,
+QUEM DIZ QUE NÃO VAI PRO BURACO.
+
+UM, DOIS, TRÊS…
+QUEM ENTROU NÃO SAI MAIS.` },
   { lvl:1, kind:'paper', label:'Diário de Bastião — última página', title:'',
     text:`Martim foi sozinho, antes do amanhecer. Ouvi quando ele gritou, muito lá embaixo.
 
-E depois ouvi outra coisa. Uma coisa que respirava.
+Depois ouvi outra coisa. Uma menina rindo. Longe, como se a risada descesse pelas pedras lá de cima.
 
-Não era o fantasma. O fantasma estava aqui, do meu lado, parado no meio do corredor, entre mim e a escada.
+O monstro estava aqui, do meu lado, parado entre mim e a escada, com a luz vermelha piscando. Tremia inteiro, como alguém lutando contra uma corda amarrada no pescoço.
 
-Como se estivesse me impedindo de ir atrás.` },
-  { lvl:1, kind:'stone', label:'Desenho a giz numa pedra baixa', title:'',
-    text:`Papai disse que a luz espanta o escuro.
-Então eu seguro a lanterna bem alto,
-pra ele ver o caminho.
+Como se estivesse se segurando para não me pegar.` },
 
-— A.` },
-  { lvl:2, kind:'paper', label:'Diário de João Vitão', title:'Se alguém ler isto',
-    text:`Não sou maldito. Ninguém me prendeu aqui. Fiquei porque quis.
+  // III — as regras dela e o começo do diário de João Vitão
+  { lvl:2, kind:'paper', label:'Caderno de Dona Cotinha, benzedeira', title:'As regras da IFMT',
+    text:`Se ouvir uma menina rindo nos corredores da IFMT, não responda.
+Nunca aceite as balas que ela oferecer.
+Nunca pise dentro do círculo de giz desenhado no chão.
+Se ela chamar seu nome três vezes, não olhe para trás.
+Na luz forte ela não enxerga. Leve sempre fogo.
 
-No fundo desta masmorra há uma porta que os mineiros abriram e que eu fechei com as minhas próprias mãos. Do outro lado existe uma coisa que come a luz. Não tem nome, porque ninguém que a viu voltou para dar um.
+E a regra que quase ninguém sabe: tudo o que a Jojo dá é uma coleira. Uma fita, uma bala, um brinquedo. Coleira devolvida é coleira partida. Ela odeia quando devolvem.` },
+  { lvl:2, kind:'paper', label:'Diário de João Vitão', title:'A sala 13',
+    text:`Achei a sala 13 no terceiro dia, no fim do corredor do bloco velho. Um círculo de giz no chão e, no meio, a mesa do professor.
 
-Ela comeu a lanterna de Aninha. E depois a levou também.` },
-  { lvl:2, kind:'paper', label:'Diário de João Vitão', title:'Sobre o óleo',
-    text:`Deixo frascos de óleo pelos corredores. Os que descem pensam que é sorte, ou que foram esquecidos por outros como eles.
+A menina estava sentada na mesa, balançando os pés, trançando o cabelo da minha Aninha com uma fita vermelha. No quadro de avisos havia bonecas de pano penduradas por alfinetes. Cada uma tinha o rosto de alguém que sumiu de Pedra Alta.
 
-Não é sorte.
+“Ela vai ficar comigo”, disse a menina. “Ela é minha amiguinha agora.”
 
-A coisa só alcança quem fica no escuro. Enquanto a tocha de vocês arder, eu tenho tempo de chegar antes dela.` },
-  { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'Monstro',
-    text:`Eles fogem de mim. Todos fogem.
+Eu disse não.` },
+  { lvl:2, kind:'paper', label:'Diário de João Vitão', title:'O preço',
+    text:`Ela não ficou brava. Ficou contente, como criança que ganhou um jogo novo.
 
-Eu os carrego de volta até a entrada, onde o ar ainda é bom, e reacendo suas tochas enquanto dormem. Eles acordam jurando que um monstro os arrastou.
+“Então leva ela. Mas alguém tem que brincar comigo. Você vai brincar de pega-pega, Joãozinho. Pra sempre, lá na minha caixa de brinquedos. Toda vez que alguém entrar, você corre atrás. Você é o pegador.”
 
-Está bem. Que me chamem de monstro. Ninguém segue um monstro para dentro do escuro.` },
+Eu aceitei. Ela deu o último nó na fita do cabelo da Aninha e bateu palmas.
+
+Foi assim que eu virei o que vocês chamam de monstro.` },
+  { lvl:2, kind:'stone', label:'Desenho a carvão numa pedra baixa', title:'',
+    text:`Uma menina de vestido, desenhada com traço de criança.
+Os olhos foram pintados de vermelho com o dedo.
+Na mão ela segura uma corda.
+A outra ponta está amarrada no pescoço de um homem grande.
+
+Embaixo, com letra caprichada: “EU E O JOÃOZINHO”.` },
+
+  // IV — como a maldição funciona
+  { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'O pegador',
+    text:`Quando alguém entra, a luz vermelha acende em mim e as minhas pernas correm sozinhas. Não consigo parar. É o jogo dela.
+
+Mas o jogo só manda pegar. Não diz o que fazer depois.
+
+Então eu carrego vocês até a entrada, onde o ar é bom, e encho a tocha de vocês enquanto dormem. Deixo óleo pelos corredores também. Na luz ela não enxerga. É a única trapaça que ela ainda não percebeu.` },
   { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'O rapaz',
-    text:`O rapaz, Martim, chegou até a porta. Eu cheguei tarde.
+    text:`O rapaz, Martim, chegou lá no fundo antes de mim. A Jojo chegou antes de nós dois.
 
-Guardei o chapéu dele ao lado da lanterna de Aninha. Converso com os dois às vezes. Eles não respondem, mas eu gosto de pensar que ouvem.
+Ela ofereceu balas, e ele estava com fome.
 
-Foi o único que não consegui trazer de volta. Não vou deixar que haja outro.` },
-  { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'As chaves',
-    text:`Escondi as chaves longe do caminho, atrás de armadilhas, no fundo dos becos, para que desistissem.
+Guardei o chapéu dele ao lado da lanterna de Aninha. Lá em cima, na sala 13, deve haver uma boneca nova pendurada no quadro, de chapéu.
 
-Você as achou mesmo assim. Tem a mesma teimosia que ela tinha.
+Foi o único que eu não consegui trazer de volta. Não vou deixar que haja outro.` },
+  { lvl:3, kind:'paper', label:'Diário de João Vitão', title:'Ela visita',
+    text:`Às vezes ouço ela rindo lá em cima, nos corredores da IFMT, e a risada desce pelas pedras até aqui.
 
-Por favor. Quando chegar à última câmara, não toque no selo. Não corra. Não lute.
+Às vezes ela desce. Senta na pedra do laço, balança os pés descalços e canta a cantiga de roda. Pergunta se eu estou me divertindo. Pergunta quando vou trazer um amigo novo.
 
-Apenas ouça.` },
-  { lvl:4, kind:'paper', label:'Diário de João Vitão — a primeira página', title:'A promessa',
-    text:`Aninha me pediu, com a última luz da lanterna, que ninguém mais descesse sozinho no escuro.
+Eu não respondo. Regra número um.` },
+  { lvl:3, kind:'paper', label:'Bilhete com letra de criança, preso com fita vermelha', title:'',
+    text:`Joãozinho,
 
-Eu prometi.
+você tá muito devagar. Faz tempo que você não me traz amigo novo. Você tá trapaceando, né? Eu sei que tá.
 
-Isso foi há cem invernos. Meu corpo ficou em algum lugar destes corredores; já não lembro onde. Mas a promessa ficou comigo.
+Se não trouxer logo, eu fico triste. E quando eu fico triste eu vou buscar brinquedo sozinha.
 
-Ainda estou cumprindo.` },
-  { lvl:4, kind:'stone', label:'Inscrição no selo', title:'', final:true,
-    text:`AQUI DORME O QUE NÃO TEM NOME.
-AQUI VELA JOÃO VITÃO,
+Beijo,
+Jojo` },
+
+  // V — a fita, o laço e a saída
+  { lvl:4, kind:'paper', label:'Diário de João Vitão — a última página', title:'Aninha',
+    text:`Aninha cresceu lá em cima. Eu via pela fresta do poço, inverno após inverno. Ficou moça, ficou velha, morreu em casa, com o cabelo branco.
+
+Nunca tirou a fita vermelha. Tinha medo de que, se tirasse, eu fosse embora de vez. Não sabia que era justamente a fita que me prendia.
+
+Enterraram a fita com ela. E a outra ponta do laço continua aqui embaixo, dando sete voltas na pedra da câmara.` },
+  { lvl:4, kind:'paper', label:'Diário de João Vitão', title:'Coleira devolvida',
+    text:`Uma vez, Dona Cotinha gritou pela boca do poço, achando que eu não ouvia:
+
+“Tudo o que a Jojo dá é uma coleira, João! Coleira devolvida é coleira partida!”
+
+Se alguém desatar o laço, sem rasgar, sem cortar, e levar a fita de volta até a sala 13… eu estaria livre.
+
+Mas quem levar vai ter que olhar para ela. E ela vai querer brincar.
+
+Se romperem o laço à força, o jogo não acaba. Só troca de pegador.` },
+  { lvl:4, kind:'stone', label:'Inscrição na pedra do laço', title:'', final:true,
+    text:`CAIXA DE BRINQUEDOS DA JOJO.
+
+AQUI BRINCA JOÃO VITÃO,
 FERREIRO DE PEDRA ALTA,
 PAI DE ANINHA.
 
-QUE A LUZ DE QUEM PASSA
-NUNCA SE APAGUE.` },
+QUEM ROMPER O LAÇO
+VIRA O PEGADOR.` },
 ];
 const SEAL_PAGE = PAGES.findIndex(p => p.final);
+const PAGES_FOR_TRUTH = 12;   // páginas lidas para liberar o final "A Coleira Devolvida"
+
+// quando o witch.mp3 toca: é a Menina Jojo, lá de cima, na IFMT Abandonada
+const JOJO_ECHOES = [
+  'Uma risada de menina desce pelas pedras, de muito longe.',
+  'Alguém cantarola ao longe: “…um, dois, três, quem entrou não sai mais…”',
+  '“João… vem brincar comigo…”',
+  'Uma voz de criança, abafada pela terra: “Tá quente… tá frio… tá quente…”',
+  'Passos descalços, leves, em algum corredor que você não vê.',
+  '“Não precisa ter medo. É só brincadeira.”',
+];
 
 /* =====================================================================
    CONFRONTO FINAL — roteiro e finais
    ===================================================================== */
 const SCRIPT = {
   start: { lines: [
-    { s:'n', t:'No centro da câmara, sobre um selo de pedra rachado, a figura pálida flutua em silêncio. Pela primeira vez, ela não se afasta.' },
-    { s:'n', t:'Aos pés dele: uma lanterna pequena e enferrujada. Ao lado, um chapéu velho de explorador.' },
-    { s:'n', cond:() => G.autoSeal, t:'Na borda do selo, letras gastas: “Aqui vela João Vitão, ferreiro de Pedra Alta, pai de Aninha.”' },
-    { s:'j', t:'Você chegou longe. Mais longe do que qualquer um… desde ela.' },
-    { s:'j', t:'Não tenha medo. Eu nunca machuquei ninguém.' },
+    { s:'n', t:'No centro da câmara, sobre uma pedra marcada com a mão pequena de uma criança, a figura flutua. A luz vermelha dele pisca, fraca. Pela primeira vez, ele não corre atrás de você.' },
+    { s:'n', t:'Uma fita vermelha desbotada dá sete voltas na pedra e termina num laço apertado. Ao lado, uma lanterna pequena e enferrujada e um chapéu velho de explorador.' },
+    { s:'n', cond:() => G.autoSeal, t:'Gravado na pedra: “Caixa de brinquedos da Jojo. Aqui brinca João Vitão, ferreiro de Pedra Alta, pai de Aninha.”' },
+    { s:'j', t:'Aqui embaixo, perto do laço, o jogo dela fica fraco. Eu consigo pensar. Consigo falar.' },
+    { s:'j', t:'Não tenha medo. Eu nunca quis pegar ninguém.' },
   ], choices: [
     { label:'Confrontá-lo', to:'confront' },
     { label:'Ouvir o que ele tem a dizer', to:'listen' },
     { label:'Fugir', to:'flee' },
   ]},
   confront: { lines: [
-    { s:'n', t:'Você ergue a tocha contra ele. Ele não recua. A luz atravessa seu corpo como se ele fosse feito de névoa e lembrança.' },
-    { s:'j', t:'Faça o que precisa fazer. Só não toque no selo.' },
-    { s:'n', t:'Debaixo da pedra, alguma coisa respira. A chama da sua tocha se inclina na direção dela, como se tivesse fome.' },
+    { s:'n', t:'Você ergue a tocha contra ele. Ele não recua. A luz vermelha dele treme, como uma vela num vento que você não sente.' },
+    { s:'j', t:'Faça o que precisa fazer. Só não arrebente o laço. É isso que ela quer.' },
+    { s:'n', t:'Em algum lugar muito acima, atravessando pedra e terra, uma menina dá uma risadinha.' },
   ], choices: [
-    { label:'Empurrá-lo e romper o selo', to:'end_open' },
+    { label:'Arrancar a fita e romper o laço', to:'end_open' },
     { label:'Baixar a tocha', to:'listen' },
   ]},
   listen: { lines: [
-    { s:'n', t:'Você baixa a tocha. Ele parece surpreso — como alguém que esqueceu como é ser ouvido.' },
-    { s:'j', t:'Os mineiros cavaram fundo demais. Acharam uma porta. Do outro lado havia uma fome que come a luz… e tudo o que a luz toca.' },
-    { s:'j', t:'Aninha segurava a lanterna para mim. Ela ficou para trás só um passo. Um passo.' },
-    { s:'j', t:'Fechei a porta com as minhas mãos e prometi a ela que ninguém mais desceria sozinho no escuro. Desde então, eu fico.' },
+    { s:'n', t:'Você baixa a tocha. Ele parece surpreso, como alguém que esqueceu como é ser ouvido.' },
+    { s:'j', t:'A Menina Jojo mora na IFMT Abandonada desde antes de existir Pedra Alta. Parece uma criança. Não é.' },
+    { s:'j', t:'Ela levou minha Aninha para brincar. Eu fui buscar. Ela disse que eu podia levar a menina… se ficasse no lugar dela.' },
+    { s:'j', t:'Então virei o pegador do jogo dela. Toda vez que alguém entra aqui, a luz vermelha acende e eu corro. Não consigo parar.' },
     { s:'j', t:() => G.rescues > 0
-        ? `Cada pessoa que eu assustei, cada uma que eu carreguei de volta até a entrada… inclusive você, ${G.rescues} ${G.rescues===1?'vez':'vezes'}. Eu só queria que vivessem.`
-        : 'Cada pessoa que eu assustei, cada uma que eu carreguei de volta até a entrada… eu só queria que vivessem.' },
-    { s:'n', cond:() => G.pages.size >= 10, t:'Você pensa em cada página que encontrou. Bastião. Martim. O óleo nos corredores. A letra torta de uma menina.' },
+        ? `Mas o jogo só manda pegar. Cada um que eu peguei, inclusive você, ${G.rescues} ${G.rescues===1?'vez':'vezes'}, eu levei até a entrada e enchi a tocha. É a única trapaça que ela nunca percebeu.`
+        : 'Mas o jogo só manda pegar. Cada um que eu peguei, eu levei até a entrada e enchi a tocha. É a única trapaça que ela nunca percebeu.' },
+    { s:'n', cond:() => G.pages.size >= PAGES_FOR_TRUTH, t:'Você lembra do caderno da benzedeira. Das regras da IFMT. Tudo o que ela dá é uma coleira. Coleira devolvida é coleira partida.' },
   ], choices: [
     { label:'Prometer contar a verdade lá em cima e partir', to:'end_promise' },
-    { label:'Oferecer-se para vigiar em seu lugar', to:'end_rest', req:() => G.pages.size >= 10, locked:'você ainda não conhece a história dele' },
+    { label:'Desatar o laço e devolver a fita à Menina Jojo', to:'end_rest', req:() => G.pages.size >= PAGES_FOR_TRUTH, locked:'você ainda não conhece as regras dela' },
   ]},
   flee: { lines: [ { s:'n', t:'Você dá as costas e corre.' } ], next:'end_flee' },
 };
 
 const ENDINGS = {
-  end_open: { title:'A Porta Aberta', paras:[
-    'Suas mãos tocam a pedra fria. O selo range e se parte.',
-    'Por um instante, algo do outro lado respira — e toda a luz da câmara se curva na direção da fenda, como água descendo por um ralo.',
-    'Antes que a escuridão alcance você, João Vitão se lança entre você e a porta. Ele a fecha com o que restou de si, do mesmo jeito que fez há cem invernos.',
-    'Você desperta na entrada da masmorra, com a tocha acesa e cheia de óleo. Do fundo, uma última vez, um sussurro: “Vá. Viva.”',
-    'O guardião nunca mais foi visto. O selo, dizem, ainda aguenta. Por enquanto.' ]},
-  end_promise: { title:'A Promessa Continua', paras:[
-    'Ele sorri — ou faz algo muito parecido com isso.',
-    '“Então alguém lá em cima vai saber.”',
-    'Ele guia você de volta pela escuridão, e pela primeira vez você não tem medo da presença pálida que flutua ao seu lado. Nenhum corredor parece tão escuro com ele ali.',
-    'Na saída, você se vira. A luz dele fica pequena no fundo do poço, cada vez menor, até sumir.',
-    'Ele volta para o selo. Ele sempre volta.' ]},
-  end_rest: { title:'O Descanso de João Vitão', paras:[
-    '“Você não sabe o que está pedindo.”',
-    '“Sei”, você responde. “Eu li tudo.”',
-    'Ele fica muito tempo em silêncio. Então pousa a mão fria sobre a sua tocha, e a chama fica branca, como a luz dele.',
-    '“Mantenha-a acesa. Deixe óleo nos corredores. E quando alguém descer…”',
-    '“Eu levo de volta.”',
-    'Pela primeira vez em cem invernos, João Vitão fecha os olhos. Lá longe, na escuridão, uma lanterna pequena se acende — esperando por ele.',
-    'Ele vai até ela. E não olha para trás.' ]},
+  end_open: { title:'O Novo Pegador', paras:[
+    'Você agarra a fita e puxa. O laço não desata. Ele arrebenta, e a pedra racha no meio.',
+    'João Vitão solta um suspiro longo, de cem invernos. A luz vermelha se apaga nele… e acende em você.',
+    'Lá em cima, nos corredores da IFMT, uma menina bate palmas. “Oba! Amigo novo!”',
+    'Suas pernas começam a querer correr. Alguém acaba de entrar na masmorra, lá longe, com uma tocha na mão.',
+    'Agora o pegador é você.' ]},
+  end_promise: { title:'O Jogo Continua', paras:[
+    'Ele sorri, ou faz algo muito parecido com isso.',
+    '“Então conte a eles. Conte sobre a Jojo. Que ninguém mais responda quando ouvir uma menina rindo na IFMT.”',
+    'Ele guia você de volta pela escuridão. Nos corredores, a luz vermelha dele não se apaga nem uma vez, e ele segura o jogo com as duas mãos para não correr atrás de você.',
+    'Na saída, você se vira. A luz vermelha fica pequena no fundo do poço, cada vez menor, até sumir.',
+    'No portão da IFMT, atrás das grades enferrujadas, alguém de vestido vermelho acena para você. Você não acena de volta.' ]},
+  end_rest: { title:'A Coleira Devolvida', paras:[
+    '“Você sabe o que está pedindo?”',
+    '“Sei”, você responde. “Coleira devolvida é coleira partida.”',
+    'Seus dedos desfazem as sete voltas da fita, uma por uma, sem rasgar. A cada volta, a luz vermelha dele fica mais fraca, até sobrar só a luz branca e cansada de um homem.',
+    'Você sobe com a fita no bolso e entra na IFMT Abandonada. Na sala 13, no meio do círculo de giz, uma menina descalça espera sentada na mesa do professor, balançando os pés.',
+    '“Isso é meu”, ela diz, emburrada. Você estende a fita. Pelas regras dela, ela não tem escolha a não ser pegar.',
+    'Muito abaixo de vocês, João Vitão fecha os olhos pela primeira vez em cem invernos. Longe, na escuridão, uma lanterna pequena se acende, esperando por ele. Ele vai até ela e não olha para trás.',
+    'A Menina Jojo guarda a fita no bolso do vestido e sorri para você. “Tudo bem. Você brinca comigo outro dia.”' ]},
   end_flee: { title:'O Eco', paras:[
-    'Corredores, escadas, escuridão. Atrás de você, nenhum som. Ele não vem atrás de você. Nunca veio.',
+    'Corredores, escadas, escuridão. Atrás de você, nenhum som. Tão perto do laço, ele consegue não correr atrás. Por pouco.',
     'Na saída, o sol queima seus olhos. Na sua bolsa há um frasco de óleo que não estava lá antes, e um bilhete escrito com uma letra antiga e cuidadosa:',
-    '“Obrigado por ir embora.”',
-    'Você nunca descobre quem ele era de verdade.' ]},
+    '“Obrigado por ir embora. Não passe pela IFMT.”',
+    'O único caminho para casa passa em frente à IFMT. Lá dentro, uma menina ri.' ]},
 };
 
 /* =====================================================================
@@ -672,7 +754,10 @@ const Tracks = (() => {
   const scream = make('grito.mp3', 1);             // quando o João Vitão te pega
   const round = make('roundchange.mp3', .8);       // início do jogo e troca de nível
   const witch = make('witch.mp3', .25);            // ao longe, em momentos aleatórios
-  const all = [menuMusic, gameMusic, scream, round, witch];
+  const steps = make('heavy-footsteps.mp3', 0, true);   // passos do João Vitão; volume pela distância
+  const STEPS_RANGE = 14;   // a partir de quantos tiles dá para ouvir ele chegando
+  let stepsVol = 0;
+  const all = [menuMusic, gameMusic, scream, round, witch, steps];
   let witchT = rand(20, 40), scene = 'menu';
   const start = a => { const p = a.play(); if (p && p.catch) p.catch(() => {}); };
   function play(a, vol){
@@ -704,7 +789,13 @@ const Tracks = (() => {
     setMuted(m){ all.forEach(a => { a.muted = m; }); if (!m) api.startMusic(); },
     scream(){ playFor(scream, 1, 1); },   // só 1 segundo do grito
     round(){ play(round); },
-    update(dt, state){
+    update(dt, state, near){
+      // passos pesados enquanto ele caça: mais altos quanto mais perto (some suave quando ele some)
+      const want = near != null && near < STEPS_RANGE ? Math.pow(1 - near/STEPS_RANGE, 1.6)*.9 : 0;
+      stepsVol += (want - stepsVol)*Math.min(1, dt*4);
+      if (stepsVol > .01 && !Sound.muted){ steps.volume = stepsVol; if (steps.paused) start(steps); }
+      else if (!steps.paused) steps.pause();
+
       // troca a música quando sai do menu para o jogo (e volta no fim)
       const s = state === 'title' || state === 'end' ? 'menu' : 'game';
       if (s !== scene){
@@ -715,7 +806,10 @@ const Tracks = (() => {
       // bruxa: volume baixo e variável para soar distante, de tempos em tempos
       if (state !== 'play') return;
       witchT -= dt;
-      if (witchT <= 0){ witchT = rand(30, 65); playFor(witch, rand(.12, .3), 3); }   // só 3 segundos
+      if (witchT <= 0){
+        witchT = rand(30, 65); playFor(witch, rand(.12, .3), 3);   // só 3 segundos
+        if (!Sound.muted) toast(pick(JOJO_ECHOES), 3400);   // é a Menina Jojo, lá da IFMT
+      }
     }
   };
   api.setMuted(Sound.muted);
@@ -1736,12 +1830,25 @@ function beginGame(){
 $('btn-start').onclick = beginGame;
 $('btn-restart').onclick = () => { G.state = 'end'; beginGame(); };
 
+// o rosto dele na tela inteira, em vermelho, junto com o grito (1s)
+const jumpEl = $('jumpscare');
+function jumpscare(){
+  if (villainSprite && !jumpEl.querySelector('canvas')){
+    const c = makeCanvas(villainSprite.width, villainSprite.height, g => g.drawImage(villainSprite, 0, 0));
+    jumpEl.prepend(c);
+  }
+  jumpEl.classList.remove('on'); void jumpEl.offsetWidth; jumpEl.classList.add('on');   // reinicia as animações
+}
+
 async function pushback(){
   if (G.state !== 'play') return;
   G.state = 'cutscene'; G.rescues++; releasePointer();
   Tracks.scream(); G.shake = .6;
+  jumpscare();
+  await sleep(1000);
   setFade({ title:L.cfg.push, whisper:true });
-  await fadeTo(1, 1300);
+  await fadeTo(1, 350);
+  jumpEl.classList.remove('on');
   await sleep(2300);
   P.x = L.start.x + .5; P.y = L.start.y + .5; P.a = openDirAngle(L.start.x, L.start.y); P.pitch = 0;
   P.fuel = Math.max(P.fuel, 75); P.out = false; P.invT = 1;
@@ -1872,7 +1979,7 @@ async function showEnding(id){
   }
   const m = Math.floor(G.time/60), s = Math.floor(G.time % 60);
   $('end-stats').innerHTML = `Páginas encontradas: ${G.pages.size}/${PAGES.length} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>` +
-    (G.rescues ? `João Vitão levou você de volta à entrada ${G.rescues} ${G.rescues === 1 ? 'vez' : 'vezes'}. Sua tocha nunca voltou vazia.` : 'Você nunca deixou que ele chegasse perto o bastante para salvar você.');
+    (G.rescues ? `João Vitão levou você de volta à entrada ${G.rescues} ${G.rescues === 1 ? 'vez' : 'vezes'}. Sua tocha nunca voltou vazia.` : 'O pegador nunca alcançou você.');
   $('end').classList.add('on'); $('end').scrollTop = 0;
   L = null;
   setFade({});
@@ -1911,7 +2018,7 @@ function update(dt){
   if (G.mapT <= 0){ G.mapT = .15; drawMinimap(); }
 
   const near = (L && G.state === 'play' && V.alpha > .3) ? Math.hypot(P.x - V.x, P.y - V.y) : null;
-  Tracks.update(dt, G.state);
+  Tracks.update(dt, G.state, near);
   Sound.update(dt, { near, out:G.state === 'play' && P.out, torchLit:!!L && !P.out && (G.state === 'play' || G.state === 'final'), walking:G.state === 'play' && P.moving });
 }
 
