@@ -713,7 +713,7 @@ const Sound = (() => {
   const tm = { heart:.3, step:0 };
 
   function init(){
-    if (ac){ if (ac.state === 'suspended') ac.resume(); return; }
+    if (ac){ if (ac.state !== 'running'){ const r = ac.resume(); if (r && r.catch) r.catch(() => {}); } return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ac = new AC();
@@ -814,7 +814,28 @@ const Sound = (() => {
    (tocados com <audio>, que funciona até abrindo o jogo via file://)
    ===================================================================== */
 const Tracks = (() => {
-  const make = (src, vol, loop=false) => { const a = new Audio(src); a.preload = 'auto'; a.volume = vol; a.loop = loop; return a; };
+  // iOS ignora audio.volume (sempre 1). Lá o volume vira um GainNode do WebAudio (só em http/https;
+  // via file:// o WebAudio silencia o áudio). O resto do código continua usando a.volume normalmente.
+  const volumeIgnored = (() => { const t = new Audio(); t.volume = .37; return Math.abs(t.volume - .37) > .01; })();
+  const canGain = /^https?:$/.test(location.protocol) && !!(window.AudioContext || window.webkitAudioContext);
+  let tac = null;
+  const make = (src, vol, loop=false) => {
+    const a = new Audio(src); a.preload = 'auto'; a.loop = loop;
+    if (volumeIgnored){
+      a._vol = vol;
+      Object.defineProperty(a, 'volume', { configurable:true, get(){ return a._vol; }, set(v){ a._vol = v; if (a._gain) a._gain.gain.value = v; } });
+    } else a.volume = vol;
+    return a;
+  };
+  function attachGain(a){
+    if (!volumeIgnored || !canGain || a._gain) return;
+    try {
+      tac = tac || new (window.AudioContext || window.webkitAudioContext)();
+      const g = tac.createGain(); g.gain.value = a._vol;
+      tac.createMediaElementSource(a).connect(g); g.connect(tac.destination);
+      a._gain = g;
+    } catch (e) {}
+  }
   const menuMusic = make('musica.mp3', .10, true);   // título e tela final
   const gameMusic = make('robloxhorror.mp3', .10, true);  // durante o jogo (inclui pausa e cenas)
   const scream = make('grito.mp3', 1);             // quando o João Vitão te pega
@@ -825,7 +846,30 @@ const Tracks = (() => {
   let stepsVol = 0;
   const all = [menuMusic, gameMusic, scream, round, witch, steps];
   let witchT = rand(20, 40), scene = 'menu';
-  const start = a => { const p = a.play(); if (p && p.catch) p.catch(() => {}); return p; };
+  const start = a => {
+    a._unlockTok = 0;   // se estava sendo "destravado" em silêncio, agora toca de verdade
+    a.muted = Sound.muted;
+    const p = a.play(); if (p && p.catch) p.catch(() => {}); return p;
+  };
+  // Celulares (principalmente iPhone) só deixam um som tocar por conta própria se aquele mesmo arquivo
+  // já tiver tocado dentro de um toque. Os sons de troca de nível, grito, bruxa, passos e a música do
+  // jogo só tocam bem depois de um toque, então a cada toque cada um toca mudo por um instante e para.
+  function unlock(){
+    if (tac && tac.state !== 'running'){ const r = tac.resume(); if (r && r.catch) r.catch(() => {}); }
+    for (const a of all){
+      if (a._unlocked || !a.paused) continue;
+      attachGain(a);
+      const tok = a._unlockTok = Math.random() + 1;
+      a.muted = true;
+      let p; try { p = a.play(); } catch (e) { a._unlockTok = 0; a.muted = Sound.muted; continue; }
+      const done = ok => {
+        if (a._unlockTok !== tok) return;   // já tocou de verdade nesse meio tempo
+        a._unlockTok = 0; a.pause(); try { a.currentTime = 0; } catch (e) {}
+        a.muted = Sound.muted; if (ok) a._unlocked = true;
+      };
+      if (p && p.then) p.then(() => done(true), () => done(false)); else done(true);
+    }
+  }
   function play(a, vol){
     if (Sound.muted) return;
     if (vol != null) a.volume = vol;
@@ -863,10 +907,11 @@ const Tracks = (() => {
     startMusic(){
       if (Sound.muted) return;
       const cur = scene === 'menu' ? menuMusic : gameMusic, other = scene === 'menu' ? gameMusic : menuMusic;
-      if (!other.paused) other.pause();
+      if (!other.paused && !other._unlockTok) other.pause();   // (não corta o destravamento silencioso)
       if (cur.paused) return start(cur);
     },
     setMuted(m){ all.forEach(a => { a.muted = m; }); if (!m) api.startMusic(); },
+    unlock,
     scream(){ playFor(scream, 1, 2); },   // só 2 segundos do grito
     round(){ play(round); },
     update(dt, state, near){
@@ -897,6 +942,8 @@ const Tracks = (() => {
 })();
 addEventListener('pointerdown', () => Tracks.startMusic());
 addEventListener('keydown', () => Tracks.startMusic());
+// no celular o toque só "vale" para liberar o som ao soltar o dedo (touchend/pointerup/click)
+['touchend','pointerup','click','keydown'].forEach(ev => addEventListener(ev, () => { Sound.init(); Tracks.startMusic(); Tracks.unlock(); }, { capture:true, passive:true }));
 
 /* =====================================================================
    ESTADO
