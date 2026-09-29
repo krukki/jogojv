@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <style>
   :root{
+    --vw:1vw; --vh:1vh;
     --bg:#060403; --amber:#e3a452; --ember:#ff8a3a; --cold:#b9cdf5; --parch:#dccaa3;
     --ink:#2b1d12; --text:#d9cbb4; --muted:#8a7b68; --line:rgba(227,164,82,.28);
   }
@@ -56,7 +57,7 @@
   #minimap.on{display:block}
   body.touch #minimap{width:120px;height:120px;top:calc(110px + env(safe-area-inset-top));bottom:auto}
 
-  #toast{position:fixed;left:50%;bottom:calc(14% + env(safe-area-inset-bottom));transform:translate(-50%,8px);max-width:min(560px,calc(100vw - 32px));
+  #toast{position:fixed;left:50%;bottom:calc(14% + env(safe-area-inset-bottom));transform:translate(-50%,8px);max-width:min(560px,calc(calc(var(--vw)*100) - 32px));
     text-align:center;font-size:19px;font-style:italic;color:#eadcc3;background:rgba(6,4,3,.78);border:1px solid var(--line);
     padding:10px 18px;opacity:0;transition:opacity .4s,transform .4s;pointer-events:none;z-index:8;text-shadow:0 0 8px #000}
   #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -90,15 +91,15 @@
     padding:24px 16px;z-index:20;overflow:auto}
   .screen.on{display:flex}
   #title{background:radial-gradient(ellipse at 50% 62%,rgba(120,55,15,.35),rgba(6,4,3,0) 55%),var(--bg)}
-  #title-ghost{height:min(46vh,400px);max-width:80vw;object-fit:contain;filter:drop-shadow(0 0 24px rgba(255,40,24,.6));
+  #title-ghost{height:min(calc(var(--vh)*46),400px);max-width:calc(var(--vw)*80);object-fit:contain;filter:drop-shadow(0 0 24px rgba(255,40,24,.6));
     animation:float 5s ease-in-out infinite;margin-bottom:-10px}
   @keyframes float{50%{transform:translateY(-12px)}}
   .kicker{font-family:Cinzel,serif;font-size:13px;letter-spacing:.4em;color:var(--muted);text-transform:uppercase}
-  h1{font-family:Cinzel,serif;font-weight:600;font-size:clamp(30px,6.4vw,64px);letter-spacing:.06em;line-height:1.1;color:#f0d9a8;
+  h1{font-family:Cinzel,serif;font-weight:600;font-size:clamp(30px,calc(var(--vw)*6.4),64px);letter-spacing:.06em;line-height:1.1;color:#f0d9a8;
     text-shadow:0 0 30px rgba(255,140,40,.35),0 2px 0 #000;margin:14px 0 12px}
   h1 span{display:block;font-size:.42em;letter-spacing:.35em;color:var(--amber);margin-bottom:6px}
   h1 span.sub{font-size:.36em;letter-spacing:.28em;margin:14px 0 0}
-  .lede{font-size:clamp(18px,2.4vw,22px);font-style:italic;color:#bfae94;max-width:560px;line-height:1.45}
+  .lede{font-size:clamp(18px,calc(var(--vw)*2.4),22px);font-style:italic;color:#bfae94;max-width:560px;line-height:1.45}
   .btn{margin-top:28px;font-family:Cinzel,serif;font-size:16px;letter-spacing:.3em;text-transform:uppercase;color:#f3dcae;
     padding:14px 34px;border:1px solid rgba(227,164,82,.55);background:linear-gradient(rgba(90,45,15,.35),rgba(30,15,6,.5));
     box-shadow:0 0 30px rgba(255,120,30,.12);transition:box-shadow .3s,border-color .3s}
@@ -108,7 +109,7 @@
   .controls b{font-family:Cinzel,serif;font-weight:400;color:#cbb898;font-size:12px;letter-spacing:.1em;border:1px solid var(--line);padding:1px 6px;margin:0 2px}
   .ember{position:fixed;bottom:-10px;width:3px;height:3px;border-radius:50%;background:#ff9a45;box-shadow:0 0 6px #ff7a2a;
     animation:rise linear infinite;pointer-events:none;opacity:0}
-  @keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}100%{transform:translate(var(--dx),-105vh);opacity:0}}
+  @keyframes rise{0%{transform:translate(0,0);opacity:0}10%{opacity:.9}100%{transform:translate(var(--dx),calc(var(--vh)*-105));opacity:0}}
 
   #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:30;display:flex;flex-direction:column;
     align-items:center;justify-content:center;text-align:center;padding:24px 16px;transition-property:opacity;transition-duration:1s}
@@ -127,8 +128,8 @@
   @keyframes js-zoom{0%{transform:scale(1.9)}14%{transform:scale(1.02)}100%{transform:scale(1.14)}}
   @keyframes js-shake{0%{transform:translate(0,0)}25%{transform:translate(-14px,9px)}50%{transform:translate(12px,-11px)}75%{transform:translate(-9px,-7px)}100%{transform:translate(0,0)}}
   @keyframes js-flash{from{opacity:.9}to{opacity:0}}
-  #fade-title{font-family:Cinzel,serif;font-size:clamp(26px,5vw,46px);color:#f0d9a8;letter-spacing:.06em;margin:12px 0;text-shadow:0 0 24px rgba(255,140,40,.3)}
-  #fade-sub{font-size:clamp(18px,2.6vw,23px);font-style:italic;color:#a8977f;max-width:560px}
+  #fade-title{font-family:Cinzel,serif;font-size:clamp(26px,calc(var(--vw)*5),46px);color:#f0d9a8;letter-spacing:.06em;margin:12px 0;text-shadow:0 0 24px rgba(255,140,40,.3)}
+  #fade-sub{font-size:clamp(18px,calc(var(--vw)*2.6),23px);font-style:italic;color:#a8977f;max-width:560px}
   #fade.whisper #fade-title{font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:400;color:var(--cold);
     text-shadow:0 0 22px rgba(150,190,255,.55);letter-spacing:.04em;animation:breathe 2.4s ease-in-out infinite}
   @keyframes breathe{50%{opacity:.55;letter-spacing:.1em}}
@@ -137,7 +138,7 @@
   .modal{position:fixed;inset:0;background:rgba(0,0,0,.74);display:none;align-items:center;justify-content:center;z-index:25;padding:16px}
   .modal.on{display:flex;animation:appear .35s ease-out}
   @keyframes appear{from{opacity:0}}
-  .paper{position:relative;max-width:540px;width:100%;max-height:88vh;overflow:auto;padding:36px 34px 26px;
+  .paper{position:relative;max-width:540px;width:100%;max-height:calc(var(--vh)*88);overflow:auto;padding:36px 34px 26px;
     background:radial-gradient(ellipse at 30% 18%,#eadbb6,#d2bd90 55%,#b09668);color:var(--ink);
     box-shadow:0 0 0 1px #6b5436,0 24px 70px rgba(0,0,0,.85),inset 0 0 70px rgba(90,55,20,.5);animation:unfold .45s ease-out}
   @keyframes unfold{from{transform:translateY(14px) rotate(-1deg);opacity:0}}
@@ -169,7 +170,7 @@
   #dialog.on{display:block;animation:appear .8s}
   .dlg-inner{max-width:740px;margin:0 auto}
   #dlg-speaker{font-family:Cinzel,serif;color:var(--cold);letter-spacing:.3em;font-size:12px;text-transform:uppercase;min-height:16px;text-shadow:0 0 10px rgba(150,190,255,.5)}
-  #dlg-text{font-size:clamp(19px,2.6vw,24px);line-height:1.45;min-height:3.2em;margin-top:6px;color:#e9e2d6}
+  #dlg-text{font-size:clamp(19px,calc(var(--vw)*2.6),24px);line-height:1.45;min-height:3.2em;margin-top:6px;color:#e9e2d6}
   #dlg-text.narr{font-style:italic;color:#bcae98}
   #dlg-next{font-family:Cinzel,serif;font-size:11px;letter-spacing:.25em;color:var(--muted);margin-top:8px;animation:breathe 1.6s infinite}
   #dlg-choices{display:flex;flex-direction:column;gap:8px;margin-top:14px}
@@ -180,9 +181,9 @@
   /* ---------- Final ---------- */
   #end{background:radial-gradient(ellipse at 50% 30%,rgba(90,110,150,.16),rgba(6,4,3,0) 60%),var(--bg);justify-content:flex-start}
   #end .wrap{max-width:620px;margin:auto;padding:30px 0;animation:appear 2.5s}
-  #end-ghost{height:min(36vh,300px);max-width:80vw;object-fit:contain;filter:drop-shadow(0 0 26px rgba(255,40,24,.55));animation:float 6s ease-in-out infinite}
-  #end h2{font-family:Cinzel,serif;font-weight:600;font-size:clamp(26px,4.6vw,40px);color:#f0d9a8;margin:10px 0 22px;letter-spacing:.05em}
-  #end-text p{font-size:clamp(18px,2.3vw,21px);line-height:1.55;margin-bottom:14px;color:#d6c8b2}
+  #end-ghost{height:min(calc(var(--vh)*36),300px);max-width:calc(var(--vw)*80);object-fit:contain;filter:drop-shadow(0 0 26px rgba(255,40,24,.55));animation:float 6s ease-in-out infinite}
+  #end h2{font-family:Cinzel,serif;font-weight:600;font-size:clamp(26px,calc(var(--vw)*4.6),40px);color:#f0d9a8;margin:10px 0 22px;letter-spacing:.05em}
+  #end-text p{font-size:clamp(18px,calc(var(--vw)*2.3),21px);line-height:1.55;margin-bottom:14px;color:#d6c8b2}
   #end-text p.hint{font-style:italic;color:var(--muted);font-size:17px}
   #end-stats{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-size:16px;color:var(--muted);line-height:1.7}
 
@@ -195,9 +196,36 @@
   .fov-row input{flex:1;min-width:0;accent-color:var(--amber);cursor:pointer}
   .fov-row output{min-width:3em;text-align:right;color:var(--amber)}
   #pause .fov-row{margin-left:auto;margin-right:auto}
+  .fov-row.sens-row{margin-top:10px}
+
+  /* ---------- Celular ---------- */
+  /* páginas compactas: não cobrem a tela toda e o botão de fechar fica sempre visível */
+  body.touch .modal{background:rgba(0,0,0,.45);padding:10px calc(10px + env(safe-area-inset-right)) 10px calc(10px + env(safe-area-inset-left))}
+  body.touch .paper{display:flex;flex-direction:column;overflow:hidden;max-width:min(340px,calc(var(--vw)*44));max-height:min(calc(var(--vh)*62),300px);padding:12px 14px 10px}
+  body.touch .paper .label{font-size:9px;flex:none}
+  body.touch .paper h3{font-size:13px;margin:3px 0 6px;flex:none}
+  body.touch .paper .body{font-size:13px;line-height:1.35;overflow:auto;flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+  body.touch .paper.stone .body{font-size:11px;line-height:1.5}
+  body.touch .paper .foot{margin-top:8px;flex:none}
+  body.touch .paper .close{padding:7px 12px;font-size:11px}
+  body.touch .journal #journal-list{overflow:auto;flex:1 1 auto;min-height:0;touch-action:pan-y}
+  body.touch #journal-list button,body.touch #journal-list .missing{font-size:13px;padding:6px 8px}
+  body.touch .paper .count{font-size:10px}
+  /* título compacto no celular deitado (sem a ajuda de teclado) */
+  body.touch .controls{display:none}
+  body.touch #title-ghost{height:min(calc(var(--vh)*24),400px);margin-bottom:0}
+  body.touch h1{font-size:clamp(24px,calc(var(--vw)*5),64px);margin:6px 0}
+  body.touch .lede{font-size:14px;line-height:1.35;max-width:520px}
+  body.touch #title .btn{margin-top:12px;padding:10px 28px}
+  body.touch #title .fov-row{margin-top:8px;font-size:11px}
+
+  /* tudo fica dentro de #app; com o celular em pé ele gira 90° (JS) para jogar deitado,
+     mesmo com a rotação automática travada. --vw/--vh = 1% da tela do jogo (já girada) */
+  #app{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;transform-origin:0 0}
 </style>
 </head>
 <body>
+<div id="app">
 
 <canvas id="game"></canvas>
 <canvas id="minimap" width="340" height="340"></canvas>
@@ -235,7 +263,7 @@
 <div id="toast"></div>
 <div id="act"></div>
 <div id="dpad"><span class="arr u"></span><span class="arr d"></span><span class="arr l"></span><span class="arr r"></span><div id="knob"></div></div>
-<div id="look-hint">arraste para olhar</div>
+<div id="look-hint">arraste aqui para olhar</div>
 
 <!-- Tela de entrada (desbloqueia o som) -->
 <div class="screen" id="gate">
@@ -251,6 +279,7 @@
   <p class="lede">João Vitão estudava na IFMT. A Menina Jojo também, e ela era bruxa. Ele disse “não” para ela, e desde então nunca mais conseguiu sair da escola. Hoje a IFMT está abandonada, mas ele continua lá dentro. A bateria do seu celular não vai durar para sempre.</p>
   <button class="btn" id="btn-start">Entrar</button>
   <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
+  <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
   <div class="controls">
     <b>W</b><b>S</b> andar &nbsp;·&nbsp; <b>A</b><b>D</b> passo lateral &nbsp;·&nbsp; <b>mouse</b> olhar<br>
     <b>E</b> esconder no armário &nbsp;·&nbsp; <b>F</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
@@ -285,6 +314,7 @@
     <button class="btn" id="pause-resume">Continuar</button>
     <button class="btn ghost" id="pause-journal">Diário</button>
     <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
+    <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
     <div class="controls"><b>W</b><b>S</b> andar · <b>A</b><b>D</b> lateral · <b>mouse</b> olhar<br><b>E</b> armário · <b>F</b> lanterna · <b>Tab</b> mapa · <b>J</b> diário · <b>M</b> som</div>
   </div>
 </div>
@@ -308,6 +338,8 @@
     <button class="btn" id="btn-restart">Entrar outra vez</button>
   </div>
 </div>
+
+</div><!-- #app -->
 
 <script>
 'use strict';
@@ -798,19 +830,33 @@ const Tracks = (() => {
     if (Sound.muted) return;
     if (vol != null) a.volume = vol;
     try { a.currentTime = 0; } catch (e) {}
-    start(a);
+    return start(a);
   }
-  // toca só os primeiros `secs` segundos, com um corte suave de 0.1s no fim (sem estalo)
+  // toca só os primeiros `secs` segundos, com um corte suave de 0.1s no fim (sem estalo).
+  // no iOS o volume é somente leitura, então o pause() no fim é garantido de qualquer jeito;
+  // o limite por currentTime cobre timers atrasados (aba em segundo plano, celular lento)
   function playFor(a, vol, secs){
     clearTimeout(a._cut); clearInterval(a._fade);
-    play(a, vol);
-    a._cut = setTimeout(() => {
-      const step = a.volume/5;
-      a._fade = setInterval(() => {
-        a.volume = Math.max(0, a.volume - step);
-        if (a.volume <= 0){ clearInterval(a._fade); a.pause(); }
-      }, 20);
-    }, (secs - .1)*1000);
+    const base = vol != null ? vol : a.volume;
+    a._end = secs;
+    if (!a._guard){
+      a._guard = true;
+      a.addEventListener('timeupdate', () => {
+        if (a._end && a.currentTime >= a._end){ clearTimeout(a._cut); clearInterval(a._fade); a.pause(); a._end = 0; }
+      });
+    }
+    const cut = () => {
+      clearTimeout(a._cut);
+      a._cut = setTimeout(() => {
+        let n = 5;
+        a._fade = setInterval(() => {
+          if (--n <= 0){ clearInterval(a._fade); a.pause(); a.volume = base; a._end = 0; return; }
+          a.volume = base*n/5;
+        }, 20);
+      }, (secs - .1)*1000);
+    };
+    // o tempo conta a partir de quando o som começa de fato (no celular pode demorar a carregar)
+    Promise.resolve(play(a, vol)).then(cut, cut);
   }
   const api = {
     // navegadores só deixam tocar depois de um clique/tecla; chamado a cada interação
@@ -821,7 +867,7 @@ const Tracks = (() => {
       if (cur.paused) return start(cur);
     },
     setMuted(m){ all.forEach(a => { a.muted = m; }); if (!m) api.startMusic(); },
-    scream(){ playFor(scream, 1, 1); },   // só 1 segundo do grito
+    scream(){ playFor(scream, 1, 2); },   // só 2 segundos do grito
     round(){ play(round); },
     update(dt, state, near){
       // passos pesados enquanto ele caça: mais altos quanto mais perto (some suave quando ele some)
@@ -1510,12 +1556,40 @@ let cw = 0, ch = 0, dpr = 1, RW = 320, RH = 180, FOC = 240, PLANE = .66;
 // campo de visão horizontal em graus (slider no título e na pausa; lembrado entre sessões)
 let FOV_DEG = 75;
 try { const f = +localStorage.getItem('jv-fov'); if (f >= 50 && f <= 120) FOV_DEG = f; } catch (e) {}
+// sensibilidade da câmera em % (mouse e arrastar no celular; slider no título e na pausa)
+let SENS = 100;
+try { const v = +localStorage.getItem('jv-sens'); if (v >= 20 && v <= 300) SENS = v; } catch (e) {}
 let imgData, buf, zbuf;
 
+/* CELULAR EM PÉ: em vez de esperar a tela girar (não gira com a rotação automática
+   travada, nem no iPhone), o jogo inteiro (#app) gira 90° no sentido horário.
+   Aí basta deitar o celular para a esquerda. */
+const appEl = document.getElementById('app');
+let ROT = false;
+if ('ontouchstart' in window || (window.matchMedia && matchMedia('(pointer:coarse)').matches)) document.body.classList.add('touch');
+function markTouch(){ if (!document.body.classList.contains('touch')){ document.body.classList.add('touch'); resize(); } }
+addEventListener('touchstart', markTouch, { passive:true, once:true });
+function applyRotation(){
+  const W = innerWidth, H = innerHeight;
+  ROT = document.body.classList.contains('touch') && H > W && W < 600;
+  document.body.classList.toggle('rot', ROT);
+  const s = appEl.style;
+  if (ROT){ s.width = H + 'px'; s.height = W + 'px'; s.transform = `translateX(${W}px) rotate(90deg)`; }
+  else { s.width = s.height = s.transform = ''; }
+  const root = document.documentElement.style;
+  root.setProperty('--vw', (ROT ? H : W)/100 + 'px');
+  root.setProperty('--vh', (ROT ? W : H)/100 + 'px');
+}
+const viewW = () => ROT ? innerHeight : innerWidth;
+const viewH = () => ROT ? innerWidth : innerHeight;
+// coordenadas do toque (tela) → coordenadas do jogo (girado)
+const toApp = (x, y) => ROT ? { x:y, y:innerWidth - x } : { x, y };
+
 function resize(){
+  applyRotation();
   dpr = Math.min(2, window.devicePixelRatio || 1);
-  cw = canvas.width = Math.floor(innerWidth*dpr);
-  ch = canvas.height = Math.floor(innerHeight*dpr);
+  cw = canvas.width = Math.floor(viewW()*dpr);
+  ch = canvas.height = Math.floor(viewH()*dpr);
   const s = Math.max(cw/620, ch/350, 1.5);
   RW = Math.max(160, Math.floor(cw/s)); RH = Math.max(120, Math.floor(ch/s));
   // em telas em pé, o FOV vertical manda (evita paredes minúsculas no celular)
@@ -1773,18 +1847,21 @@ canvas.addEventListener('pointerdown', e => {
   // com o mouse travado o clique chega no canvas, não no botão da página
   if (G.state === 'modal' && pageModal.classList.contains('on') && document.pointerLockElement === canvas){ closeModals(); return; }
   if (G.state !== 'play') return;
+  // no celular só a metade direita da tela gira a câmera (a esquerda é do joystick)
+  const pt = toApp(e.clientX, e.clientY);
+  if (e.pointerType === 'touch' && pt.x < viewW()/2) return;
   if (e.pointerType === 'mouse' && canvas.requestPointerLock && document.pointerLockElement !== canvas){
     try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch(err) {}
   }
-  drag = { id:e.pointerId, x:e.clientX, y:e.clientY };
+  drag = { id:e.pointerId, x:pt.x, y:pt.y };
   try { canvas.setPointerCapture(e.pointerId); } catch(err) {}
 });
 canvas.addEventListener('pointermove', e => {
   if (document.pointerLockElement === canvas){ lookDX += e.movementX; lookDY += e.movementY; return; }
   if (drag && e.pointerId === drag.id){
-    const m = e.pointerType === 'touch' ? 1.6 : 1;
-    lookDX += (e.clientX - drag.x)*m; lookDY += (e.clientY - drag.y)*m;
-    drag.x = e.clientX; drag.y = e.clientY;
+    const m = e.pointerType === 'touch' ? 1.6 : 1, pt = toApp(e.clientX, e.clientY);
+    lookDX += (pt.x - drag.x)*m; lookDY += (pt.y - drag.y)*m;
+    drag.x = pt.x; drag.y = pt.y;
   }
 });
 ['pointerup','pointercancel'].forEach(ev => canvas.addEventListener(ev, e => { if (drag && e.pointerId === drag.id) drag = null; }));
@@ -1793,12 +1870,19 @@ canvas.addEventListener('wheel', e => { if (pageModal.classList.contains('on')) 
 function releasePointer(){ if (document.pointerLockElement && document.exitPointerLock) document.exitPointerLock(); }
 
 const dpadEl = document.getElementById('dpad'), knob = document.getElementById('knob');
-function markTouch(){ document.body.classList.add('touch'); }
-if ('ontouchstart' in window || (window.matchMedia && matchMedia('(pointer:coarse)').matches)) markTouch();
-addEventListener('touchstart', markTouch, { passive:true, once:true });
+// tenta tela cheia + paisagem (Android); precisa vir de um toque. Se não der, o #app girado resolve.
+function goLandscape(){
+  if (!document.body.classList.contains('touch')) return;
+  const lock = () => { try { const p = screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape'); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
+  const el = document.documentElement, req = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (req && !document.fullscreenElement && !document.webkitFullscreenElement){
+    try { const p = req.call(el, { navigationUI:'hide' }); if (p && p.then) p.then(lock, () => {}); else lock(); } catch (e) { lock(); }
+  } else lock();
+}
 function updDpad(e){
   const r = dpadEl.getBoundingClientRect();
-  const dx = e.clientX - (r.left + r.width/2), dy = e.clientY - (r.top + r.height/2), d = Math.hypot(dx, dy);
+  const c = toApp(r.left + r.width/2, r.top + r.height/2), pt = toApp(e.clientX, e.clientY);
+  const dx = pt.x - c.x, dy = pt.y - c.y, d = Math.hypot(dx, dy);
   if (d < 10){ dpad.x = dpad.y = 0; }
   else { const m = Math.min(1, d/(r.width*.32)); dpad.x = dx/d*m; dpad.y = dy/d*m; }
   knob.style.transform = `translate(${dpad.x*42}px,${dpad.y*42}px)`;
@@ -1894,6 +1978,8 @@ function closeModals(){
 }
 $('page-close').onclick = closeModals;
 $('journal-close').onclick = closeModals;
+// tocar fora da página também fecha
+[pageModal, journalModal].forEach(m => m.addEventListener('click', e => { if (e.target === m) closeModals(); }));
 bookBtn.onclick = e => { e.currentTarget.blur(); if (G.state === 'play') openJournal(); };
 $('btn-sound').onclick = e => { e.currentTarget.blur(); toggleMute(); };
 $('btn-map').onclick = e => { e.currentTarget.blur(); toggleMap(); };
@@ -1924,6 +2010,18 @@ fovInputs.forEach(i => {
   i.addEventListener('change', () => i.blur());
 });
 setFov(FOV_DEG);
+const sensInputs = document.querySelectorAll('.sens-input'), sensVals = document.querySelectorAll('.sens-val');
+function setSens(v, save){
+  SENS = clamp(Math.round(v/10)*10, 20, 300);
+  sensInputs.forEach(i => { i.value = SENS; });
+  sensVals.forEach(o => { o.textContent = (SENS/100).toFixed(1) + '×'; });
+  if (save) try { localStorage.setItem('jv-sens', SENS); } catch (e) {}
+}
+sensInputs.forEach(i => {
+  i.addEventListener('input', () => setSens(+i.value, true));
+  i.addEventListener('change', () => i.blur());
+});
+setSens(SENS);
 function setPause(on){
   if (on && G.state === 'play'){ G.state = 'paused'; $('pause').classList.add('on'); releasePointer(); }
   else if (!on && G.state === 'paused'){ G.state = 'play'; $('pause').classList.remove('on'); }
@@ -2012,6 +2110,7 @@ async function playIntro(){
 
 async function beginGame(){
   if (G.state !== 'title' && G.state !== 'end') return;
+  goLandscape();
   Sound.init();
   G.pages = new Set(); G.time = 0; G.rescues = 0; G.autoSeal = false;
   P.light = true; updateLightBtn();
@@ -2022,7 +2121,7 @@ async function beginGame(){
 $('btn-start').onclick = beginGame;
 $('btn-restart').onclick = () => { G.state = 'end'; beginGame(); };
 
-// o rosto dele na tela inteira, em vermelho, junto com o grito (1s)
+// o rosto dele na tela inteira, em vermelho, junto com o grito (2s)
 const jumpEl = $('jumpscare');
 function jumpscare(){
   if (villainSprite && !jumpEl.querySelector('canvas')){
@@ -2215,10 +2314,12 @@ function update(dt){
 function updatePlay(dt){
   G.time += dt;
   // girar
-  P.a += dpad.x*.9*P.turn*dt + lookDX*.0028;
+  // só o mouse / arrastar no lado direito gira a câmera (o joystick só anda)
+  const look = .0028*SENS/100;
+  P.a += lookDX*look;
   // olhar para cima/baixo (mouse ou arrastar)
   const lim = pitchLimit();
-  P.pitch = clamp(P.pitch - lookDY*.0028, -lim, lim);
+  P.pitch = clamp(P.pitch - lookDY*look, -lim, lim);
   lookDX = lookDY = 0;
   if (P.hideCd > 0) P.hideCd -= dt;
   // no armário: não anda, o celular fica desligado e só dá para espiar pelas frestas
@@ -2236,7 +2337,8 @@ function updatePlay(dt){
   if (keys['s']) fwd -= 1;
   if (keys['d']) str += 1;
   if (keys['a']) str -= 1;
-  fwd -= dpad.y;
+  // joystick do celular só anda (frente/trás e passo lateral); a câmera é o lado direito da tela
+  fwd -= dpad.y; str += dpad.x;
   const dirX = Math.cos(P.a), dirY = Math.sin(P.a);
   let mx = dirX*fwd - dirY*str, my = dirY*fwd + dirX*str;
   const ml = Math.hypot(mx, my);
@@ -2733,7 +2835,7 @@ requestAnimationFrame(frame);
   const t = $('title');
   for (let i = 0; i < 26; i++){
     const e = document.createElement('span'); e.className = 'ember';
-    e.style.left = rand(0, 100) + 'vw';
+    e.style.left = rand(0, 100) + '%';
     e.style.setProperty('--dx', rand(-60, 60) + 'px');
     e.style.animationDuration = rand(6, 13) + 's';
     e.style.animationDelay = rand(0, 10) + 's';
