@@ -247,7 +247,7 @@
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.2c3-1.2 6-1 8.5.9 2.5-1.9 5.5-2.1 8.5-.9v13.6c-3-1.2-6-1-8.5.9-2.5-1.9-5.5-2.1-8.5-.9z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 6.1v13.6" stroke="currentColor" stroke-width="1.4"/></svg>
       <span id="pages-count">0/13</span>
     </button>
-    <button class="chip icon-btn" id="btn-light" title="Lanterna (L)" aria-label="Lanterna" aria-pressed="true">
+    <button class="chip icon-btn" id="btn-light" title="Lanterna (F)" aria-label="Lanterna" aria-pressed="true">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v4l-2 3v10a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V10L8 7z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 13v3" stroke="currentColor" stroke-width="1.6"/></svg>
     </button>
     <button class="chip icon-btn" id="btn-map" title="Mapa (Tab)" aria-label="Mapa">
@@ -281,8 +281,8 @@
   <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
   <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
   <div class="controls">
-    <b>W</b><b>S</b> andar &nbsp;·&nbsp; <b>A</b><b>D</b> passo lateral &nbsp;·&nbsp; <b>←</b><b>→</b> ou <b>mouse</b> olhar &nbsp;·&nbsp; <b>R</b><b>F</b> cima/baixo<br>
-    <b>E</b> esconder no armário &nbsp;·&nbsp; <b>L</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
+    <b>W</b><b>S</b> andar &nbsp;·&nbsp; <b>A</b><b>D</b> passo lateral &nbsp;·&nbsp; <b>mouse</b> olhar<br>
+    <b>E</b> esconder no armário &nbsp;·&nbsp; <b>F</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
     Clique na tela para controlar a visão com o mouse. Use fones de ouvido.
   </div>
 </div>
@@ -314,8 +314,8 @@
     <button class="btn" id="pause-resume">Continuar</button>
     <button class="btn ghost" id="pause-journal">Diário</button>
     <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
-  <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
-    <div class="controls"><b>W</b><b>S</b> andar · <b>A</b><b>D</b> lateral · <b>←</b><b>→</b>/mouse olhar · <b>R</b><b>F</b> cima/baixo<br><b>E</b> armário · <b>L</b> lanterna · <b>Tab</b> mapa · <b>J</b> diário · <b>M</b> som</div>
+    <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
+    <div class="controls"><b>W</b><b>S</b> andar · <b>A</b><b>D</b> lateral · <b>mouse</b> olhar<br><b>E</b> armário · <b>F</b> lanterna · <b>Tab</b> mapa · <b>J</b> diário · <b>M</b> som</div>
   </div>
 </div>
 
@@ -907,7 +907,7 @@ const G = {
   graceT:0, hintT:0, autoSeal:false, resume:'play', showMap:true, mapT:0
 };
 const P = { x:1.5, y:1.5, a:0, pitch:0, r:.24, walkT:0, fuel:100, out:false, outT:0, invT:0, speed:3.6, turn:3, moving:false, hidden:null, hideCd:0, light:true };   // fuel = bateria do celular; light = lanterna ligada
-const V = { x:-9, y:-9, state:'hidden', timer:10, alpha:0, path:[], repath:0, moving:false, emitT:0, whisper:null, sawHide:false };
+const V = { x:-9, y:-9, state:'hidden', timer:10, alpha:0, path:[], repath:0, moving:false, emitT:0, whisper:null };
 let L = null;
 let parts = [];
 
@@ -1606,7 +1606,7 @@ resize();
 function lightRadius(){
   if (P.hidden) return .8;   // dentro do armário o celular fica desligado
   if (P.out || !P.light) return .9;   // sem lanterna, só o brilho da tela
-  let R = 1.8 + 3.2*Math.sqrt(P.fuel/100);
+  let R = 3 + 5.5*Math.sqrt(P.fuel/100);   // alcance do facho do flash
   R *= 1 + G.flick;
   if (G.dip > 0) R *= .6;
   return R;
@@ -1688,8 +1688,6 @@ function toggleHide(){
   const peek = solidAt(ox, oy) ? tileOf(P.x, P.y) : oy*L.W + ox;
   P.hidden = Object.assign(lk, { a:Math.atan2(-DY[lk.k], -DX[lk.k]), peek });
   P.a = P.hidden.a; P.pitch = 0;
-  // se ele estava perto e viu você entrar, não adianta: ele abre o armário
-  V.sawHide = V.state === 'chase' && Math.hypot(P.x - V.x, P.y - V.y) < 2.6;
   Sound.locker();
   if (!G.hideTip){ G.hideTip = true; toast('Dentro do armário. Fique quieto… Aqui dentro o celular fica desligado.', 3400); }
 }
@@ -1702,9 +1700,9 @@ function villainPathTo(target){
   for (let j = target; j >= 0 && r.dist[j] > 0; j = r.prev[j]) path.push(j);
   V.path = path.reverse();
 }
-function villainHide(){ V.state = 'hidden'; V.timer = rand(...L.cfg.v.hide); V.path = []; V.sawHide = false; }
+function villainHide(){ V.state = 'hidden'; V.timer = rand(...L.cfg.v.hide); V.path = []; }
 function villainChase(){
-  V.state = 'chase'; V.timer = rand(...L.cfg.v.chase); V.repath = 0; V.path = []; V.sawHide = false;
+  V.state = 'chase'; V.timer = rand(...L.cfg.v.chase); V.repath = 0; V.path = [];
   V.whisper = { text:pick(L.cfg.whispers), t:0 };
   Sound.whisper();
 }
@@ -1757,8 +1755,8 @@ function updateVillain(dt){
       break;
     case 'chase': {
       V.timer -= dt; V.repath -= dt;
-      // você entrou no armário sem ele ver: ele vai até a frente dele e procura
-      const lost = P.hidden && !V.sawHide;
+      // você está no armário: ele vai até a frente dele, procura e desiste
+      const lost = !!P.hidden;
       if (V.repath <= 0){ V.repath = .3; villainPathTo(lost ? P.hidden.peek : tileOf(P.x, P.y)); }
       if (V.path.length) followPath(dt, vc.speed);
       else if (lost){
@@ -1779,7 +1777,7 @@ function updateVillain(dt){
       break;
   }
   if (V.whisper){ V.whisper.t += dt; if (V.whisper.t > 3.5) V.whisper = null; }
-  if (V.state !== 'hidden' && V.alpha > .6 && dP < .55 && G.graceT <= 0 && (!P.hidden || V.sawHide)) pushback();
+  if (V.state !== 'hidden' && V.alpha > .6 && dP < .55 && G.graceT <= 0 && !P.hidden) pushback();   // no armário ele nunca te pega
   emitVillain(dt);
 }
 
@@ -1809,7 +1807,7 @@ let lookDX = 0, lookDY = 0;
 addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;   // slider de FOV com foco usa as setas
   const k = e.key.toLowerCase();
-  if (['arrowup','arrowdown','arrowleft','arrowright',' ','tab'].includes(k)) e.preventDefault();
+  if ([' ','tab'].includes(k)) e.preventDefault();
   keys[k] = true;
   if (e.repeat) return;
   if (k === 'm'){ toggleMute(); return; }
@@ -1824,7 +1822,7 @@ addEventListener('keydown', e => {
       break;
     case 'play':
       if (k === 'e') toggleHide();
-      else if (k === 'l') toggleLight();
+      else if (k === 'f') toggleLight();
       else if (k === 'j') openJournal();
       else if (k === 'p' || k === 'escape') setPause(true);
       break;
@@ -2316,17 +2314,12 @@ function update(dt){
 function updatePlay(dt){
   G.time += dt;
   // girar
-  let turn = 0;
-  if (keys['arrowleft']) turn -= 1;
-  if (keys['arrowright']) turn += 1;
+  // só o mouse / arrastar no lado direito gira a câmera (o joystick só anda)
   const look = .0028*SENS/100;
-  P.a += turn*P.turn*dt + lookDX*look;
-  // olhar para cima/baixo (mouse, arrastar ou R/F)
-  let tilt = 0;
-  if (keys['r'] || keys['pageup']) tilt += 1;
-  if (keys['f'] || keys['pagedown']) tilt -= 1;
+  P.a += lookDX*look;
+  // olhar para cima/baixo (mouse ou arrastar)
   const lim = pitchLimit();
-  P.pitch = clamp(P.pitch + tilt*1.4*dt - lookDY*look, -lim, lim);
+  P.pitch = clamp(P.pitch - lookDY*look, -lim, lim);
   lookDX = lookDY = 0;
   if (P.hideCd > 0) P.hideCd -= dt;
   // no armário: não anda, o celular fica desligado e só dá para espiar pelas frestas
@@ -2340,8 +2333,8 @@ function updatePlay(dt){
   }
   // andar
   let fwd = 0, str = 0;
-  if (keys['w'] || keys['arrowup']) fwd += 1;
-  if (keys['s'] || keys['arrowdown']) fwd -= 1;
+  if (keys['w']) fwd += 1;
+  if (keys['s']) fwd -= 1;
   if (keys['d']) str += 1;
   if (keys['a']) str -= 1;
   // joystick do celular só anda (frente/trás e passo lateral); a câmera é o lado direito da tela
@@ -2413,8 +2406,12 @@ function updatePlay(dt){
    RENDERIZAÇÃO 3D — raycasting com chão/teto texturizados e
    iluminação por pixel (lanterna branca do celular + luz vermelha do João Vitão)
    ===================================================================== */
-const LUTS = 24, LUTN = LUTS*24, AMB = .012;
-const lut = new Float32Array(LUTN);
+const LUTS = 24, LUTN = LUTS*24, AMB = .007;
+const lutB = new Float32Array(LUTN), lutS = new Float32Array(LUTN);   // facho / luz em volta, por distância
+// cone do flash, indexado pela tangente² do ângulo em relação ao centro da tela:
+// cheio até ~10°, some até ~24°
+const CONE_N = 512, CONE_K = CONE_N/1.5, coneT = new Float32Array(CONE_N);
+for (let i = 0; i < CONE_N; i++){ const t = Math.sqrt(i/CONE_K), f = clamp(1 - (t - .17)/.28, 0, 1); coneT[i] = f*f*(3 - 2*f); }
 let R_ = {};   // parâmetros da câmera no quadro atual (usados pelos sprites)
 // tabela de paredes por direção horizontal (preenchida a cada quadro)
 const TBL_MAX = 8192;
@@ -2440,11 +2437,13 @@ function renderWorld(){
   R_ = { dirX, dirY, eye, cp, sp, cy0 };
 
   // tabela de luz da lanterna (recalculada a cada quadro por causa da bateria fraca)
-  const lightOff = P.out || !P.light;
-  const Rl = lightRadius(), kl = P.hidden ? .25 : lightOff ? .45 : 1;
+  // luz = facho em cone (só onde você aponta, alcança longe) + um pouco que vaza em volta (tela, reflexo)
+  const lightOff = P.out || !P.light, beamOn = !lightOff && !P.hidden;
+  const Rl = lightRadius(), Rs = 1.3, ks = P.hidden ? .12 : beamOn ? .16 : .32;
   for (let i = 0; i < LUTN; i++){
-    const v = 1 - (i/LUTS)/Rl;
-    lut[i] = (v > 0 ? Math.min(1, Math.pow(v, 1.35)*1.3)*kl : 0) + AMB;
+    const d = i/LUTS, vb = 1 - d/Rl, vs = 1 - d/Rs;
+    lutB[i] = beamOn && vb > 0 ? Math.min(1.1, Math.pow(vb, 1.3)*1.25) : 0;
+    lutS[i] = vs > 0 ? Math.pow(vs, 1.6)*ks : 0;
   }
   // luz branca do LED; desligado, sobra só o brilho azulado da tela
   const dim = lightOff || P.hidden, WR = dim ? .55 : .95, WG = dim ? .62 : .98, WB = dim ? .8 : 1;
@@ -2526,7 +2525,7 @@ function renderWorld(){
     const ay = (cy0 - y - .5)*invF;
     const cy = cp - sp*ay, rz = sp + cp*ay;   // parte do raio na direção do olhar (horizontal) e vertical
     const tFC = rz < -1e-6 ? -eye/rz : rz > 1e-6 ? (WALL_H - eye)/rz : 1e9;   // quando ele bate no chão/teto
-    const iScale = qScale/cy, iOff = qMax*qScale, cy2 = cy*cy, row = y*W;
+    const iScale = qScale/cy, iOff = qMax*qScale, cy2 = cy*cy, row = y*W, ay2 = ay*ay;
     for (let x = 0; x < W; x++){
       const ax = colAx[x];
       let i = (ax*iScale + iOff) | 0; if (i < 0) i = 0; else if (i >= N) i = N - 1;
@@ -2537,7 +2536,8 @@ function renderWorld(){
         // parede/porta: textura esticada na altura toda
         const tex = tblTex[i];
         hx = tblHX[i]; hy = tblHY[i]; dist = D;
-        const bi = (dist*LUTS) | 0; b = bi < LUTN ? lut[bi] : AMB;
+        const bi = (dist*LUTS) | 0, ci = ((ax*ax + ay2)*CONE_K) | 0;
+        b = bi < LUTN ? AMB + lutS[bi] + (ci < CONE_N ? coneT[ci] : 0)*lutB[bi] : AMB;
         let zf = (eye + tW*rz)*invWH; if (zf < 0) zf = 0; else if (zf > .999) zf = .999;
         const v = TS - 1 - ((zf*TS) | 0);
         c = tex[v*TS + tblU[i]];
@@ -2549,7 +2549,8 @@ function renderWorld(){
         hx = posX + tFC*(dirX*cy - dirY*ax); hy = posY + tFC*(dirY*cy + dirX*ax); dist = tFC*hl;
         const tx = hx | 0, ty = hy | 0;
         if (hx < 0 || hy < 0 || tx >= MW || ty >= MH){ buf[row + x] = 0xff000000; continue; }
-        const bi = (dist*LUTS) | 0; b = bi < LUTN ? lut[bi] : AMB;
+        const bi = (dist*LUTS) | 0, ci = ((ax*ax + ay2)*CONE_K) | 0;
+        b = bi < LUTN ? AMB + lutS[bi] + (ci < CONE_N ? coneT[ci] : 0)*lutB[bi] : AMB;
         if (rz < 0){
           // chão
           const fid = floorId[ty*MW + tx];
@@ -2611,7 +2612,19 @@ function billboard(img, sil, wx, wy, zBottom, ww, wh, alpha, bright, additive){
   lctx.globalAlpha = 1; lctx.globalCompositeOperation = 'source-over';
   return { scrX, top, depth, k };
 }
-function lightAt(d){ const bi = (d*LUTS) | 0; return bi < LUTN ? lut[bi] : AMB; }
+// luz num ponto do mundo (para sprites): o mesmo cone do flash usado nas paredes
+function lightAt(wx, wy, z){
+  const { dirX, dirY, eye, cp, sp } = R_;
+  const sx = wx - P.x, sy = wy - P.y, bi = (Math.hypot(sx, sy)*LUTS) | 0;
+  if (bi >= LUTN) return AMB;
+  const F = dirX*sx + dirY*sy, h = z - eye, fwd = cp*F + sp*h;
+  let cone = 0;
+  if (fwd > .05){
+    const ax = (dirX*sy - dirY*sx)/fwd, ay = (cp*h - sp*F)/fwd, ci = ((ax*ax + ay*ay)*CONE_K) | 0;
+    cone = ci < CONE_N ? coneT[ci] : 0;
+  }
+  return AMB + lutS[bi] + cone*lutB[bi];
+}
 
 function renderSprites(){
   const list = [];
@@ -2624,7 +2637,7 @@ function renderSprites(){
     const x = it.x + .5, y = it.y + .5, d = dist(x, y);
     if (d > 14) continue;
     const bob = Math.sin(t*2.2 + it.bob)*.03;
-    const b = lightAt(d);
+    const b = lightAt(x, y, .2);
     add(d, () => {
       if (it.type === 'key'){
         billboard(SPR.glowGold, null, x, y, .05 + bob, .5, .5, .18 + .1*Math.sin(t*3 + it.bob), 1, true);
@@ -2645,15 +2658,15 @@ function renderSprites(){
     const x = tr.x + .5, y = tr.y + .5, d = dist(x, y);
     if (d > 10) continue;
     const k = Math.min(1, (ph - TRAP_UP)/.07);
-    add(d, () => billboard(SPR.spikes.img, SPR.spikes.sil, x, y, -SPR.spikes.wh*(1 - k), SPR.spikes.ww, SPR.spikes.wh, 1, 1, false));   // faísca brilha sozinha
+    add(d, () => billboard(SPR.spikes.img, SPR.spikes.sil, x, y, -SPR.spikes.wh*(1 - k), SPR.spikes.ww, SPR.spikes.wh, 1, lightAt(x, y, .1), false));
   }
   { const x = L.start.x + .5, y = L.start.y + .5, d = dist(x, y);
-    if (d < 14) add(d, () => billboard(SPR.ladder.img, SPR.ladder.sil, x, y, 0, SPR.ladder.ww, SPR.ladder.wh, 1, Math.max(lightAt(d), .35), false)); }
+    if (d < 14) add(d, () => billboard(SPR.ladder.img, SPR.ladder.sil, x, y, 0, SPR.ladder.ww, SPR.ladder.wh, 1, lightAt(x, y, .6), false)); }
   if (L.seal){
     const lx = L.seal.x - .6, ly = L.seal.y + 1.5, hx = L.seal.x + 1.6, hy = L.seal.y + 1.5;
     const d1 = dist(lx, ly), d2 = dist(hx, hy);
-    add(d1, () => billboard(SPR.bag.img, SPR.bag.sil, lx, ly, 0, SPR.bag.ww, SPR.bag.wh, 1, Math.max(lightAt(d1), V.state === 'final' ? .5 : 0), false));
-    add(d2, () => billboard(SPR.cap.img, SPR.cap.sil, hx, hy, 0, SPR.cap.ww, SPR.cap.wh, 1, Math.max(lightAt(d2), V.state === 'final' ? .5 : 0), false));
+    add(d1, () => billboard(SPR.bag.img, SPR.bag.sil, lx, ly, 0, SPR.bag.ww, SPR.bag.wh, 1, Math.max(lightAt(lx, ly, .15), V.state === 'final' ? .5 : 0), false));
+    add(d2, () => billboard(SPR.cap.img, SPR.cap.sil, hx, hy, 0, SPR.cap.ww, SPR.cap.wh, 1, Math.max(lightAt(hx, hy, .08), V.state === 'final' ? .5 : 0), false));
   }
   for (const p of parts){
     const d = dist(p.x, p.y);
@@ -2735,6 +2748,18 @@ function drawHandPhone(){
   ctx.beginPath(); ctx.ellipse(-w/2 + 2*s, 50*s, 20*s, 52*s, .25, 0, TAU); ctx.fill();
   for (let k = 0; k < 4; k++){ ctx.beginPath(); ctx.ellipse(w/2 + 4*s, -30*s + k*36*s, 22*s, 15*s, -.1, 0, TAU); ctx.fill(); }
   ctx.fillStyle = skinDark; for (let k = 0; k < 4; k++){ ctx.fillRect(w/2 - 10*s, -30*s + k*36*s, 3*s, 12*s); }
+  // flash: o LED fica atrás, no topo do celular; a luz vaza pela borda e sai em facho para a frente
+  if (P.light && !P.out){
+    const k = (G.dip > 0 ? .55 : 1)*(.96 + .04*Math.sin(G.t*37));
+    const lx = -w*.28, ly = -h/2 - 4*s;
+    ctx.globalCompositeOperation = 'lighter';
+    const halo = ctx.createRadialGradient(lx, ly, 0, lx, ly, 170*s);
+    halo.addColorStop(0, `rgba(235,242,255,${.55*k})`); halo.addColorStop(.25, `rgba(210,225,255,${.18*k})`); halo.addColorStop(1, 'rgba(210,225,255,0)');
+    ctx.fillStyle = halo; ctx.fillRect(lx - 170*s, ly - 170*s, 340*s, 340*s);
+    ctx.fillStyle = `rgba(255,255,255,${.95*k})`; ctx.beginPath(); ctx.ellipse(lx, ly, 9*s, 6*s, 0, 0, TAU); ctx.fill();
+    ctx.fillStyle = `rgba(230,240,255,${.35*k})`; ctx.beginPath(); ctx.ellipse(lx, ly, 120*s, 2.5*s, 0, 0, TAU); ctx.fill();   // risco de lente
+    ctx.globalCompositeOperation = 'source-over';
+  }
   ctx.restore();
 }
 
@@ -2758,29 +2783,14 @@ function render(){
   c.fillStyle = '#000'; c.fillRect(0, 0, cw, ch);
   if (!L) return;
   renderWorld();
-  const vs = renderSprites();
+  renderSprites();
   c.imageSmoothingEnabled = true;
   c.drawImage(low, 0, 0, cw, ch);
-  const sc = cw/RW;
 
   // vinheta
   const vg = c.createRadialGradient(cw/2, ch/2, Math.min(cw, ch)*.3, cw/2, ch/2, Math.max(cw, ch)*.72);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.65)');
   c.fillStyle = vg; c.fillRect(0, 0, cw, ch);
-
-  // sussurros acima do fantasma
-  if (V.whisper && vs && V.alpha > .2){
-    const wt = V.whisper.t, a = Math.min(1, wt/.6, (3.5 - wt)/.8)*V.alpha;
-    if (a > 0){
-      const fs = clamp(vs.k*.16*sc, 14*dpr, 40*dpr);
-      c.font = `italic ${Math.round(fs)}px 'Cormorant Garamond', Georgia, serif`;
-      c.textAlign = 'center';
-      c.fillStyle = `rgba(255,190,180,${a*.95})`;
-      c.shadowColor = 'rgba(255,30,20,.95)'; c.shadowBlur = 14*dpr;
-      c.fillText(V.whisper.text, vs.scrX*sc, Math.max(fs*1.5, (vs.top - 6)*sc - wt*6*dpr));
-      c.shadowBlur = 0;
-    }
-  }
 
   if (P.hidden && G.state === 'play') drawLockerView();
   else if (G.state !== 'final') drawHandPhone();
