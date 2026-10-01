@@ -2642,7 +2642,7 @@ function otherOf(id){
   let o = MP.others.get(id);
   if (!o){
     const p = MP.players.find(q => q.id === id);
-    o = { id, name:p ? p.name : '?', color:p ? p.color : 0, x:0, y:0, a:0, tx:0, ty:0, ta:0, f:0, peek:-1, li:-1, fresh:true };
+    o = { id, name:p ? p.name : '?', color:p ? p.color : 0, x:0, y:0, a:0, tx:0, ty:0, ta:0, f:0, peek:-1, li:-1, walkT:0, fresh:true };
     MP.others.set(id, o);
   }
   return o;
@@ -2925,7 +2925,10 @@ function sendSnapshot(){
 function updateNet(dt){
   if (!MP.on || !MP.started) return;
   const k = Math.min(1, dt*12);
-  for (const o of MP.others.values()){ o.x += (o.tx - o.x)*k; o.y += (o.ty - o.y)*k; o.a += angDiff(o.a, o.ta)*k; }
+  for (const o of MP.others.values()){
+    o.x += (o.tx - o.x)*k; o.y += (o.ty - o.y)*k; o.a += angDiff(o.a, o.ta)*k;
+    o.walkT = o.f & F_MOVING ? o.walkT + dt*9 : 0;   // ciclo da caminhada do modelo
+  }
   if (!L) return;
   if (MP.host){
     if (G.state !== 'final' && V.state !== 'final'){
@@ -3502,11 +3505,17 @@ function renderSprites(){
     const d = dist(o.x, o.y);
     if (d > 16 || d < .15) continue;
     add(d, () => {
-      const s = playerSprite(o.color), lit = o.f & F_LIGHT;
+      const { view, frame } = studentPose(o), s = playerSprite(o.color, view, frame), lit = o.f & F_LIGHT;
       // a tela do celular ilumina um pouco quem está com a lanterna ligada
       const b = Math.max(lightAt(o.x, o.y, .6), lit ? .3 : .05);
-      const r = billboard(s.img, s.sil, o.x, o.y, 0, s.ww, s.wh, 1, b, false);
-      if (lit) billboard(SPR.glowWhite, null, o.x + Math.cos(o.a)*.22, o.y + Math.sin(o.a)*.22, .3, .45, .45, .55, 1, true);
+      // brilho do flash no celular: de costas fica atrás do corpo; de frente, o flash aponta para você
+      // (de frente o celular está à direita na tela: desloca para a direita da câmera)
+      const side = view === 'f' ? .055 : 0, gs = view === 'f' ? .26 : .36;
+      const gx = o.x + Math.cos(o.a)*.15 - Math.sin(P.a)*side, gy = o.y + Math.sin(o.a)*.15 + Math.cos(P.a)*side;
+      const glow = () => billboard(SPR.glowWhite, null, gx, gy, PS_PHONE_Z - gs/2, gs, gs, view === 'f' ? .8 : .5, 1, true);
+      if (lit && view === 'b') glow();
+      const r = billboard(s.img, s.sil, o.x, o.y, frame === 2 || frame === 4 ? .012 : 0, s.ww, s.wh, 1, b, false);
+      if (lit && view !== 'b') glow();
       // nome em cima (o João Vitão do versus não vê nomes: eles entregariam quem está no escuro)
       if (r && d < 9 && !isVillain()){
         const zx = clamp(r.scrX | 0, 0, RW - 1);
@@ -3541,22 +3550,134 @@ function renderSprites(){
 
 /* ---------- Online: os outros alunos ---------- */
 const nameTags = [];
-const PSPR = [];
-// aluno de moletom com capuz, com o celular na mão; a cor do moletom é a do jogador na sala
-function playerSprite(ci){
-  return PSPR[ci] || (PSPR[ci] = sprite(48, 112, .42, 1.02, g => {
-    const c = PLAYER_COLORS[ci] || PLAYER_COLORS[0];
-    g.fillStyle = '#1c1d22'; g.fillRect(14, 72, 8, 38); g.fillRect(26, 72, 8, 38);          // calça
-    g.fillStyle = '#0e0f12'; g.fillRect(12, 106, 11, 6); g.fillRect(25, 106, 11, 6);         // tênis
-    g.fillStyle = rgb(c); g.beginPath(); g.roundRect(8, 30, 32, 46, 8); g.fill();            // moletom
-    g.fillStyle = rgb(c, -28); g.fillRect(3, 34, 8, 30); g.fillRect(37, 34, 8, 26);          // braços
-    g.fillStyle = rgb(c, -40); g.fillRect(14, 54, 20, 3);                                     // bolso
-    g.fillStyle = rgb(c, -18); g.beginPath(); g.arc(24, 21, 13.5, 0, TAU); g.fill();          // capuz
-    g.fillStyle = '#c99a78'; g.beginPath(); g.ellipse(24, 23, 7.5, 9, 0, 0, TAU); g.fill();   // rosto
-    g.fillStyle = '#1a1210'; g.fillRect(20, 21, 2.5, 2.5); g.fillRect(25.5, 21, 2.5, 2.5);
-    g.fillStyle = '#c99a78'; g.fillRect(37, 59, 8, 5);                                        // mão
-    g.fillStyle = '#0d0f12'; g.fillRect(38, 50, 7, 12); g.fillStyle = '#9fc4ff'; g.fillRect(39, 51, 5, 9);   // celular
-  }));
+/* Aluno de moletom com capuz, mochila, jeans e tênis, com o celular na mão.
+   A cor do moletom é a do jogador na sala. Cada aluno tem 3 vistas — frente (olhando
+   para você), costas e de lado ('s' olha para a direita da tela; 'S' é o espelho) —
+   e 5 quadros: 0 parado, 1–4 o ciclo da caminhada. Desenhado em 64×144 e ampliado;
+   cada combinação é gerada só quando aparece pela primeira vez. */
+const PSPR = new Map();
+const PS_W = 96, PS_H = 216, PS_K = PS_W/64, PS_WH = .68;
+const PS_PHONE_Z = PS_WH*(144 - 56)/144;   // altura do celular na mão (y≈56 no desenho de 144)
+const SKIN = '#c99a78', SKIN_D = '#a57758', HAIR = '#2a1c14', EYES = '#1a1210';
+const JEANS = '#313b52', JEANS_D = '#1f2536', BAG = '#2a2e35', BAG_D = '#1a1d22', SHOE = '#5a5d66', SOLE = '#e8e4dc';
+function playerSprite(ci, view, frame){
+  const key = ci + view + frame;
+  let s = PSPR.get(key);
+  if (!s){
+    // altura .68: os olhos ficam na mesma altura da sua câmera (EYE)
+    s = sprite(PS_W, PS_H, PS_WH*PS_W/PS_H, PS_WH, g => drawStudent(g, PLAYER_COLORS[ci] || PLAYER_COLORS[0], view, frame));
+    PSPR.set(key, s);
+  }
+  return s;
+}
+function drawStudent(g, c, view, frame){
+  g.scale(PS_K, PS_K);
+  if (view === 'S'){ g.translate(64, 0); g.scale(-1, 1); view = 's'; }
+  const swing = [0, 1, 0, -1, 0][frame] || 0;
+  const bob = frame === 2 || frame === 4 ? -1.5 : 0;   // no meio do passo o corpo sobe um pouco
+  const hood = rgb(c), hoodD = rgb(c, -34), hoodDD = rgb(c, -58), hoodL = rgb(c, 28);
+  const rr = (x, y, w, h, r, st) => { g.fillStyle = st; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
+  const ell = (x, y, rx, ry, st) => { g.fillStyle = st; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, TAU); g.fill(); };
+  const torsoFill = (x0, x1) => { const gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, hoodL); gr.addColorStop(.45, hood); gr.addColorStop(1, hoodD); return gr; };
+
+  if (view === 's'){
+    // ---------- de lado, olhando para a direita ----------
+    // pernas em tesoura (a de trás mais escura); o tênis aponta para a frente
+    const leg = (ang, far) => {
+      g.save(); g.translate(31, 91); g.rotate(ang);
+      rr(-5, -2, 10, 44, 4, far ? JEANS_D : JEANS);
+      rr(-5.5, 38, 16, 7, 3, far ? '#3a3c43' : SHOE);
+      g.fillStyle = far ? '#a9a59e' : SOLE; g.fillRect(-5.5, 43, 16, 2.5);
+      g.beginPath(); g.roundRect(6, 39.5, 4.5, 4.5, [0, 2.5, 2.5, 0]); g.fill();   // biqueira
+      g.restore();
+    };
+    const a = .36*swing;
+    leg(a, true); leg(-a, false);
+    g.translate(0, bob);
+    rr(7, 45, 15, 37, 6, BAG); rr(7, 45, 15, 13, 6, BAG_D);               // mochila nas costas
+    g.fillStyle = BAG_D; g.fillRect(9, 66, 11, 1.2);
+    g.fillStyle = torsoFill(19, 45);                                        // moletom
+    g.beginPath(); g.moveTo(21, 42); g.quadraticCurveTo(32, 37.5, 41, 43); g.quadraticCurveTo(45.5, 50, 44.5, 60);
+    g.lineTo(43.5, 96); g.quadraticCurveTo(31, 98.5, 19, 96); g.lineTo(19, 52); g.quadraticCurveTo(18, 44, 21, 42); g.closePath(); g.fill();
+    rr(19, 91, 25, 6, 2, hoodD);                                            // barra
+    g.fillStyle = BAG; g.fillRect(22, 43, 4, 31);                           // alça
+    rr(27, 45, 10, 25, 5, hoodD);                                           // braço
+    g.save(); g.translate(32, 66); g.rotate(-.38); rr(-4.5, -4.5, 20, 9, 4, hoodD); rr(11, -4.5, 4, 9, 1.5, hoodDD); g.restore();   // antebraço para a frente
+    rr(46, 48, 4.2, 16, 1.5, '#16181c');                                    // celular de perfil
+    g.fillStyle = '#7fa7e0'; g.fillRect(46, 49.5, 1.3, 13);                 // a tela vira para o rosto
+    ell(48, 60.5, 4, 3.8, SKIN);                                            // mão
+    ell(31, 43, 12, 4.5, hoodD);                                            // capuz caído nos ombros
+    ell(29.5, 24, 16, 18, hood);                                            // capuz
+    g.strokeStyle = hoodL; g.lineWidth = 1.4; g.beginPath(); g.ellipse(29.5, 24, 15, 17, 0, Math.PI*1.05, Math.PI*1.55); g.stroke();
+    g.save(); g.beginPath(); g.ellipse(36.5, 27.5, 9, 12.5, 0, 0, TAU); g.clip();   // abertura do capuz
+    g.fillStyle = '#16110d'; g.fillRect(20, 10, 30, 36);
+    ell(39.5, 29, 7.5, 10.5, SKIN);
+    g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(30, 15, 20, 6.5);            // sombra do capuz na testa
+    g.restore();
+    g.fillStyle = SKIN; g.beginPath(); g.moveTo(45, 24.5); g.lineTo(48.5, 30.5); g.lineTo(45, 31.5); g.closePath(); g.fill();   // nariz
+    g.fillStyle = HAIR; g.beginPath(); g.ellipse(41, 21, 5.5, 2.8, 0, Math.PI, TAU); g.fill();   // franja
+    ell(42.3, 26.8, 1.2, 1.3, EYES);
+    g.fillStyle = '#7a4a3a'; g.fillRect(42.5, 35.2, 3, 1);
+    g.strokeStyle = hoodD; g.lineWidth = 2; g.beginPath(); g.ellipse(36.5, 27.5, 9, 12.5, 0, Math.PI*.55, Math.PI*1.45); g.stroke();   // borda do capuz
+    return;
+  }
+
+  // ---------- de frente ou de costas ----------
+  const front = view === 'f';
+  // pernas: no passo, o pé de trás sobe um pouco
+  for (const [x, lift] of [[21, swing < 0 ? 4 : 0], [34, swing > 0 ? 4 : 0]]){
+    rr(x, 91, 10, 45 - lift, 3, JEANS);
+    g.fillStyle = JEANS_D; g.fillRect(x < 32 ? x + 7 : x, 93, 3, 41 - lift);   // sombra na parte de dentro
+    rr(x - 1, 132 - lift, 12, 9, 3, SHOE);
+    g.fillStyle = SOLE; g.fillRect(x - 1, 139 - lift, 12, 3);
+    if (front) rr(x + 1, 134 - lift, 8, 3, 1.5, SOLE);   // biqueira
+  }
+  g.translate(0, bob);
+  g.fillStyle = torsoFill(12, 52);                                          // moletom
+  g.beginPath(); g.moveTo(16, 42); g.quadraticCurveTo(32, 36, 48, 42); g.quadraticCurveTo(53, 44, 52, 52);
+  g.lineTo(51, 96); g.quadraticCurveTo(32, 99, 13, 96); g.lineTo(12, 52); g.quadraticCurveTo(11, 44, 16, 42); g.closePath(); g.fill();
+  rr(13, 91, 38, 6, 2, hoodD);                                              // barra
+  const as = swing*1.5;
+  if (front){
+    g.fillStyle = BAG; g.fillRect(17, 43, 5, 26); g.fillRect(42, 43, 5, 26);   // alças da mochila
+    rr(21, 72, 22, 14, 4, hoodD);                                           // bolso canguru
+    g.strokeStyle = '#e9e2d4'; g.lineWidth = 1.1; g.beginPath(); g.moveTo(28.5, 45); g.lineTo(28, 59); g.moveTo(35.5, 45); g.lineTo(36, 59); g.stroke();   // cordões
+    // braço livre balançando; o outro dobrado, segurando o celular na frente do peito
+    rr(4, 45, 10, 36, 5, hoodD); rr(4, 76 + as, 10, 6, 2, hoodDD); ell(9, 85 + as, 4.2, 4.6, SKIN);
+    rr(50, 45, 10, 24, 5, hoodD); rr(38, 62, 21, 9, 4, hoodD);
+    rr(37, 48, 10, 16, 2, '#16181c');                                       // costas do celular, com o flash
+    ell(39.8, 51, 1.6, 1.6, '#3a3e46'); ell(39.8, 55, 1.1, 1.1, '#e9eef6');
+    ell(43, 63.5, 4.5, 4, SKIN);
+  } else {
+    rr(17, 46, 30, 39, 7, BAG); rr(17, 46, 30, 14, 7, BAG_D);              // mochila
+    rr(22, 68, 20, 12, 3, BAG_D); g.fillStyle = '#5b5f67'; g.fillRect(30.5, 69.5, 3, 1.4);
+    g.fillStyle = rgb(c, 10); g.fillRect(19, 61, 3, 9);                     // chaveirinho da cor do jogador
+    rr(4, 45, 10, 26, 5, hoodD);                                            // braço do celular, dobrado para a frente
+    rr(50, 45, 10, 36, 5, hoodD); rr(50, 76 - as, 10, 6, 2, hoodDD); ell(55, 85 - as, 4.2, 4.6, SKIN);
+  }
+  ell(32, 43, 17, 5, hoodD);                                                // capuz caído nos ombros
+  ell(32, 24, 17, 18, hood);                                                // capuz
+  g.strokeStyle = hoodL; g.lineWidth = 1.4; g.beginPath(); g.ellipse(32, 24, 16, 17, 0, Math.PI*1.08, Math.PI*1.5); g.stroke();
+  if (front){
+    ell(32, 27, 11.5, 13.5, '#16110d');                                     // sombra dentro do capuz
+    ell(32, 29.5, 9.2, 11, SKIN);
+    g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(32, 20.5, 9.5, 5, 0, 0, TAU); g.fill();
+    g.fillStyle = HAIR; g.beginPath(); g.ellipse(32, 21, 9, 4.2, 0, Math.PI, TAU); g.fill();   // franja
+    ell(28.2, 28, 1.4, 1.2, EYES); ell(35.8, 28, 1.4, 1.2, EYES);
+    g.fillStyle = SKIN_D; g.fillRect(31.3, 30, 1.4, 4);
+    g.fillStyle = '#7a4a3a'; g.fillRect(29.5, 36, 5, 1.1);
+    g.strokeStyle = hoodD; g.lineWidth = 2; g.beginPath(); g.ellipse(32, 27, 11.5, 13.5, 0, 0, TAU); g.stroke();   // borda do capuz
+  } else {
+    g.fillStyle = 'rgba(0,0,0,.16)'; g.beginPath(); g.ellipse(32, 24, 17, 18, 0, -Math.PI/2, Math.PI/2); g.fill();   // lado na sombra
+    g.strokeStyle = hoodDD; g.lineWidth = 1.2; g.beginPath(); g.moveTo(32, 7); g.quadraticCurveTo(33, 24, 32, 41); g.stroke();   // costura
+  }
+}
+// qual vista do aluno aparece para quem está olhando, e em que quadro da caminhada
+function studentPose(o){
+  const rel = Math.abs(angDiff(o.a, Math.atan2(P.y - o.y, P.x - o.x)));
+  const view = rel < Math.PI/4 ? 'f' : rel > Math.PI*.75 ? 'b' : Math.sin(o.a - P.a) > 0 ? 's' : 'S';
+  const frame = o.f & F_MOVING ? 1 + (Math.floor(o.walkT/1.4) % 4) : 0;
+  return { view, frame };
 }
 function drawNameTags(){
   if (!nameTags.length) return;
