@@ -7,6 +7,8 @@
 <title>João Vitão: A história não contada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- o jogo é desenhado em 3D com o Three.js (render3d.js): de onde vêm os módulos -->
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -20,6 +22,8 @@
     user-select:none;-webkit-user-select:none;overscroll-behavior:none}
   button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   canvas#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+  /* o mundo é desenhado neste canvas (WebGL, render3d.js); o #game fica por cima, transparente, com nomes e avisos */
+  canvas#game3d{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;background:#000}
 
   /* ---------- HUD ---------- */
   #hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;
@@ -90,7 +94,11 @@
   .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;
     padding:24px 16px;z-index:20;overflow:auto}
   .screen.on{display:flex}
-  #title{background:radial-gradient(ellipse at 50% 62%,rgba(120,55,15,.35),rgba(6,4,3,0) 55%),var(--bg)}
+  /* título, sala e final deixam ver o corredor 3D lá atrás (render3d.js desenha um passeio pela IFMT) */
+  #title{background:radial-gradient(ellipse at 50% 62%,rgba(120,55,15,.3),rgba(6,4,3,.35) 55%,rgba(6,4,3,.75))}
+  button:disabled{cursor:wait;opacity:.6}
+  #fail{z-index:41;background:var(--bg)}
+  #fail h2{font-family:Cinzel,serif;font-weight:600;font-size:clamp(22px,calc(var(--vw)*4),36px);color:#f0d9a8;margin:12px 0 14px}
   #title-ghost{height:min(calc(var(--vh)*46),400px);max-width:calc(var(--vw)*80);object-fit:contain;filter:drop-shadow(0 0 24px rgba(255,40,24,.6));
     animation:float 5s ease-in-out infinite;margin-bottom:-10px}
   @keyframes float{50%{transform:translateY(-12px)}}
@@ -179,7 +187,7 @@
   #dlg-choices button:disabled{opacity:.4;cursor:not-allowed;font-style:italic}
 
   /* ---------- Final ---------- */
-  #end{background:radial-gradient(ellipse at 50% 30%,rgba(90,110,150,.16),rgba(6,4,3,0) 60%),var(--bg);justify-content:flex-start}
+  #end{background:radial-gradient(ellipse at 50% 30%,rgba(90,110,150,.16),rgba(6,4,3,.6) 60%,rgba(6,4,3,.85));justify-content:flex-start}
   #end .wrap{max-width:620px;margin:auto;padding:30px 0;animation:appear 2.5s}
   #end-ghost{height:min(calc(var(--vh)*36),300px);max-width:calc(var(--vw)*80);object-fit:contain;filter:drop-shadow(0 0 26px rgba(255,40,24,.55));animation:float 6s ease-in-out infinite}
   #end h2{font-family:Cinzel,serif;font-weight:600;font-size:clamp(26px,calc(var(--vw)*4.6),40px);color:#f0d9a8;margin:10px 0 22px;letter-spacing:.05em}
@@ -222,7 +230,7 @@
 
   /* ---------- Sala online ---------- */
   [hidden]{display:none!important}
-  #lobby{justify-content:flex-start;background:radial-gradient(ellipse at 50% 40%,rgba(120,55,15,.25),rgba(6,4,3,0) 60%),var(--bg)}
+  #lobby{justify-content:flex-start;background:radial-gradient(ellipse at 50% 40%,rgba(120,55,15,.2),rgba(6,4,3,.55) 60%,rgba(6,4,3,.8))}
   #lobby .panel{margin:auto;border:1px solid var(--line);background:rgba(12,8,6,.92);padding:26px 26px 20px;max-width:460px;width:100%}
   #lobby h2{font-family:Cinzel,serif;font-weight:400;letter-spacing:.3em;color:#f0d9a8;font-size:22px;margin:6px 0 10px}
   #lobby .btn{display:block;width:100%;margin-top:12px}
@@ -273,6 +281,7 @@
 <body>
 <div id="app">
 
+<canvas id="game3d"></canvas>
 <canvas id="game"></canvas>
 <canvas id="minimap" width="340" height="340"></canvas>
 
@@ -336,6 +345,14 @@
     <b>E</b> esconder no armário &nbsp;·&nbsp; <b>F</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
     Clique na tela para controlar a visão com o mouse. Use fones de ouvido.
   </div>
+</div>
+
+<!-- Sem 3D (sem WebGL ou sem internet) -->
+<div class="screen" id="fail">
+  <div class="kicker">A IFMT não abriu</div>
+  <h2>Não deu para carregar o jogo em 3D</h2>
+  <p class="lede" id="fail-msg"></p>
+  <button class="btn" onclick="location.reload()">Tentar de novo</button>
 </div>
 
 <!-- Sala online -->
@@ -494,10 +511,10 @@ const T_FLOOR = 0, T_WALL = 1, T_DOOR = 2, T_EXIT = 3;
 const DX = [1,-1,0,0], DY = [0,0,1,-1];
 const ROMAN = ['I','II','III','IV','V'];
 const TRAP_PERIOD = 2.6, TRAP_WARN = 1.6, TRAP_UP = 2.0;
-const TS = 64;              // tamanho das texturas
 const WALL_H = 1.35;        // altura das paredes (em tiles)
 const EYE = .58;            // altura dos olhos do jogador
 const PITCH_MAX = 1.1;      // quanto dá para olhar para cima/baixo (radianos, ~63°)
+let R3D = null;             // renderizador 3D (render3d.js, Three.js): desenha o mundo; aqui fica a lógica
 
 // rng: Math.random, trocado por um gerador com semente enquanto o labirinto é gerado
 // (no online todo mundo gera exatamente o mesmo labirinto a partir da mesma semente)
@@ -1320,242 +1337,21 @@ function tryGenerate(li, cfg, force){
 }
 
 /* =====================================================================
-   TEXTURAS PROCEDURAIS (64×64, geradas por nível)
+   DESENHOS EM CANVAS — o giz da sala 13 e os itens (viram texturas no 3D)
    ===================================================================== */
 function makeCanvas(w, h, fn){ const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), w, h); return c; }
-function toTex(c){ return new Uint32Array(c.getContext('2d').getImageData(0, 0, c.width, c.height).data.buffer.slice(0)); }
-function makeTex(fn){ return toTex(makeCanvas(TS, TS, fn)); }
-function speckle(g, n, w=TS, h=TS){
-  for (let k = 0; k < n; k++){
-    g.fillStyle = Math.random() < .55 ? 'rgba(0,0,0,.22)' : 'rgba(255,240,220,.06)';
-    const s = rand(1, 2.4); g.fillRect(Math.random()*w, Math.random()*h, s, s);
-  }
-}
-function crack(g, w=TS, h=TS){
-  g.strokeStyle = 'rgba(0,0,0,.55)'; g.lineWidth = 1.2; g.beginPath();
-  let x = rand(6, w-6), y = rand(6, h-6); g.moveTo(x, y);
-  for (let k = 0; k < 4; k++){ x = clamp(x + rand(-12,12), 1, w-1); y = clamp(y + rand(-12,12), 1, h-1); g.lineTo(x, y); }
-  g.stroke();
-}
-
-// parede de escola: pintura clara em cima, barrado escuro embaixo.
-// (as paredes são desenhadas "esticadas": a textura cobre a altura toda da parede)
-function wallTex(p, variant){
-  return makeTex(g => {
-    const band = 38;
-    g.fillStyle = rgb(p.wall); g.fillRect(0, 0, TS, TS);
-    g.fillStyle = rgb(p.band); g.fillRect(0, band, TS, TS - band);
-    g.fillStyle = rgb(p.band, 28); g.fillRect(0, band - 2, TS, 2);          // friso
-    g.fillStyle = 'rgba(0,0,0,.4)'; g.fillRect(0, TS - 3, TS, 3);           // rodapé
-    g.fillStyle = 'rgba(0,0,0,.28)'; g.fillRect(0, 0, TS, 2);               // sombra do forro
-    // umidade escorrendo do teto
-    for (let k = randi(2, 5); k > 0; k--){
-      const x = rand(0, TS), w = rand(3, 10), h = rand(8, 34);
-      const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, 'rgba(45,48,32,.4)'); gr.addColorStop(1, 'rgba(45,48,32,0)');
-      g.fillStyle = gr; g.fillRect(x, 0, w, h);
-    }
-    // tinta descascando
-    for (let k = randi(1, 4); k > 0; k--){ g.fillStyle = rgb(p.wall, -38, .8); g.beginPath(); g.ellipse(rand(4,60), rand(4,34), rand(2,6), rand(1.5,4), rand(0,3), 0, TAU); g.fill(); }
-    speckle(g, 90);
-    if (Math.random() < .5) crack(g);
-    if (variant === 1){
-      switch (p.deco){
-        case 'board': {   // quadro de avisos com papéis
-          g.fillStyle = '#5a3d24'; g.fillRect(8, 7, 48, 26); g.fillStyle = '#8a6440'; g.fillRect(10, 9, 44, 22);
-          for (let k = 0; k < 5; k++){
-            const x = rand(11, 44), y = rand(10, 22);
-            g.fillStyle = pick(['#d8d2c2','#cfc59a','#c9d4d6','#e0c8c8']); g.fillRect(x, y, rand(6,10), rand(7,10));
-            g.fillStyle = pick(['#c0392b','#2e86c1','#27ae60']); g.fillRect(x + 2, y, 2, 2);
-          }
-          break;
-        }
-        case 'chalk': {   // lousa com contas e rabiscos
-          g.fillStyle = '#6b4a2c'; g.fillRect(4, 6, 56, 30); g.fillStyle = '#23392e'; g.fillRect(6, 8, 52, 26);
-          g.strokeStyle = 'rgba(230,235,225,.55)'; g.lineWidth = 1;
-          for (let k = 0; k < 4; k++){ g.beginPath(); let x = rand(9, 16); g.moveTo(x, 12 + k*5); for (let s = 0; s < 6; s++){ x += rand(3, 6); g.lineTo(x, 12 + k*5 + rand(-1.5, 1.5)); } g.stroke(); }
-          g.fillStyle = 'rgba(230,235,225,.4)'; g.fillRect(6, 34, 52, 2);
-          break;
-        }
-        case 'lab': {     // azulejos brancos + cartaz da tabela periódica
-          g.strokeStyle = 'rgba(0,0,0,.18)'; g.lineWidth = 1;
-          for (let x = 0; x <= TS; x += 8){ g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 36); g.stroke(); }
-          for (let y = 0; y <= 36; y += 8){ g.beginPath(); g.moveTo(0, y); g.lineTo(TS, y); g.stroke(); }
-          g.fillStyle = '#d9d6cc'; g.fillRect(14, 8, 36, 22);
-          for (let r = 0; r < 4; r++) for (let c = 0; c < 8; c++) if (!(r === 0 && c > 0 && c < 7)){ g.fillStyle = pick(['#d98f7a','#8fb5d9','#9bd98f','#d9d18f']); g.fillRect(16 + c*4.2, 10 + r*4.8, 3.4, 3.8); }
-          break;
-        }
-        case 'books': {   // estante de livros (ocupa a parede inteira)
-          g.fillStyle = '#3a2618'; g.fillRect(0, 0, TS, TS);
-          for (let sh = 0; sh < 4; sh++){
-            const y = 3 + sh*15;
-            g.fillStyle = '#5c3d26'; g.fillRect(0, y + 12, TS, 3);
-            for (let x = 2; x < TS - 2;){
-              const w = rand(2.5, 5.5), h = rand(8, 12);
-              g.fillStyle = rgb(pick([[120,40,34],[40,70,110],[46,90,56],[140,110,50],[90,60,90],[150,140,120]]), randi(-20, 10));
-              g.fillRect(x, y + 12 - h, w, h); x += w + .6;
-              if (Math.random() < .08) x += rand(3, 8);   // falhas na prateleira
-            }
-          }
-          g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(0, 0, 3, TS); g.fillRect(TS - 3, 0, 3, TS);
-          break;
-        }
-        default: {        // pichação vermelha
-          g.fillStyle = 'rgba(170,18,18,.85)'; g.font = 'bold 15px sans-serif'; g.textAlign = 'center';
-          g.save(); g.translate(32, 26); g.rotate(rand(-.15, .15)); g.fillText(pick(['JOJO','SALA 13','CORRE']), 0, 0); g.restore();
-          for (let k = 0; k < 3; k++){ g.fillRect(rand(10, 54), rand(26, 34), 1.5, rand(4, 12)); }   // escorrido
-        }
-      }
-    } else if (variant === 2){
-      // riscos de giz / caneta: contagem de dias, "1 2 3"
-      g.strokeStyle = 'rgba(235,235,225,.45)'; g.lineWidth = 1.2;
-      const x0 = rand(8, 24), y0 = rand(14, 22);
-      for (let grp = 0; grp < 3; grp++){
-        const gx = x0 + grp*13;
-        for (let k = 0; k < 4; k++){ g.beginPath(); g.moveTo(gx + k*2.5, y0); g.lineTo(gx + k*2.5 + rand(-.5,.5), y0 + 12); g.stroke(); }
-        g.beginPath(); g.moveTo(gx - 2, y0 + 10); g.lineTo(gx + 10, y0 + 2); g.stroke();
-      }
-    }
-  });
-}
-
-// fileira de armários de metal (onde dá para se esconder)
-function lockerTex(){
-  return makeTex(g => {
-    g.fillStyle = '#23292e'; g.fillRect(0, 0, TS, TS);
-    for (let k = 0; k < 2; k++){
-      const x = k*32 + 1, col = pick([[74,94,110],[64,84,98],[82,98,106]]);
-      const gr = g.createLinearGradient(x, 0, x + 30, 0); gr.addColorStop(0, rgb(col, 14)); gr.addColorStop(1, rgb(col, -16));
-      g.fillStyle = gr; g.fillRect(x, 2, 30, TS - 6);
-      g.fillStyle = 'rgba(0,0,0,.8)';
-      for (let s = 0; s < 5; s++) g.fillRect(x + 7, 6 + s*3, 16, 1.4);        // frestas de cima
-      for (let s = 0; s < 3; s++) g.fillRect(x + 7, TS - 16 + s*3, 16, 1.2);  // frestas de baixo
-      g.fillStyle = '#cfcab8'; g.fillRect(x + 11, 24, 8, 4);                  // plaquinha do número
-      g.fillStyle = '#15181b'; g.fillRect(x + 24, 30, 2.5, 9);                // puxador
-      g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x, 2, 1.5, TS - 6);
-      g.fillStyle = 'rgba(120,70,40,.4)'; for (let r = 0; r < 5; r++) g.fillRect(x + rand(0, 26), rand(8, 58), rand(1, 3), rand(1, 4));   // ferrugem
-    }
-    speckle(g, 40);
-  });
-}
-
-// piso: lajotas quadriculadas (corredores) ou taco de madeira (salas de aula)
-function floorPaint(g, p, room){
-  if (room){
-    g.fillStyle = '#2a1c12'; g.fillRect(0, 0, TS, TS);
-    for (let r = 0; r < 8; r++){
-      const off = (r % 2)*16;
-      for (let x = -32; x < TS; x += 32){ g.fillStyle = rgb([98,70,46], randi(-12, 8)); g.fillRect(x + off + .5, r*8 + .5, 31, 7); }
-    }
-  } else {
-    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++){
-      g.fillStyle = rgb((r + c) % 2 ? p.floor : p.floor2, randi(-7, 6)); g.fillRect(c*16, r*16, 16, 16);
-    }
-    g.fillStyle = 'rgba(0,0,0,.28)';
-    for (let k = 0; k <= 4; k++){ g.fillRect(k*16 - .5, 0, 1, TS); g.fillRect(0, k*16 - .5, TS, 1); }
-  }
-  for (let k = randi(2, 5); k > 0; k--){ g.fillStyle = 'rgba(30,24,18,.18)'; g.beginPath(); g.ellipse(rand(0,TS), rand(0,TS), rand(6,14), rand(4,9), rand(0,3), 0, TAU); g.fill(); }
-  speckle(g, 70);
-}
-function floorTex(p, variant){
-  return makeTex(g => {
-    floorPaint(g, p, variant === 'room');
-    if (variant === 'b'){
-      // lajotas quebradas e folhas de caderno jogadas
-      for (let k = 0; k < 2; k++) crack(g);
-      for (let k = randi(2, 4); k > 0; k--){
-        g.save(); g.translate(rand(10, 54), rand(10, 54)); g.rotate(rand(0, TAU));
-        g.fillStyle = 'rgba(215,210,195,.85)'; g.fillRect(-6, -8, 12, 16);
-        g.strokeStyle = 'rgba(80,110,160,.5)'; g.lineWidth = .8; for (let l = 0; l < 4; l++){ g.beginPath(); g.moveTo(-5, -5 + l*4); g.lineTo(5, -5 + l*4); g.stroke(); }
-        g.restore();
-      }
-    }
-  });
-}
-// forro de placas com estrutura de metal; 'beam' = luminária fluorescente queimada
-function ceilTex(p, variant){
-  return makeTex(g => {
-    g.fillStyle = rgb(p.top); g.fillRect(0, 0, TS, TS);
-    for (let k = 0; k < 4; k++){ g.fillStyle = rgb(p.top, randi(-10, 6), .6); g.fillRect((k % 2)*32 + 1, ((k/2)|0)*32 + 1, 30, 30); }
-    for (let k = randi(0, 2); k > 0; k--){   // manchas de infiltração
-      const x = rand(8, 56), y = rand(8, 56), r = rand(4, 10);
-      g.strokeStyle = 'rgba(110,80,40,.35)'; g.lineWidth = 1.5; g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke();
-      g.fillStyle = 'rgba(110,80,40,.15)'; g.fill();
-    }
-    if (Math.random() < .12){ g.fillStyle = '#0a0a0a'; g.fillRect(33, 1, 30, 30); }   // placa caída
-    g.fillStyle = 'rgba(40,40,40,.7)'; g.fillRect(0, 31, TS, 2); g.fillRect(31, 0, 2, TS); g.fillRect(0, 0, TS, 1); g.fillRect(0, 0, 1, TS);
-    speckle(g, 40);
-    if (variant === 'beam'){
-      g.fillStyle = '#9a9c98'; g.fillRect(12, 20, 40, 24);
-      g.fillStyle = '#c9ccc8'; g.fillRect(15, 23, 34, 5); g.fillRect(15, 35, 34, 5);   // lâmpadas apagadas
-      g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(15, 26, 4, 2); g.fillRect(45, 38, 4, 2);
-    }
-  });
-}
-function exitTex(p){
-  return makeTex(g => {
-    floorPaint(g, p, false);
-    g.fillStyle = '#0e0a07'; g.fillRect(6, 6, 52, 52);
-    for (let k = 0; k < 5; k++){ g.fillStyle = rgb(p.floor, 4 - k*14); g.fillRect(8, 8 + k*10, 48, 6); g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(8, 14 + k*10, 48, 4); }
-    const gr = g.createLinearGradient(0, 8, 0, 58); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.9)');
-    g.fillStyle = gr; g.fillRect(8, 8, 48, 50);
-    g.strokeStyle = '#d6c23a'; g.lineWidth = 3; g.strokeRect(5, 5, 54, 54);   // faixa amarela de escada
-  });
-}
-// armadilha: poça d'água com fio desencapado
-function trapTex(p){
-  return makeTex(g => {
-    floorPaint(g, p, false);
-    g.fillStyle = 'rgba(40,62,82,.65)'; g.beginPath(); g.ellipse(32, 34, 24, 16, .3, 0, TAU); g.fill();
-    g.strokeStyle = 'rgba(170,200,225,.3)'; g.lineWidth = 1; g.beginPath(); g.ellipse(28, 30, 10, 5, .3, 3.4, 5.6); g.stroke();
-    g.strokeStyle = '#111'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 12); g.bezierCurveTo(20, 18, 16, 40, 34, 34); g.stroke();
-    g.strokeStyle = '#c8a226'; g.lineWidth = 1; g.beginPath(); g.moveTo(31, 33); g.lineTo(37, 36); g.moveTo(32, 35); g.lineTo(36, 31); g.stroke();
-  });
-}
-// claraboia quebrada na entrada: luz do dia entrando pelo forro
-function holeTex(p){
-  return makeTex(g => {
-    g.fillStyle = rgb(p.top); g.fillRect(0, 0, TS, TS);
-    const gr = g.createRadialGradient(32, 32, 2, 32, 32, 28);
-    gr.addColorStop(0, '#eef2f6'); gr.addColorStop(.6, '#9aa6b4'); gr.addColorStop(1, rgb(p.top));
-    g.fillStyle = gr; g.fillRect(4, 4, 56, 56);
-    g.fillStyle = 'rgba(40,40,40,.8)'; g.fillRect(0, 31, TS, 2); g.fillRect(31, 0, 2, TS);
-  });
-}
-function doorTex(req, have){
-  return makeTex(g => {
-    g.fillStyle = '#1b120b'; g.fillRect(0, 0, TS, TS);
-    for (let k = 0; k < 4; k++){
-      const gr = g.createLinearGradient(k*16, 0, k*16 + 16, 0);
-      gr.addColorStop(0, '#6e4727'); gr.addColorStop(1, '#4a2e17');
-      g.fillStyle = gr; g.fillRect(k*16 + 1, 0, 14, TS);
-      g.strokeStyle = 'rgba(30,18,8,.5)'; g.lineWidth = 1;
-      for (let s = 0; s < 3; s++){ g.beginPath(); g.moveTo(k*16 + rand(3,13), rand(0,20)); g.lineTo(k*16 + rand(3,13), rand(40,64)); g.stroke(); }
-    }
-    g.fillStyle = '#2a2522'; g.fillRect(0, 8, TS, 6); g.fillRect(0, 50, TS, 6);
-    g.fillStyle = '#6d6660'; for (let k = 0; k < 4; k++){ g.beginPath(); g.arc(8 + k*16, 11, 1.6, 0, TAU); g.arc(8 + k*16, 53, 1.6, 0, TAU); g.fill(); }
-    // cadeado
-    g.strokeStyle = '#9a948b'; g.lineWidth = 2.5; g.beginPath(); g.arc(32, 27, 5, Math.PI, 0); g.stroke();
-    g.fillStyle = '#c0943c'; g.fillRect(25, 27, 14, 11);
-    g.fillStyle = '#1a120a'; g.beginPath(); g.arc(32, 31, 1.8, 0, TAU); g.fill(); g.fillRect(31.2, 31, 1.6, 4);
-    // bolinhas = quantidade de chaves exigidas
-    for (let k = 0; k < req; k++){
-      const x = 32 + (k - (req - 1)/2)*9;
-      g.beginPath(); g.arc(x, 44, 2.8, 0, TAU);
-      if (k < have){ g.fillStyle = '#ffd06a'; g.fill(); } else { g.strokeStyle = '#d9a94a'; g.lineWidth = 1.2; g.stroke(); }
-    }
-  });
-}
-// chão da sala 13: círculo de giz com desenhos de criança e a fita vermelha dando sete voltas na carteira
-function sealTexture(p){
-  const S = 7*TS;
-  const c = makeCanvas(S, S, g => {
-    for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++){ g.save(); g.translate(x*TS, y*TS); floorPaint(g, { floor:p.floor.map(v => v - 10), floor2:p.floor2.map(v => v - 10) }, false); g.restore(); }
-    const cx = S/2, cy = S/2, R = TS;
-    g.strokeStyle = 'rgba(235,235,225,.7)'; g.lineWidth = 4;
+// chão da sala 13: círculo de giz com desenhos de criança (fundo transparente: vai por cima do piso)
+// cobre 7×7 tiles a partir do canto da câmara; a carteira e a fita são 3D
+const SEAL_TILES = 7;
+function sealDecal(){
+  const T = 64, S = SEAL_TILES*T;
+  return makeCanvas(S, S, g => {
+    const cx = S/2, cy = S/2, R = T;
+    g.strokeStyle = 'rgba(235,235,225,.75)'; g.lineWidth = 4;
     g.beginPath(); g.arc(cx, cy, R*2.75, 0, TAU); g.stroke();
     g.lineWidth = 3; g.beginPath(); g.arc(cx, cy, R*1.35, 0, TAU); g.stroke();
     // desenhos de giz entre os círculos: estrelas, corações e bonequinhos
-    g.strokeStyle = 'rgba(235,235,225,.65)'; g.lineWidth = 2.5;
+    g.strokeStyle = 'rgba(235,235,225,.7)'; g.lineWidth = 2.5;
     for (let k = 0; k < 12; k++){
       const a = k/12*TAU;
       g.save(); g.translate(cx + Math.cos(a)*R*2.05, cy + Math.sin(a)*R*2.05); g.rotate(a + Math.PI/2); g.beginPath();
@@ -1566,51 +1362,13 @@ function sealTexture(p){
       }
       g.stroke(); g.restore();
     }
-    // a carteira vista de cima, com a fita vermelha em sete voltas
-    g.fillStyle = '#3a2a1c'; g.fillRect(cx - R*.5, cy - R*.36, R, R*.72);
-    g.fillStyle = '#6b4c30'; g.fillRect(cx - R*.46, cy - R*.32, R*.92, R*.64);
-    g.strokeStyle = 'rgba(190,20,24,.9)'; g.lineWidth = 3;
-    for (let k = 0; k < 7; k++){ g.beginPath(); g.ellipse(cx, cy, R*(.6 + k*.07), R*(.46 + k*.06), .05*k, 0, TAU); g.stroke(); }
-    g.fillStyle = 'rgba(190,20,24,.95)'; g.beginPath(); g.ellipse(cx + R*.2, cy - R*.1, 7, 4, .6, 0, TAU); g.ellipse(cx + R*.32, cy - R*.02, 7, 4, -.6, 0, TAU); g.fill();
   });
-  return { data:toTex(c), w:S };
-}
-
-// índices de textura de chão/teto/parede
-const F_A = 0, F_B = 1, F_ROOM = 2, F_EXIT = 3, F_TRAP = 4, F_SEAL = 5;
-const C_A = 0, C_BEAM = 1, C_HOLE = 2;
-const W_LOCKER = 4;
-const hash = (x, y) => ((x*73856093) ^ (y*19349663)) >>> 0;
-
-function buildAssets(lv){
-  const p = lv.cfg.pal, N = lv.W*lv.H;
-  lv.tex = {
-    walls:[wallTex(p,0), wallTex(p,0), wallTex(p,1), wallTex(p,2), lockerTex()],
-    floors:[floorTex(p,'a'), floorTex(p,'b'), floorTex(p,'room'), exitTex(p), trapTex(p)],
-    ceils:[ceilTex(p,'a'), ceilTex(p,'beam'), holeTex(p)],
-    doors:{}
-  };
-  for (const d of lv.doors) for (let h = 0; h <= d.req; h++){ const k = d.req + '_' + h; if (!lv.tex.doors[k]) lv.tex.doors[k] = doorTex(d.req, h); }
-  if (lv.seal) lv.tex.seal = sealTexture(p);
-  lv.wallId = new Uint8Array(N); lv.floorId = new Uint8Array(N); lv.ceilId = new Uint8Array(N);
-  for (let y = 0; y < lv.H; y++) for (let x = 0; x < lv.W; x++){
-    const j = y*lv.W + x, h = hash(x, y);
-    lv.wallId[j] = lv.lockerAt.has(j) ? W_LOCKER : h % 9 === 0 ? 2 : h % 13 === 0 ? 3 : h % 2;
-    lv.floorId[j] = lv.roomMask[j] === 1 ? F_SEAL : lv.roomMask[j] === 2 ? F_ROOM : (h % 5 === 0 ? F_B : F_A);
-    lv.ceilId[j] = (h >> 3) % 4 === 0 ? C_BEAM : C_A;
-  }
-  if (lv.exit) lv.floorId[lv.exit.y*lv.W + lv.exit.x] = F_EXIT;
-  for (const t of lv.traps) lv.floorId[t.y*lv.W + t.x] = F_TRAP;
-  lv.ceilId[lv.start.y*lv.W + lv.start.x] = C_HOLE;
 }
 
 /* =====================================================================
-   SPRITES (billboards) — itens, faíscas, escada da entrada etc.
+   SPRITES — itens, faíscas, mochila e boné (planos no 3D, sempre virados para você)
    ===================================================================== */
-function silhouette(src){
-  return makeCanvas(src.width, src.height, g => { g.drawImage(src, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = '#000'; g.fillRect(0, 0, src.width, src.height); });
-}
-function sprite(w, h, ww, wh, fn){ const img = makeCanvas(w, h, fn); return { img, sil:silhouette(img), ww, wh }; }
+function sprite(w, h, ww, wh, fn){ return { img:makeCanvas(w, h, fn), ww, wh }; }
 function glowCanvas(r, g, b){
   return makeCanvas(64, 64, c => { const gr = c.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0, `rgba(${r},${g},${b},1)`); gr.addColorStop(.4, `rgba(${r},${g},${b},.35)`); gr.addColorStop(1, `rgba(${r},${g},${b},0)`); c.fillStyle = gr; c.fillRect(0,0,64,64); });
 }
@@ -1699,21 +1457,20 @@ for (let f = 0; f < 8; f++){
 }
 
 /* =====================================================================
-   CANVAS E RESOLUÇÃO INTERNA
-   A cena 3D é renderizada pixel a pixel em baixa resolução (raycasting)
-   e depois ampliada — isso mantém o jogo leve até em máquinas simples.
+   CANVAS
+   O mundo é desenhado em 3D (WebGL) no #game3d pelo render3d.js. O #game,
+   transparente e por cima, recebe o mouse/toque e desenha o que é tela:
+   nomes dos outros alunos, contagem do João Vitão, sustos em vermelho.
    ===================================================================== */
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const low = document.createElement('canvas'), lctx = low.getContext('2d');
-let cw = 0, ch = 0, dpr = 1, RW = 320, RH = 180, FOC = 240, PLANE = .66;
+let cw = 0, ch = 0, dpr = 1;
 // campo de visão horizontal em graus (slider no título e na pausa; lembrado entre sessões)
 let FOV_DEG = 75;
 try { const f = +localStorage.getItem('jv-fov'); if (f >= 50 && f <= 120) FOV_DEG = f; } catch (e) {}
 // sensibilidade da câmera em % (mouse e arrastar no celular; slider no título e na pausa)
 let SENS = 100;
 try { const v = +localStorage.getItem('jv-sens'); if (v >= 20 && v <= 300) SENS = v; } catch (e) {}
-let imgData, buf, zbuf;
 
 /* CELULAR EM PÉ: em vez de esperar a tela girar (não gira com a rotação automática
    travada, nem no iPhone), o jogo inteiro (#app) gira 90° no sentido horário.
@@ -1744,15 +1501,7 @@ function resize(){
   dpr = Math.min(2, window.devicePixelRatio || 1);
   cw = canvas.width = Math.floor(viewW()*dpr);
   ch = canvas.height = Math.floor(viewH()*dpr);
-  const s = Math.max(cw/620, ch/350, 1.5);
-  RW = Math.max(160, Math.floor(cw/s)); RH = Math.max(120, Math.floor(ch/s));
-  // em telas em pé, o FOV vertical manda (evita paredes minúsculas no celular)
-  const t = Math.tan(FOV_DEG*Math.PI/360);
-  FOC = Math.max(RW/(2*t), RH/(2*1.21*t)); PLANE = RW/(2*FOC);
-  low.width = RW; low.height = RH;
-  imgData = lctx.createImageData(RW, RH);
-  buf = new Uint32Array(imgData.data.buffer);
-  zbuf = new Float32Array(RW);
+  if (R3D) R3D.resize();
 }
 addEventListener('resize', resize);
 resize();
@@ -2278,7 +2027,6 @@ function drawMinimap(){
 function buildLevel(li){
   // online: todos geram o mesmo labirinto a partir da semente da partida
   L = generateLevel(li, MP.on ? (MP.seed + li*7919) >>> 0 : null);
-  buildAssets(L);
   L.items.forEach((it, i) => { it.i = i; });
   G.li = li; G.keys = 0;
   P.x = L.start.x + .5; P.y = L.start.y + .5; P.a = openDirAngle(L.start.x, L.start.y); P.pitch = 0;
@@ -2349,6 +2097,7 @@ async function playIntro(){
 async function beginGame(){
   if (G.state !== 'title' && G.state !== 'end' && G.state !== 'lobby') return;
   const seq = ++G.seq;
+  if (!R3D){ G.state = 'cutscene'; await R3D_READY; if (seq !== G.seq) return; }   // online a partida pode começar antes do 3D terminar de carregar
   goLandscape();
   Sound.init();
   G.pages = new Set(); G.time = 0; G.rescues = 0; G.autoSeal = false;
@@ -3095,8 +2844,7 @@ function updatePlay(dt){
   const look = .0028*SENS/100;
   P.a += lookDX*look;
   // olhar para cima/baixo (mouse ou arrastar)
-  const lim = pitchLimit();
-  P.pitch = clamp(P.pitch - lookDY*look, -lim, lim);
+  P.pitch = clamp(P.pitch - lookDY*look, -PITCH_MAX, PITCH_MAX);
   lookDX = lookDY = 0;
   if (P.hideCd > 0) P.hideCd -= dt;
   // no armário: não anda, o celular fica desligado e só dá para espiar pelas frestas
@@ -3209,485 +2957,17 @@ function updatePlay(dt){
   updateHUD();
 }
 
-/* =====================================================================
-   RENDERIZAÇÃO 3D — raycasting com chão/teto texturizados e
-   iluminação por pixel (lanterna branca do celular + luz vermelha do João Vitão)
-   ===================================================================== */
-const LUTS = 24, LUTN = LUTS*24, AMB = .007;
-const lutB = new Float32Array(LUTN), lutS = new Float32Array(LUTN);   // facho / luz em volta, por distância
-// cone do flash, indexado pela tangente² do ângulo em relação ao centro da tela:
-// cheio até ~10°, some até ~24°
-const CONE_N = 512, CONE_K = CONE_N/1.5, coneT = new Float32Array(CONE_N);
-for (let i = 0; i < CONE_N; i++){ const t = Math.sqrt(i/CONE_K), f = clamp(1 - (t - .17)/.28, 0, 1); coneT[i] = f*f*(3 - 2*f); }
-let R_ = {};   // parâmetros da câmera no quadro atual (usados pelos sprites)
-// tabela de paredes por direção horizontal (preenchida a cada quadro)
-const TBL_MAX = 8192;
-const tblD = new Float32Array(TBL_MAX), tblHX = new Float32Array(TBL_MAX), tblHY = new Float32Array(TBL_MAX);
-const tblU = new Uint8Array(TBL_MAX), tblSide = new Uint8Array(TBL_MAX), tblTex = new Array(TBL_MAX).fill(null);
-let colAx = new Float32Array(0);   // deslocamento horizontal de cada coluna (em unidades de foco)
-// online: lanternas dos outros alunos (até 4 luzes: x, y)
-const PL = new Float32Array(8), PL_R2 = 4.4, PL_I = .5;
-
-// limite do olhar para cima/baixo: o raio mais inclinado da tela nunca aponta para trás
-function pitchLimit(){ const a = (RH/2 + 2)/FOC; return Math.min(PITCH_MAX, Math.acos(.12/Math.sqrt(1 + a*a)) - Math.atan(a)); }
-
-function renderWorld(){
-  const W = RW, H = RH, map = L.map, MW = L.W, MH = L.H;
-  const shakeA = G.shake > 0 ? (Math.random() - .5)*G.shake*.05 : 0;
-  const ang = P.a + shakeA;
-  const dirX = Math.cos(ang), dirY = Math.sin(ang);
-  const posX = P.x, posY = P.y;
-  const eye = EYE + (P.moving ? Math.sin(P.walkT)*.018 : 0);
-  // câmera inclinada de verdade (olhar para cima/baixo): cada pixel lança o próprio raio 3D,
-  // então as paredes não entortam como no truque antigo de só deslocar o horizonte
-  const pitch = clamp(P.pitch, -pitchLimit(), pitchLimit());
-  const cp = Math.cos(pitch), sp = Math.sin(pitch);
-  const cy0 = H/2 + (G.shake > 0 ? (Math.random() - .5)*G.shake*H*.04 : 0);   // centro óptico vertical
-  R_ = { dirX, dirY, eye, cp, sp, cy0 };
-
-  // tabela de luz da lanterna (recalculada a cada quadro por causa da bateria fraca)
-  // luz = facho em cone (só onde você aponta, alcança longe) + um pouco que vaza em volta (tela, reflexo)
-  const lightOff = P.out || !P.light, beamOn = !lightOff && !P.hidden;
-  const Rl = lightRadius(), Rs = 1.3, ks = P.hidden ? .12 : beamOn ? .16 : .32;
-  for (let i = 0; i < LUTN; i++){
-    const d = i/LUTS, vb = 1 - d/Rl, vs = 1 - d/Rs;
-    lutB[i] = beamOn && vb > 0 ? Math.min(1.1, Math.pow(vb, 1.3)*1.25) : 0;
-    lutS[i] = vs > 0 ? Math.pow(vs, 1.6)*ks : 0;
-  }
-  // luz branca do LED; desligado, sobra só o brilho azulado da tela
-  const dim = lightOff || P.hidden, WR = dim ? .55 : .95, WG = dim ? .62 : .98, WB = dim ? .8 : 1;
-
-  // luz vermelha do fantasma (pulsa; atravessa as paredes, então você vê ele chegando)
-  const vOn = V.alpha > .05 && V.state !== 'hidden' && L;
-  const vPulse = .85 + .15*Math.sin(G.t*4.2);
-  // versus: quem é o João Vitão enxerga pela própria luz vermelha, mais larga
-  const ownV = isVillain();
-  const vx = V.x, vy = V.y, vI = vOn ? V.alpha*vPulse*(V.state === 'final' ? 1.6 : ownV ? 1.25 : 1.9) : 0, VL2 = V.state === 'final' ? 9 : ownV ? 20 : 7.5;
-  // online: lanterna dos outros alunos — uma luz branca um pouco à frente de cada um
-  let nPL = 0;
-  if (MP.on) for (const o of MP.others.values()){
-    if (nPL >= 4 || !otherVisible(o) || !(o.f & F_LIGHT) || isVillainId(o.id)) continue;
-    PL[2*nPL] = o.x + Math.cos(o.a)*1.3; PL[2*nPL + 1] = o.y + Math.sin(o.a)*1.3; nPL++;
-  }
-  // sala 13: escuridão que respira em volta da carteira
-  const sealOn = !!L.seal, scx = sealOn ? L.seal.x + .5 : 0, scy = sealOn ? L.seal.y + .5 : 0;
-  const sealDark = .7 + .15*Math.sin(G.t*.8);
-  const sealTex = sealOn ? L.tex.seal.data : null, sealW = sealOn ? L.tex.seal.w : 0;
-  const sx0 = sealOn ? L.chamber.x0 : 0, sy0 = sealOn ? L.chamber.y0 : 0;
-
-  const floors = L.tex.floors, ceils = L.tex.ceils, walls = L.tex.walls;
-  const floorId = L.floorId, ceilId = L.ceilId, wallId = L.wallId, explored = L.explored;
-  const invF = 1/FOC;
-
-  // 1) tabela de paredes por direção horizontal. As paredes vão do chão ao teto, então
-  //    qual parede um raio acerta só depende da direção horizontal dele (q = tangente do
-  //    ângulo em relação ao olhar). Cada direção é traçada uma vez; os pixels só consultam.
-  const aX = (W/2)*invF, aY = (H/2 + 2)*invF;
-  const cyMin = cp - Math.abs(sp)*aY, cyMax = cp + Math.abs(sp)*aY;
-  const qMax = aX/cyMin;
-  const N = Math.min(TBL_MAX, Math.ceil(2*qMax*FOC*cyMax) + 2), qScale = N/(2*qMax);   // ~1 amostra por pixel na pior linha
-  for (let i = 0; i < N; i++){
-    const q = -qMax + (i + .5)/qScale, nrm = 1/Math.sqrt(1 + q*q);
-    const rdx = (dirX - dirY*q)*nrm, rdy = (dirY + dirX*q)*nrm;    // direção unitária: t = distância
-    let mapX = posX | 0, mapY = posY | 0;
-    const ddx = rdx === 0 ? 1e30 : Math.abs(1/rdx), ddy = rdy === 0 ? 1e30 : Math.abs(1/rdy);
-    let stepX, stepY, sdx, sdy, side = 0;
-    if (rdx < 0){ stepX = -1; sdx = (posX - mapX)*ddx; } else { stepX = 1; sdx = (mapX + 1 - posX)*ddx; }
-    if (rdy < 0){ stepY = -1; sdy = (posY - mapY)*ddy; } else { stepY = 1; sdy = (mapY + 1 - posY)*ddy; }
-    let D = 1e9, tex = null, u = 0;
-    explored[mapY*MW + mapX] = 1;
-    for (let it = 0; it < 80; it++){
-      const cur = sdx < sdy ? sdx : sdy;
-      if (sdx < sdy){ sdx += ddx; mapX += stepX; side = 0; } else { sdy += ddy; mapY += stepY; side = 1; }
-      if (mapX < 0 || mapY < 0 || mapX >= MW || mapY >= MH) break;
-      const idx = mapY*MW + mapX, t = map[idx];
-      if (cur < Rl + .6) explored[idx] = 1;
-      if (t === T_WALL){
-        D = cur;
-        let wx = side === 0 ? posY + cur*rdy : posX + cur*rdx; wx -= Math.floor(wx);
-        u = (wx*TS) | 0;
-        if (side === 0 && rdx > 0) u = TS - 1 - u;
-        if (side === 1 && rdy < 0) u = TS - 1 - u;
-        tex = walls[wallId[idx]];
-        break;
-      }
-      if (t === T_DOOR){
-        const d = L.doorAt.get(idx);
-        if (d.anim >= 1) continue;
-        const tt = d.axis === 'x' ? (mapX + .5 - posX)/rdx : (mapY + .5 - posY)/rdy;
-        if (tt <= 0) continue;
-        const f = d.axis === 'x' ? posY + tt*rdy - mapY : posX + tt*rdx - mapX;
-        if (f < 0 || f >= 1 || f < d.anim) continue;
-        D = tt; u = ((f - d.anim)*TS) | 0; side = d.axis === 'x' ? 0 : 1;
-        tex = L.tex.doors[d.req + '_' + Math.min(G.keys, d.req)];
-        break;
-      }
-    }
-    tblD[i] = D; tblTex[i] = tex; tblU[i] = u; tblSide[i] = side;
-    tblHX[i] = posX + D*rdx; tblHY[i] = posY + D*rdy;
-  }
-  // z-buffer dos sprites: raio horizontal na altura dos olhos de cada coluna (distância para a frente)
-  for (let x = 0; x < W; x++){
-    const q = (x + .5 - W/2)*invF*cp;
-    const i = clamp(((q + qMax)*qScale) | 0, 0, N - 1);
-    const z = tblD[i]/Math.sqrt(1 + q*q);
-    zbuf[x] = z < .02 ? .02 : z > 30 ? 30 : z;
-  }
-
-  // 2) cada pixel: parede/porta (da tabela) ou chão/teto — o que o raio 3D encontrar primeiro
-  if (colAx.length !== W) colAx = new Float32Array(W);
-  for (let x = 0; x < W; x++) colAx[x] = (x + .5 - W/2)*invF;
-  const invWH = 1/WALL_H;
-  for (let y = 0; y < H; y++){
-    const ay = (cy0 - y - .5)*invF;
-    const cy = cp - sp*ay, rz = sp + cp*ay;   // parte do raio na direção do olhar (horizontal) e vertical
-    const tFC = rz < -1e-6 ? -eye/rz : rz > 1e-6 ? (WALL_H - eye)/rz : 1e9;   // quando ele bate no chão/teto
-    const iScale = qScale/cy, iOff = qMax*qScale, cy2 = cy*cy, row = y*W, ay2 = ay*ay;
-    for (let x = 0; x < W; x++){
-      const ax = colAx[x];
-      let i = (ax*iScale + iOff) | 0; if (i < 0) i = 0; else if (i >= N) i = N - 1;
-      const hl = Math.sqrt(cy2 + ax*ax);                           // tamanho da parte horizontal do raio
-      const D = tblD[i], tW = D/hl;
-      let hx, hy, dist, c, mr, mg, mb, b;
-      if (tW < tFC && D < 1e8){
-        // parede/porta: textura esticada na altura toda
-        const tex = tblTex[i];
-        hx = tblHX[i]; hy = tblHY[i]; dist = D;
-        const bi = (dist*LUTS) | 0, ci = ((ax*ax + ay2)*CONE_K) | 0;
-        b = bi < LUTN ? AMB + lutS[bi] + (ci < CONE_N ? coneT[ci] : 0)*lutB[bi] : AMB;
-        let zf = (eye + tW*rz)*invWH; if (zf < 0) zf = 0; else if (zf > .999) zf = .999;
-        const v = TS - 1 - ((zf*TS) | 0);
-        c = tex[v*TS + tblU[i]];
-        const sh = tblSide[i] ? .74 : 1;
-        mr = b*WR*sh; mg = b*WG*sh; mb = b*WB*sh;
-        if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; } }
-        for (let q = 0; q < nPL; q++){ const ex = hx - PL[2*q], ey = hy - PL[2*q + 1], d2 = ex*ex + ey*ey; if (d2 < PL_R2){ const k = 1 - d2/PL_R2, l = PL_I*k*k*sh; mr += l*.92; mg += l*.96; mb += l; } }
-      } else {
-        if (tFC >= 1e8){ buf[row + x] = 0xff000000; continue; }
-        hx = posX + tFC*(dirX*cy - dirY*ax); hy = posY + tFC*(dirY*cy + dirX*ax); dist = tFC*hl;
-        const tx = hx | 0, ty = hy | 0;
-        if (hx < 0 || hy < 0 || tx >= MW || ty >= MH){ buf[row + x] = 0xff000000; continue; }
-        const bi = (dist*LUTS) | 0, ci = ((ax*ax + ay2)*CONE_K) | 0;
-        b = bi < LUTN ? AMB + lutS[bi] + (ci < CONE_N ? coneT[ci] : 0)*lutB[bi] : AMB;
-        if (rz < 0){
-          // chão
-          const fid = floorId[ty*MW + tx];
-          if (fid === F_SEAL) c = sealTex[(((hy - sy0)*TS) | 0)*sealW + (((hx - sx0)*TS) | 0)];
-          else c = floors[fid][(((hy - ty)*TS) | 0)*TS + (((hx - tx)*TS) | 0)];
-          mr = b*WR; mg = b*WG; mb = b*WB;
-          if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; } }
-          for (let q = 0; q < nPL; q++){ const ex = hx - PL[2*q], ey = hy - PL[2*q + 1], d2 = ex*ex + ey*ey; if (d2 < PL_R2){ const k = 1 - d2/PL_R2, l = PL_I*k*k; mr += l*.92; mg += l*.96; mb += l; } }
-          if (sealOn && fid === F_SEAL){ const ex = hx - scx, ey = hy - scy, m = 1 - sealDark*Math.exp(-(ex*ex + ey*ey)*.9); mr *= m; mg *= m; mb *= m; }
-        } else {
-          // teto
-          const cid = ceilId[ty*MW + tx];
-          c = ceils[cid][(((hy - ty)*TS) | 0)*TS + (((hx - tx)*TS) | 0)];
-          if (cid === C_HOLE){ b = Math.max(b, .55); mr = b*.85; mg = b*.9; mb = b; }   // luz do dia pela claraboia
-          else { mr = b*WR*.85; mg = b*WG*.85; mb = b*WB*.85; }
-          if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k*.7; mr += vl; mg += vl*.1; mb += vl*.06; } }
-          for (let q = 0; q < nPL; q++){ const ex = hx - PL[2*q], ey = hy - PL[2*q + 1], d2 = ex*ex + ey*ey; if (d2 < PL_R2){ const k = 1 - d2/PL_R2, l = PL_I*k*k*.6; mr += l*.92; mg += l*.96; mb += l; } }
-        }
-      }
-      let r = ((c & 255)*mr) | 0, g = (((c >> 8) & 255)*mg) | 0, bb = (((c >> 16) & 255)*mb) | 0;
-      if (r > 255) r = 255; if (g > 255) g = 255; if (bb > 255) bb = 255;
-      buf[row + x] = 0xff000000 | (bb << 16) | (g << 8) | r;
-    }
-  }
-  lctx.putImageData(imgData, 0, 0);
-}
-
-// projeta e desenha um billboard (com a inclinação da câmera), recortado coluna a coluna pelo z-buffer
-function billboard(img, sil, wx, wy, zBottom, ww, wh, alpha, bright, additive){
-  const { dirX, dirY, eye, cp, sp, cy0 } = R_;
-  const sx = wx - P.x, sy = wy - P.y;
-  const depth = dirX*sx + dirY*sy;                 // distância horizontal à frente
-  if (depth < .12) return null;
-  const rt = dirX*sy - dirY*sx;                    // deslocamento para a direita
-  // coordenadas de câmera de um ponto na altura z: "frente" e "cima"
-  const fwd = z => cp*depth + sp*(z - eye), up = z => cp*(z - eye) - sp*depth;
-  const fm = fwd(zBottom + wh/2);
-  if (fm < .08) return null;
-  const k = FOC/fm;
-  const scrX = RW/2 + rt*k, pw = ww*k;
-  const zt = zBottom + wh, fT = Math.max(.05, fwd(zt)), fB = Math.max(.05, fwd(zBottom));
-  const top = cy0 - up(zt)/fT*FOC, ph = cy0 - up(zBottom)/fB*FOC - top;
-  const left = scrX - pw/2;
-  if (left > RW || left + pw < 0 || pw < .3 || ph <= 0) return null;
-  const x0 = Math.max(0, Math.floor(left)), x1 = Math.min(RW - 1, Math.ceil(left + pw) - 1);
-  const iw = img.width || img.naturalWidth, ih = img.height || img.naturalHeight;
-  lctx.globalCompositeOperation = additive ? 'lighter' : 'source-over';
-  let run = -1;
-  const flush = (a, b) => {
-    const srcX = (a - left)/pw*iw, srcW = (b - a)/pw*iw;
-    if (srcW <= 0) return;
-    lctx.globalAlpha = alpha;
-    lctx.drawImage(img, srcX, 0, srcW, ih, a, top, b - a, ph);
-    if (sil && bright < .99){ lctx.globalAlpha = alpha*(1 - bright); lctx.drawImage(sil, srcX, 0, srcW, ih, a, top, b - a, ph); }
-  };
-  for (let x = x0; x <= x1 + 1; x++){
-    const vis = x <= x1 && zbuf[x] > depth;
-    if (vis && run < 0) run = x;
-    else if (!vis && run >= 0){ flush(run, x); run = -1; }
-  }
-  lctx.globalAlpha = 1; lctx.globalCompositeOperation = 'source-over';
-  return { scrX, top, depth, k };
-}
-// luz num ponto do mundo (para sprites): o mesmo cone do flash usado nas paredes
-function lightAt(wx, wy, z){
-  const { dirX, dirY, eye, cp, sp } = R_;
-  const sx = wx - P.x, sy = wy - P.y, bi = (Math.hypot(sx, sy)*LUTS) | 0;
-  if (bi >= LUTN) return AMB;
-  const F = dirX*sx + dirY*sy, h = z - eye, fwd = cp*F + sp*h;
-  let cone = 0;
-  if (fwd > .05){
-    const ax = (dirX*sy - dirY*sx)/fwd, ay = (cp*h - sp*F)/fwd, ci = ((ax*ax + ay*ay)*CONE_K) | 0;
-    cone = ci < CONE_N ? coneT[ci] : 0;
-  }
-  return AMB + lutS[bi] + cone*lutB[bi];
-}
-
-function renderSprites(){
-  const list = [];
-  const add = (depthFn, draw) => list.push({ d:depthFn, draw });
-  const dist = (x, y) => Math.hypot(x - P.x, y - P.y);
-  const t = G.t;
-
-  for (const it of L.items){
-    if (it.taken) continue;
-    const x = it.x + .5, y = it.y + .5, d = dist(x, y);
-    if (d > 14) continue;
-    const bob = Math.sin(t*2.2 + it.bob)*.03;
-    const b = lightAt(x, y, .2);
-    add(d, () => {
-      if (it.type === 'key'){
-        billboard(SPR.glowGold, null, x, y, .05 + bob, .5, .5, .18 + .1*Math.sin(t*3 + it.bob), 1, true);
-        billboard(SPR.key.img, SPR.key.sil, x, y, .22 + bob, SPR.key.ww, SPR.key.wh, 1, Math.max(b, .15), false);
-      } else if (it.type === 'page'){
-        const s = PAGES[it.page].kind === 'stone' ? SPR.stone : SPR.page;
-        billboard(PAGES[it.page].kind === 'stone' ? SPR.glowCold : SPR.glowWarm, null, x, y, bob, .7, .7, .22 + .12*Math.sin(t*2 + it.bob), 1, true);
-        billboard(s.img, s.sil, x, y, (s === SPR.stone ? .02 : .15) + bob, s.ww, s.wh, 1, Math.max(b, .22), false);
-      } else {
-        const s = SPR[it.type];
-        billboard(s.img, s.sil, x, y, .02, s.ww, s.wh, 1, b, false);
-      }
-    });
-  }
-  for (const tr of L.traps){
-    const ph = (t + tr.phase) % TRAP_PERIOD;
-    if (ph <= TRAP_UP) continue;
-    const x = tr.x + .5, y = tr.y + .5, d = dist(x, y);
-    if (d > 10) continue;
-    const k = Math.min(1, (ph - TRAP_UP)/.07);
-    add(d, () => billboard(SPR.spikes.img, SPR.spikes.sil, x, y, -SPR.spikes.wh*(1 - k), SPR.spikes.ww, SPR.spikes.wh, 1, lightAt(x, y, .1), false));
-  }
-  { const x = L.start.x + .5, y = L.start.y + .5, d = dist(x, y);
-    if (d < 14) add(d, () => billboard(SPR.ladder.img, SPR.ladder.sil, x, y, 0, SPR.ladder.ww, SPR.ladder.wh, 1, lightAt(x, y, .6), false)); }
-  if (L.seal){
-    const lx = L.seal.x - .6, ly = L.seal.y + 1.5, hx = L.seal.x + 1.6, hy = L.seal.y + 1.5;
-    const d1 = dist(lx, ly), d2 = dist(hx, hy);
-    add(d1, () => billboard(SPR.bag.img, SPR.bag.sil, lx, ly, 0, SPR.bag.ww, SPR.bag.wh, 1, Math.max(lightAt(lx, ly, .15), V.state === 'final' ? .5 : 0), false));
-    add(d2, () => billboard(SPR.cap.img, SPR.cap.sil, hx, hy, 0, SPR.cap.ww, SPR.cap.wh, 1, Math.max(lightAt(hx, hy, .08), V.state === 'final' ? .5 : 0), false));
-  }
-  for (const p of parts){
-    const d = dist(p.x, p.y);
-    if (d > 12) continue;
-    const a = p.life/p.max;
-    // fumaça fica atrás do João Vitão (se passar na frente, ele parece translúcido)
-    add(p.type === 'smoke' ? d + .8 : d, () => {
-      if (p.type === 'smoke') billboard(SPR.glowRed, null, p.x, p.y, p.z, p.size*(1 + (1 - a)), p.size*(1 + (1 - a)), a*.16*V.alpha, 1, true);
-      else billboard(SPR.glowGold, null, p.x, p.y, p.z, p.size, p.size, a, 1, true);
-    });
-  }
-  // online: os outros alunos (o pegador do versus aparece como o próprio João Vitão, logo abaixo)
-  nameTags.length = 0;
-  if (MP.on) for (const o of MP.others.values()){
-    if (!otherVisible(o) || isVillainId(o.id)) continue;
-    const d = dist(o.x, o.y);
-    if (d > 16 || d < .15) continue;
-    add(d, () => {
-      const { view, frame } = studentPose(o), s = playerSprite(o.color, view, frame), lit = o.f & F_LIGHT;
-      // a tela do celular ilumina um pouco quem está com a lanterna ligada
-      const b = Math.max(lightAt(o.x, o.y, .6), lit ? .3 : .05);
-      // brilho do flash no celular: de costas fica atrás do corpo; de frente, o flash aponta para você
-      // (de frente o celular está à direita na tela: desloca para a direita da câmera)
-      const side = view === 'f' ? .055 : 0, gs = view === 'f' ? .26 : .36;
-      const gx = o.x + Math.cos(o.a)*.15 - Math.sin(P.a)*side, gy = o.y + Math.sin(o.a)*.15 + Math.cos(P.a)*side;
-      const glow = () => billboard(SPR.glowWhite, null, gx, gy, PS_PHONE_Z - gs/2, gs, gs, view === 'f' ? .8 : .5, 1, true);
-      if (lit && view === 'b') glow();
-      const r = billboard(s.img, s.sil, o.x, o.y, frame === 2 || frame === 4 ? .012 : 0, s.ww, s.wh, 1, b, false);
-      if (lit && view !== 'b') glow();
-      // nome em cima (o João Vitão do versus não vê nomes: eles entregariam quem está no escuro)
-      if (r && d < 9 && !isVillain()){
-        const zx = clamp(r.scrX | 0, 0, RW - 1);
-        if (zbuf[zx] > r.depth) nameTags.push({ name:o.name, x:r.scrX, y:r.top, a:clamp(1.3 - d/9, .25, 1), color:o.color });
-      }
-    });
-  }
-  // João Vitão
-  let villainScreen = null;
-  if (V.alpha > .01){
-    const d = dist(V.x, V.y);
-    if (d < 16){
-      add(d, () => {
-        const bob = Math.sin(t*1.6)*.07;
-        const pulse = .6 + .4*Math.sin(t*2.3);
-        const img = villainImgReady ? villainSpriteRed : SPECTER[Math.floor(t*6) % 8];
-        const iw = villainImgReady ? villainSprite.width : 128, ih = villainImgReady ? villainSprite.height : 176;
-        const h = VILLAIN_SPRITE_HEIGHT, w = h*iw/ih;
-        const z0 = .02 + bob;
-        // totalmente opaco: nada de fantasma translúcido
-        const a = 1;
-        billboard(SPR.glowRed, null, V.x, V.y, z0 - .7, h*2.4, h*2.4, V.alpha*(.55 + .3*pulse), 1, true);
-        villainScreen = billboard(img, null, V.x, V.y, z0, w, h, a, 1, false);
-        if (villainScreen) villainScreen.h = h;
-      });
-    }
-  }
-  list.sort((a, b) => b.d - a.d);
-  for (const s of list) s.draw();
-  return villainScreen;
-}
-
-/* ---------- Online: os outros alunos ---------- */
+/* ---------- Online: nome em cima de cada aluno (o render3d.js diz onde, em pixels do canvas) ---------- */
 const nameTags = [];
-/* Aluno de moletom com capuz, mochila, jeans e tênis, com o celular na mão.
-   A cor do moletom é a do jogador na sala. Cada aluno tem 3 vistas — frente (olhando
-   para você), costas e de lado ('s' olha para a direita da tela; 'S' é o espelho) —
-   e 5 quadros: 0 parado, 1–4 o ciclo da caminhada. Desenhado em 64×144 e ampliado;
-   cada combinação é gerada só quando aparece pela primeira vez. */
-const PSPR = new Map();
-const PS_W = 96, PS_H = 216, PS_K = PS_W/64, PS_WH = .68;
-const PS_PHONE_Z = PS_WH*(144 - 56)/144;   // altura do celular na mão (y≈56 no desenho de 144)
-const SKIN = '#c99a78', SKIN_D = '#a57758', HAIR = '#2a1c14', EYES = '#1a1210';
-const JEANS = '#313b52', JEANS_D = '#1f2536', BAG = '#2a2e35', BAG_D = '#1a1d22', SHOE = '#5a5d66', SOLE = '#e8e4dc';
-function playerSprite(ci, view, frame){
-  const key = ci + view + frame;
-  let s = PSPR.get(key);
-  if (!s){
-    // altura .68: os olhos ficam na mesma altura da sua câmera (EYE)
-    s = sprite(PS_W, PS_H, PS_WH*PS_W/PS_H, PS_WH, g => drawStudent(g, PLAYER_COLORS[ci] || PLAYER_COLORS[0], view, frame));
-    PSPR.set(key, s);
-  }
-  return s;
-}
-function drawStudent(g, c, view, frame){
-  g.scale(PS_K, PS_K);
-  if (view === 'S'){ g.translate(64, 0); g.scale(-1, 1); view = 's'; }
-  const swing = [0, 1, 0, -1, 0][frame] || 0;
-  const bob = frame === 2 || frame === 4 ? -1.5 : 0;   // no meio do passo o corpo sobe um pouco
-  const hood = rgb(c), hoodD = rgb(c, -34), hoodDD = rgb(c, -58), hoodL = rgb(c, 28);
-  const rr = (x, y, w, h, r, st) => { g.fillStyle = st; g.beginPath(); g.roundRect(x, y, w, h, r); g.fill(); };
-  const ell = (x, y, rx, ry, st) => { g.fillStyle = st; g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, TAU); g.fill(); };
-  const torsoFill = (x0, x1) => { const gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, hoodL); gr.addColorStop(.45, hood); gr.addColorStop(1, hoodD); return gr; };
-
-  if (view === 's'){
-    // ---------- de lado, olhando para a direita ----------
-    // pernas em tesoura (a de trás mais escura); o tênis aponta para a frente
-    const leg = (ang, far) => {
-      g.save(); g.translate(31, 91); g.rotate(ang);
-      rr(-5, -2, 10, 44, 4, far ? JEANS_D : JEANS);
-      rr(-5.5, 38, 16, 7, 3, far ? '#3a3c43' : SHOE);
-      g.fillStyle = far ? '#a9a59e' : SOLE; g.fillRect(-5.5, 43, 16, 2.5);
-      g.beginPath(); g.roundRect(6, 39.5, 4.5, 4.5, [0, 2.5, 2.5, 0]); g.fill();   // biqueira
-      g.restore();
-    };
-    const a = .36*swing;
-    leg(a, true); leg(-a, false);
-    g.translate(0, bob);
-    rr(7, 45, 15, 37, 6, BAG); rr(7, 45, 15, 13, 6, BAG_D);               // mochila nas costas
-    g.fillStyle = BAG_D; g.fillRect(9, 66, 11, 1.2);
-    g.fillStyle = torsoFill(19, 45);                                        // moletom
-    g.beginPath(); g.moveTo(21, 42); g.quadraticCurveTo(32, 37.5, 41, 43); g.quadraticCurveTo(45.5, 50, 44.5, 60);
-    g.lineTo(43.5, 96); g.quadraticCurveTo(31, 98.5, 19, 96); g.lineTo(19, 52); g.quadraticCurveTo(18, 44, 21, 42); g.closePath(); g.fill();
-    rr(19, 91, 25, 6, 2, hoodD);                                            // barra
-    g.fillStyle = BAG; g.fillRect(22, 43, 4, 31);                           // alça
-    rr(27, 45, 10, 25, 5, hoodD);                                           // braço
-    g.save(); g.translate(32, 66); g.rotate(-.38); rr(-4.5, -4.5, 20, 9, 4, hoodD); rr(11, -4.5, 4, 9, 1.5, hoodDD); g.restore();   // antebraço para a frente
-    rr(46, 48, 4.2, 16, 1.5, '#16181c');                                    // celular de perfil
-    g.fillStyle = '#7fa7e0'; g.fillRect(46, 49.5, 1.3, 13);                 // a tela vira para o rosto
-    ell(48, 60.5, 4, 3.8, SKIN);                                            // mão
-    ell(31, 43, 12, 4.5, hoodD);                                            // capuz caído nos ombros
-    ell(29.5, 24, 16, 18, hood);                                            // capuz
-    g.strokeStyle = hoodL; g.lineWidth = 1.4; g.beginPath(); g.ellipse(29.5, 24, 15, 17, 0, Math.PI*1.05, Math.PI*1.55); g.stroke();
-    g.save(); g.beginPath(); g.ellipse(36.5, 27.5, 9, 12.5, 0, 0, TAU); g.clip();   // abertura do capuz
-    g.fillStyle = '#16110d'; g.fillRect(20, 10, 30, 36);
-    ell(39.5, 29, 7.5, 10.5, SKIN);
-    g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(30, 15, 20, 6.5);            // sombra do capuz na testa
-    g.restore();
-    g.fillStyle = SKIN; g.beginPath(); g.moveTo(45, 24.5); g.lineTo(48.5, 30.5); g.lineTo(45, 31.5); g.closePath(); g.fill();   // nariz
-    g.fillStyle = HAIR; g.beginPath(); g.ellipse(41, 21, 5.5, 2.8, 0, Math.PI, TAU); g.fill();   // franja
-    ell(42.3, 26.8, 1.2, 1.3, EYES);
-    g.fillStyle = '#7a4a3a'; g.fillRect(42.5, 35.2, 3, 1);
-    g.strokeStyle = hoodD; g.lineWidth = 2; g.beginPath(); g.ellipse(36.5, 27.5, 9, 12.5, 0, Math.PI*.55, Math.PI*1.45); g.stroke();   // borda do capuz
-    return;
-  }
-
-  // ---------- de frente ou de costas ----------
-  const front = view === 'f';
-  // pernas: no passo, o pé de trás sobe um pouco
-  for (const [x, lift] of [[21, swing < 0 ? 4 : 0], [34, swing > 0 ? 4 : 0]]){
-    rr(x, 91, 10, 45 - lift, 3, JEANS);
-    g.fillStyle = JEANS_D; g.fillRect(x < 32 ? x + 7 : x, 93, 3, 41 - lift);   // sombra na parte de dentro
-    rr(x - 1, 132 - lift, 12, 9, 3, SHOE);
-    g.fillStyle = SOLE; g.fillRect(x - 1, 139 - lift, 12, 3);
-    if (front) rr(x + 1, 134 - lift, 8, 3, 1.5, SOLE);   // biqueira
-  }
-  g.translate(0, bob);
-  g.fillStyle = torsoFill(12, 52);                                          // moletom
-  g.beginPath(); g.moveTo(16, 42); g.quadraticCurveTo(32, 36, 48, 42); g.quadraticCurveTo(53, 44, 52, 52);
-  g.lineTo(51, 96); g.quadraticCurveTo(32, 99, 13, 96); g.lineTo(12, 52); g.quadraticCurveTo(11, 44, 16, 42); g.closePath(); g.fill();
-  rr(13, 91, 38, 6, 2, hoodD);                                              // barra
-  const as = swing*1.5;
-  if (front){
-    g.fillStyle = BAG; g.fillRect(17, 43, 5, 26); g.fillRect(42, 43, 5, 26);   // alças da mochila
-    rr(21, 72, 22, 14, 4, hoodD);                                           // bolso canguru
-    g.strokeStyle = '#e9e2d4'; g.lineWidth = 1.1; g.beginPath(); g.moveTo(28.5, 45); g.lineTo(28, 59); g.moveTo(35.5, 45); g.lineTo(36, 59); g.stroke();   // cordões
-    // braço livre balançando; o outro dobrado, segurando o celular na frente do peito
-    rr(4, 45, 10, 36, 5, hoodD); rr(4, 76 + as, 10, 6, 2, hoodDD); ell(9, 85 + as, 4.2, 4.6, SKIN);
-    rr(50, 45, 10, 24, 5, hoodD); rr(38, 62, 21, 9, 4, hoodD);
-    rr(37, 48, 10, 16, 2, '#16181c');                                       // costas do celular, com o flash
-    ell(39.8, 51, 1.6, 1.6, '#3a3e46'); ell(39.8, 55, 1.1, 1.1, '#e9eef6');
-    ell(43, 63.5, 4.5, 4, SKIN);
-  } else {
-    rr(17, 46, 30, 39, 7, BAG); rr(17, 46, 30, 14, 7, BAG_D);              // mochila
-    rr(22, 68, 20, 12, 3, BAG_D); g.fillStyle = '#5b5f67'; g.fillRect(30.5, 69.5, 3, 1.4);
-    g.fillStyle = rgb(c, 10); g.fillRect(19, 61, 3, 9);                     // chaveirinho da cor do jogador
-    rr(4, 45, 10, 26, 5, hoodD);                                            // braço do celular, dobrado para a frente
-    rr(50, 45, 10, 36, 5, hoodD); rr(50, 76 - as, 10, 6, 2, hoodDD); ell(55, 85 - as, 4.2, 4.6, SKIN);
-  }
-  ell(32, 43, 17, 5, hoodD);                                                // capuz caído nos ombros
-  ell(32, 24, 17, 18, hood);                                                // capuz
-  g.strokeStyle = hoodL; g.lineWidth = 1.4; g.beginPath(); g.ellipse(32, 24, 16, 17, 0, Math.PI*1.08, Math.PI*1.5); g.stroke();
-  if (front){
-    ell(32, 27, 11.5, 13.5, '#16110d');                                     // sombra dentro do capuz
-    ell(32, 29.5, 9.2, 11, SKIN);
-    g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(32, 20.5, 9.5, 5, 0, 0, TAU); g.fill();
-    g.fillStyle = HAIR; g.beginPath(); g.ellipse(32, 21, 9, 4.2, 0, Math.PI, TAU); g.fill();   // franja
-    ell(28.2, 28, 1.4, 1.2, EYES); ell(35.8, 28, 1.4, 1.2, EYES);
-    g.fillStyle = SKIN_D; g.fillRect(31.3, 30, 1.4, 4);
-    g.fillStyle = '#7a4a3a'; g.fillRect(29.5, 36, 5, 1.1);
-    g.strokeStyle = hoodD; g.lineWidth = 2; g.beginPath(); g.ellipse(32, 27, 11.5, 13.5, 0, 0, TAU); g.stroke();   // borda do capuz
-  } else {
-    g.fillStyle = 'rgba(0,0,0,.16)'; g.beginPath(); g.ellipse(32, 24, 17, 18, 0, -Math.PI/2, Math.PI/2); g.fill();   // lado na sombra
-    g.strokeStyle = hoodDD; g.lineWidth = 1.2; g.beginPath(); g.moveTo(32, 7); g.quadraticCurveTo(33, 24, 32, 41); g.stroke();   // costura
-  }
-}
-// qual vista do aluno aparece para quem está olhando, e em que quadro da caminhada
-function studentPose(o){
-  const rel = Math.abs(angDiff(o.a, Math.atan2(P.y - o.y, P.x - o.x)));
-  const view = rel < Math.PI/4 ? 'f' : rel > Math.PI*.75 ? 'b' : Math.sin(o.a - P.a) > 0 ? 's' : 'S';
-  const frame = o.f & F_MOVING ? 1 + (Math.floor(o.walkT/1.4) % 4) : 0;
-  return { view, frame };
-}
 function drawNameTags(){
   if (!nameTags.length) return;
-  const sx = cw/RW, sy = ch/RH, c = ctx;
+  const c = ctx;
   c.save();
   c.font = `600 ${Math.round(13*dpr)}px Cinzel, serif`; c.textAlign = 'center'; c.textBaseline = 'bottom';
   c.shadowColor = 'rgba(0,0,0,.95)'; c.shadowBlur = 6*dpr;
   for (const t of nameTags){
     c.globalAlpha = t.a; c.fillStyle = rgb(PLAYER_COLORS[t.color] || PLAYER_COLORS[0], 110);
-    c.fillText(t.name, t.x*sx, t.y*sy - 6*dpr);
+    c.fillText(t.name, t.x, t.y - 6*dpr);
   }
   c.restore();
 }
@@ -3707,99 +2987,16 @@ function drawVillainView(){
   }
 }
 
-/* ---------- Celular na mão (primeira pessoa) ---------- */
-function drawHandPhone(){
-  const s = ch/900;
-  const bobX = P.moving ? Math.cos(P.walkT*.5)*12*s : 0, bobY = P.moving ? Math.abs(Math.sin(P.walkT*.5))*14*s : 0;
-  const sway = Math.sin(G.t*1.3)*4*s;
-  const w = 150*s, h = 290*s;
-  ctx.save();
-  ctx.translate(cw*.78 + bobX + sway, ch*.8 + bobY); ctx.rotate(-.08);
-  // manga do moletom e palma da mão, atrás do celular
-  ctx.fillStyle = '#1b1d22';
-  ctx.beginPath(); ctx.moveTo(-20*s, 130*s); ctx.lineTo(60*s, 460*s); ctx.lineTo(280*s, 460*s); ctx.lineTo(130*s, 90*s); ctx.closePath(); ctx.fill();
-  const skin = '#8d5a3c', skinDark = 'rgba(0,0,0,.28)';
-  ctx.fillStyle = skin; ctx.beginPath(); ctx.ellipse(30*s, 150*s, 95*s, 72*s, -.4, 0, TAU); ctx.fill();
-  // corpo e tela
-  ctx.fillStyle = '#0d0f12'; ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 20*s); ctx.fill();
-  ctx.strokeStyle = '#2a2f36'; ctx.lineWidth = 3*s; ctx.stroke();
-  const sx = -w/2 + 8*s, sy = -h/2 + 8*s, sw = w - 16*s, sh = h - 16*s;
-  if (!P.out){
-    const gr = ctx.createLinearGradient(0, sy, 0, sy + sh); gr.addColorStop(0, '#1d2b3f'); gr.addColorStop(1, '#0e1522');
-    ctx.fillStyle = gr; ctx.beginPath(); ctx.roundRect(sx, sy, sw, sh, 14*s); ctx.fill();
-    ctx.fillStyle = 'rgba(230,238,248,.92)'; ctx.textAlign = 'center';
-    ctx.font = `600 ${Math.round(40*s)}px sans-serif`; ctx.fillText('03:13', 0, -h*.16);
-    ctx.font = `${Math.round(13*s)}px sans-serif`; ctx.fillStyle = 'rgba(200,215,235,.7)'; ctx.fillText(P.light ? 'Lanterna ligada' : 'Lanterna desligada', 0, -h*.16 + 24*s);
-    // bateria no canto da tela
-    const f = Math.round(P.fuel), bw = 26*s, bh = 12*s, bx = sw/2 - 44*s, by = sy + 10*s;
-    ctx.strokeStyle = 'rgba(230,238,248,.85)'; ctx.lineWidth = 1.5*s; ctx.strokeRect(bx, by, bw, bh);
-    ctx.fillStyle = f < 10 ? '#ff4a3a' : f < 25 ? '#f0b43c' : '#5fd36a'; ctx.fillRect(bx + 2*s, by + 2*s, (bw - 4*s)*f/100, bh - 4*s);
-    ctx.font = `${Math.round(11*s)}px sans-serif`; ctx.fillStyle = 'rgba(230,238,248,.85)'; ctx.textAlign = 'right'; ctx.fillText(f + '%', bx - 4*s, by + 10*s);
-    // brilho da tela
-    ctx.globalCompositeOperation = 'lighter';
-    const gl = ctx.createRadialGradient(0, 0, 0, 0, 0, 220*s); gl.addColorStop(0, 'rgba(120,160,220,.10)'); gl.addColorStop(1, 'rgba(120,160,220,0)');
-    ctx.fillStyle = gl; ctx.fillRect(-220*s, -220*s, 440*s, 440*s);
-    ctx.globalCompositeOperation = 'source-over';
-  } else {
-    // descarregado: tela preta com a bateria vazia piscando
-    ctx.fillStyle = '#030405'; ctx.beginPath(); ctx.roundRect(sx, sy, sw, sh, 14*s); ctx.fill();
-    if (Math.sin(G.t*5) > 0){
-      ctx.strokeStyle = '#ff4a3a'; ctx.lineWidth = 3*s; ctx.strokeRect(-26*s, -12*s, 52*s, 24*s); ctx.fillStyle = '#ff4a3a'; ctx.fillRect(26*s, -5*s, 5*s, 10*s);
-    }
-  }
-  // polegar na borda esquerda, dedos na direita
-  ctx.fillStyle = skin;
-  ctx.beginPath(); ctx.ellipse(-w/2 + 2*s, 50*s, 20*s, 52*s, .25, 0, TAU); ctx.fill();
-  for (let k = 0; k < 4; k++){ ctx.beginPath(); ctx.ellipse(w/2 + 4*s, -30*s + k*36*s, 22*s, 15*s, -.1, 0, TAU); ctx.fill(); }
-  ctx.fillStyle = skinDark; for (let k = 0; k < 4; k++){ ctx.fillRect(w/2 - 10*s, -30*s + k*36*s, 3*s, 12*s); }
-  // flash: o LED fica atrás, no topo do celular; a luz vaza pela borda e sai em facho para a frente
-  if (P.light && !P.out){
-    const k = (G.dip > 0 ? .55 : 1)*(.96 + .04*Math.sin(G.t*37));
-    const lx = -w*.28, ly = -h/2 - 4*s;
-    ctx.globalCompositeOperation = 'lighter';
-    const halo = ctx.createRadialGradient(lx, ly, 0, lx, ly, 170*s);
-    halo.addColorStop(0, `rgba(235,242,255,${.55*k})`); halo.addColorStop(.25, `rgba(210,225,255,${.18*k})`); halo.addColorStop(1, 'rgba(210,225,255,0)');
-    ctx.fillStyle = halo; ctx.fillRect(lx - 170*s, ly - 170*s, 340*s, 340*s);
-    ctx.fillStyle = `rgba(255,255,255,${.95*k})`; ctx.beginPath(); ctx.ellipse(lx, ly, 9*s, 6*s, 0, 0, TAU); ctx.fill();
-    ctx.fillStyle = `rgba(230,240,255,${.35*k})`; ctx.beginPath(); ctx.ellipse(lx, ly, 120*s, 2.5*s, 0, 0, TAU); ctx.fill();   // risco de lente
-    ctx.globalCompositeOperation = 'source-over';
-  }
-  ctx.restore();
-}
-
-/* ---------- Dentro do armário: só as frestas da porta ---------- */
-function drawLockerView(){
-  const n = 7, gap = ch*.05, sh = ch*.018, sw = cw*.46, x0 = (cw - sw)/2, y0 = ch*.5 - (n - 1)*gap/2;
-  ctx.save();
-  ctx.beginPath(); ctx.rect(0, 0, cw, ch);
-  for (let k = 0; k < n; k++) ctx.rect(x0, y0 + k*gap - sh/2, sw, sh);
-  const gr = ctx.createLinearGradient(0, 0, cw, 0); gr.addColorStop(0, '#07090b'); gr.addColorStop(.5, '#161b20'); gr.addColorStop(1, '#07090b');
-  ctx.fillStyle = gr; ctx.fill('evenodd');
-  ctx.fillStyle = 'rgba(130,150,170,.2)';
-  for (let k = 0; k < n; k++) ctx.fillRect(x0, y0 + k*gap + sh/2, sw, 2*dpr);
-  ctx.restore();
-}
-
+// o mundo (e o celular na mão, e o armário por dentro) é 3D; aqui só o que vai por cima
 function render(){
   const c = ctx;
   c.setTransform(1,0,0,1,0,0);
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
-  c.fillStyle = '#000'; c.fillRect(0, 0, cw, ch);
+  c.clearRect(0, 0, cw, ch);
+  if (R3D) R3D.render();
   if (!L) return;
-  renderWorld();
-  renderSprites();
-  c.imageSmoothingEnabled = true;
-  c.drawImage(low, 0, 0, cw, ch);
-
-  // vinheta
-  const vg = c.createRadialGradient(cw/2, ch/2, Math.min(cw, ch)*.3, cw/2, ch/2, Math.max(cw, ch)*.72);
-  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.65)');
-  c.fillStyle = vg; c.fillRect(0, 0, cw, ch);
   drawNameTags();
-
-  if (P.hidden && G.state === 'play') drawLockerView();
-  else if (isVillain()) drawVillainView();
-  else if (G.state !== 'final') drawHandPhone();
+  if (isVillain() && !P.hidden) drawVillainView();
 
   // pânico quando a tocha apaga / dano
   if ((P.out && G.state === 'play') || P.invT > .9){
@@ -3835,6 +3032,26 @@ requestAnimationFrame(frame);
   }, true);
   const p = Tracks.startMusic();
   if (p && p.then) p.then(null, () => gate.classList.add('on'));
+})();
+
+// o 3D (render3d.js + Three.js + texturas) carrega já na abertura; até lá os botões esperam
+const R3D_READY = (function load3D(){
+  const btns = [$('btn-start'), $('btn-online')], labels = btns.map(b => b.textContent);
+  btns.forEach(b => { b.disabled = true; b.textContent = 'Carregando…'; });
+  return import('./render3d.js').then(m => m.create($('game3d'))).then(r => {
+    R3D = r; resize();
+    btns.forEach((b, k) => { b.disabled = false; b.textContent = labels[k]; });
+  }).catch(e => {
+    console.error(e);
+    const webgl = (() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (x) { return false; } })();
+    $('fail-msg').textContent = !webgl
+      ? 'Este navegador (ou o celular) não tem WebGL 2, que o jogo precisa para desenhar a escola em 3D. Tente o Chrome, o Edge, o Firefox ou o Safari atualizados.'
+      : location.protocol === 'file:'
+        ? 'Aberto direto do arquivo, o navegador bloqueia o 3D. Jogue pelo site (GitHub Pages) ou por um servidor local.'
+        : 'As texturas ou o Three.js não carregaram. Confira a internet e tente de novo.';
+    $('fail').classList.add('on');
+    return new Promise(() => {});   // nunca resolve: o jogo não começa sem o 3D
+  });
 })();
 
 // convite: ?sala=CÓDIGO abre direto a tela da sala com o código preenchido
