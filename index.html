@@ -56,6 +56,15 @@
   #keys-chip.bump{animation:bump .5s}
   @keyframes bump{40%{transform:scale(1.15);border-color:#ffcf6a}}
 
+  /* emotes: o botão abre a lista; com o teclado, 1 a 4 */
+  #emote-menu{position:fixed;top:calc(60px + env(safe-area-inset-top));right:16px;z-index:6;display:none;flex-direction:column;gap:4px;
+    padding:6px;border:1px solid var(--line);background:rgba(10,7,5,.9);pointer-events:auto}
+  #emote-menu.on{display:flex}
+  #emote-menu button{display:flex;align-items:center;gap:10px;padding:8px 14px;border:1px solid transparent;background:none;color:var(--text);
+    font-family:'Cormorant Garamond',serif;font-size:18px;text-align:left;cursor:pointer}
+  #emote-menu button:hover,#emote-menu button[aria-pressed="true"]{border-color:rgba(227,164,82,.5);color:#f3dcae}
+  #emote-menu b{font-family:Cinzel,serif;font-size:11px;color:var(--muted);width:12px}
+  body.is-villain #btn-emote{display:none}
   #minimap{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));width:170px;height:170px;z-index:5;
     border:1px solid var(--line);background:rgba(8,6,4,.55);pointer-events:none;display:none}
   #minimap.on{display:block}
@@ -309,6 +318,9 @@
     <button class="chip icon-btn" id="btn-light" title="Lanterna (F)" aria-label="Lanterna" aria-pressed="true">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8v4l-2 3v10a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V10L8 7z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 13v3" stroke="currentColor" stroke-width="1.6"/></svg>
     </button>
+    <button class="chip icon-btn" id="btn-emote" title="Emotes (1 a 4)" aria-label="Emotes" aria-haspopup="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/><path d="M8 14c1 1.8 2.4 2.6 4 2.6s3-.8 4-2.6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+    </button>
     <button class="chip icon-btn" id="btn-map" title="Mapa (Tab)" aria-label="Mapa">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="1.4"/></svg>
     </button>
@@ -319,6 +331,7 @@
   </div>
 </div>
 
+<div id="emote-menu" role="menu" aria-label="Emotes"></div>
 <div id="toast"></div>
 <div id="act"></div>
 <div id="dpad"><span class="arr u"></span><span class="arr d"></span><span class="arr l"></span><span class="arr r"></span><div id="knob"></div></div>
@@ -342,7 +355,7 @@
   <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
   <div class="controls">
     <b>W</b><b>S</b> andar &nbsp;·&nbsp; <b>A</b><b>D</b> passo lateral &nbsp;·&nbsp; <b>mouse</b> olhar<br>
-    <b>E</b> esconder no armário &nbsp;·&nbsp; <b>F</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
+    <b>E</b> esconder no armário &nbsp;·&nbsp; <b>F</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som &nbsp;·&nbsp; <b>1</b>–<b>4</b> emotes<br>
     Clique na tela para controlar a visão com o mouse. Use fones de ouvido.
   </div>
 </div>
@@ -373,8 +386,9 @@
       <div class="modes" role="group" aria-label="Modo de jogo">
         <button id="mode-coop" data-mode="coop"><small>Cooperativo</small>Todos contra o João Vitão</button>
         <button id="mode-versus" data-mode="versus"><small>Versus</small>Um de vocês é o João Vitão</button>
+        <button id="mode-infect" data-mode="infect"><small>Infecção</small>Quem é pego vira João Vitão</button>
       </div>
-      <label class="field" id="mp-villain-row">Quem é o João Vitão <select id="mp-villain"></select></label>
+      <label class="field" id="mp-villain-row"><span id="mp-villain-label">Quem é o João Vitão</span> <select id="mp-villain"></select></label>
       <button class="btn" id="mp-start">Começar</button>
       <p id="mp-wait">Esperando o anfitrião começar…</p>
     </div>
@@ -813,6 +827,17 @@ const ENDINGS = {
     'A luz vermelha que vinha atrás de vocês para no corredor, como se uma corda a puxasse de volta.',
     'Desta vez, o pegador não pegou todo mundo.',
     'Lá em cima, uma menina descalça bate o pé. “Não vale! Amanhã tem outra rodada.”' ]},
+  // infecção online
+  inf_surv: { title:'Alguém Chegou à Sala 13', paras:[
+    'A porta da sala 13 bate atrás de vocês. Do lado de fora, as luzes vermelhas se juntam no corredor.',
+    'Eram colegas há pouco. Agora flutuam, de boné, chamando seus nomes com a voz dele.',
+    'Pela primeira vez, a Menina Jojo não ri. Sobrou alguém.',
+    'Amanhã, quem foi pego acorda em casa, com o celular carregado e sem lembrar de nada.' ]},
+  inf_villain: { title:'Todos Viraram João Vitão', paras:[
+    'A última lanterna se apagou. Nos corredores da IFMT, só sobraram luzes vermelhas.',
+    'Uma turma inteira de João Vitões, flutuando em fila, de boné, na direção da sala 13.',
+    '“Agora sim!”, grita a Menina Jojo. “Agora todo mundo é meu colega.”',
+    'No mural da sala 13, a turma inteira em fotos 3x4.' ]},
   vs_villain: { title:'O Pegador Venceu', paras:[
     'Uma por uma, as luzes dos celulares se apagaram nos corredores da IFMT.',
     'O jogo terminou do jeito que a Menina Jojo gosta: com todo mundo pego.',
@@ -1074,7 +1099,7 @@ const G = {
 // fuel = bateria do celular; light = lanterna ligada
 // online: safeT = tempo protegido depois de ser pego; holdT = espera do João Vitão (versus) no começo do nível; hideT = tempo no armário
 const P = { x:1.5, y:1.5, a:0, pitch:0, r:.24, walkT:0, fuel:100, out:false, outT:0, invT:0, speed:3.6, turn:3, moving:false, hidden:null, hideCd:0, light:true,
-            safeT:0, holdT:0, hideT:0 };
+            safeT:0, holdT:0, hideT:0, emote:0, emoteT:0, emoteA:0 };
 const V = { x:-9, y:-9, tx:null, ty:null, state:'hidden', timer:10, alpha:0, path:[], repath:0, moving:false, emitT:0, whisper:null };
 let L = null;
 let parts = [];
@@ -1584,6 +1609,7 @@ function nearbyLocker(){
 }
 function toggleHide(){
   if (G.state !== 'play' || isVillain()) return;
+  stopEmote();
   if (P.hidden){ P.hidden = null; P.hideCd = .4; Sound.locker(); return; }
   if (P.hideCd > 0) return;
   const lk = nearbyLocker();
@@ -1620,14 +1646,14 @@ function inChamber(j){
 // quem o João Vitão pode caçar: você (sozinho) ou cada aluno da sala (online, só no anfitrião)
 // hidden = tile da frente do armário (-1 se não está escondido); lr = alcance da luz; ok = pode ser pego agora
 function survivors(){
-  const S = [], vs = MP.on && MP.mode === 'versus';
-  // versus: embaixo da claraboia da entrada é dia, e o pegador não pega ninguém ali
+  const S = [], vs = pvp();
+  // versus e infecção: embaixo da claraboia da entrada é dia, e o pegador não pega ninguém ali
   const safe = (x, y) => vs && Math.hypot(x - L.start.x - .5, y - L.start.y - .5) < 2.5;
   if (!isVillain() && (!MP.on || inWorld()))
     S.push({ id:MP.on ? MP.id : null, x:P.x, y:P.y, hidden:P.hidden ? P.hidden.peek : -1, lr:lightRadius(),
              ok:!MP.on || (G.state !== 'cutscene' && P.safeT <= 0 && !safe(P.x, P.y)) });
   if (MP.on) for (const o of MP.others.values()){
-    if (o.li !== L.li || !(o.f & F_WORLD) || o.f & F_FINAL || (vs && o.id === MP.villain)) continue;
+    if (o.li !== L.li || !(o.f & F_WORLD) || o.f & F_FINAL || isVillainId(o.id)) continue;
     S.push({ id:o.id, x:o.tx, y:o.ty, hidden:o.f & F_HIDDEN ? o.peek : -1, lr:o.f & F_LIGHT ? 6 : .9,
              ok:!(o.f & F_SAFE) && !safe(o.tx, o.ty) });
   }
@@ -1715,12 +1741,33 @@ function updateVillain(dt){
   checkCatch(S);
   emitVillain(dt);
 }
+// quem pode pegar alguém agora: o João Vitão de sempre, ou (infecção) cada infectado no andar
+function catchers(){
+  if (MP.mode !== 'infect' || aiVillain())
+    return V.state === 'hidden' || V.state === 'final' || V.alpha <= .6 ? [] : [{ x:V.x, y:V.y, id:MP.villain }];
+  const C = [];
+  if (isVillain() && inWorld()) C.push({ x:P.x, y:P.y, id:MP.id });
+  for (const o of MP.others.values())
+    if (isVillainId(o.id) && o.li === L.li && o.f & F_WORLD) C.push({ x:o.tx, y:o.ty, id:o.id });
+  return C;
+}
+// o João Vitão mais perto de (x, y) que dá para ver (na infecção pode haver vários): para o som e a luz vermelha
+function nearestVillain(x, y){
+  let best = null, bd = 1e9;
+  if (V.alpha > .3 && V.state !== 'hidden'){ best = V; bd = Math.hypot(x - V.x, y - V.y); }
+  if (MP.on && MP.mode === 'infect') for (const o of MP.others.values()){
+    if (!otherVisible(o) || !isVillainId(o.id)) continue;
+    const d = Math.hypot(x - o.x, y - o.y);
+    if (d < bd){ bd = d; best = o; }
+  }
+  return best ? { x:best.x, y:best.y, d:bd } : null;
+}
 // no armário ele nunca pega ninguém
 function checkCatch(S){
-  if (V.state === 'hidden' || V.state === 'final' || V.alpha <= .6 || G.graceT > 0) return;
-  for (const s of S){
+  if (G.graceT > 0) return;
+  for (const c of catchers()) for (const s of S){
     if (s.hidden >= 0 || !s.ok) continue;
-    if (Math.hypot(s.x - V.x, s.y - V.y) < .55){ catchPlayer(s.id); return; }
+    if (Math.hypot(s.x - c.x, s.y - c.y) < .55){ catchPlayer(s.id, c.id); return; }
   }
 }
 
@@ -1765,6 +1812,7 @@ addEventListener('keydown', e => {
       break;
     case 'play':
       if (k === 'e') toggleHide();
+      else if (k >= '1' && k <= String(EMOTES.length - 1) && k.length === 1) startEmote(+k);
       else if (k === 'f') toggleLight();
       else if (k === 'j') openJournal();
       else if (k === 'p' || k === 'escape') setPause(true);
@@ -1853,7 +1901,8 @@ function updateHUD(){
   const p = `${G.pages.size}/${PAGES.length}`;
   if (hudCache.p !== p){ pagesEl.textContent = p; hudCache.p = p; }
   if (MP.on){
-    const m = MP.mode === 'versus' ? `Pegos ${MP.catches}/${MP.limit}` : String(MP.players.length);
+    const m = MP.mode === 'versus' ? `Pegos ${MP.catches}/${MP.limit}`
+            : MP.mode === 'infect' ? `Infectados ${MP.infected.length}/${MP.players.length}` : String(MP.players.length);
     if (hudCache.m !== m){ $('mp-count').textContent = m; hudCache.m = m; }
   }
 }
@@ -1930,6 +1979,38 @@ $('journal-close').onclick = closeModals;
 bookBtn.onclick = e => { e.currentTarget.blur(); if (G.state === 'play') openJournal(); };
 $('btn-sound').onclick = e => { e.currentTarget.blur(); toggleMute(); };
 $('btn-map').onclick = e => { e.currentTarget.blur(); toggleMap(); };
+
+/* ---------- emotes: o aluno dança (os outros veem pela rede; você vê de fora, com a câmera na sua frente) ---------- */
+const EMOTES = [null, 'Dança padrão', 'Floss', 'Acenar', 'Comemorar'];
+const emoteMenu = $('emote-menu');
+EMOTES.forEach((name, id) => {
+  if (!name) return;
+  const b = document.createElement('button');
+  b.setAttribute('role', 'menuitem'); b.dataset.em = id;
+  b.innerHTML = `<b>${id}</b>${name}`;
+  b.onclick = e => { e.currentTarget.blur(); startEmote(id); };
+  emoteMenu.appendChild(b);
+});
+$('btn-emote').onclick = e => {
+  e.currentTarget.blur();
+  if (G.state === 'play' && !isVillain()) emoteMenu.classList.toggle('on');
+};
+function startEmote(id){
+  emoteMenu.classList.remove('on');
+  if (G.state !== 'play' || !L || P.hidden || isVillain()) return;
+  if (P.emote === id){ stopEmote(); return; }
+  if (!P.emote) P.emoteA = P.a;   // o aluno fica virado para onde estava; o mouse gira a câmera em volta dele
+  P.emote = id; P.emoteT = 0;
+  syncEmoteMenu();
+}
+function stopEmote(){
+  if (!P.emote) return;
+  P.emote = 0; P.a = P.emoteA; P.pitch = 0;
+  syncEmoteMenu();
+}
+function syncEmoteMenu(){
+  for (const b of emoteMenu.children) b.setAttribute('aria-pressed', +b.dataset.em === P.emote);
+}
 $('btn-light').onclick = e => { e.currentTarget.blur(); toggleLight(); };
 function toggleLight(){
   if (G.state !== 'play' || P.hidden || isVillain()) return;
@@ -2031,17 +2112,17 @@ function buildLevel(li){
   G.li = li; G.keys = 0;
   P.x = L.start.x + .5; P.y = L.start.y + .5; P.a = openDirAngle(L.start.x, L.start.y); P.pitch = 0;
   P.fuel = 100; P.out = false; P.invT = 0; P.hidden = null; P.hideCd = 0;
-  P.speed = 3.6; P.safeT = 0; P.holdT = 0; P.hideT = 0;
+  P.speed = 3.6; P.safeT = 0; P.holdT = 0; P.hideT = 0; P.emote = 0; emoteMenu.classList.remove('on');
   V.state = 'hidden'; V.alpha = 0; V.timer = L.cfg.firstAppear; V.x = V.y = -9; V.tx = V.ty = null; V.path = []; V.whisper = null;
   G.graceT = 4;
   MP.asked = MP.busy = false;
   if (isVillain()){
-    // versus: o João Vitão começa lá no fundo do andar e espera os alunos entrarem
-    let k = Math.floor(L.path.length*.75);
+    // versus: o João Vitão começa lá no fundo do andar e espera os alunos entrarem (na infecção, um ao lado do outro)
+    let k = Math.max(1, Math.floor(L.path.length*.75) - 3*Math.max(0, MP.infected.indexOf(MP.id)));
     while (k > 0 && inChamber(L.path[k])) k--;
     const j = L.path[k], tx = j % L.W, ty = (j / L.W) | 0;
     P.x = tx + .5; P.y = ty + .5; P.a = openDirAngle(tx, ty);
-    P.speed = VILLAIN_SPEED; P.holdT = VILLAIN_HOLD; P.light = false;
+    P.speed = VILLAIN_SPEED; P.holdT = VILLAIN_HOLD; P.holdMsg = HOLD_MSG; P.light = false;
     V.state = 'chase'; V.alpha = 1; V.x = P.x; V.y = P.y;
   }
   parts = [];
@@ -2056,10 +2137,12 @@ async function startLevel(li){
   closeOverlays();
   const cfg = LEVELS[li];
   Tracks.round();
-  const vs = MP.on && MP.mode === 'versus';
-  // versus: no primeiro nível a tela de entrada diz quem é o pegador
+  const vs = MP.on && MP.mode === 'versus', inf = MP.on && MP.mode === 'infect';
+  // versus e infecção: no primeiro nível a tela de entrada diz quem é o pegador
   const sub = vs && li === 0
     ? (isVillain() ? 'Você é o João Vitão. Pegue os alunos antes que eles cheguem à sala 13.' : `${nameOf(MP.villain)} é o João Vitão nesta rodada. Cheguem à sala 13.`)
+    : inf && li === 0
+    ? (isVillain() ? 'Você é o primeiro João Vitão. Quem você pegar vira João Vitão também.' : `${nameOf(MP.first) || 'Alguém'} é o primeiro João Vitão. Quem for pego vira João Vitão. Cheguem à sala 13.`)
     : cfg.epigraph;
   setFade({ kicker:`Nível ${ROMAN[li]}`, title:cfg.name, sub });
   await fadeTo(1, 1100);
@@ -2074,7 +2157,9 @@ async function startLevel(li){
   if (seq !== G.seq) return;
   G.state = 'play';
   const hide = document.body.classList.contains('touch') ? 'toque em Esconder' : 'aperte E';
-  if (isVillain()) toast(`Você é o João Vitão: atravessa portas e enxerga em vermelho. Pegue alunos ${MP.limit} vezes para vencer. Espere ${VILLAIN_HOLD} segundos…`, 6500);
+  if (isVillain() && inf) toast(`Você é um João Vitão: atravessa portas e enxerga em vermelho. Quem você pegar vira João Vitão. Peguem todos para vencer. Espere ${VILLAIN_HOLD} segundos…`, 6500);
+  else if (isVillain()) toast(`Você é o João Vitão: atravessa portas e enxerga em vermelho. Pegue alunos ${MP.limit} vezes para vencer. Espere ${VILLAIN_HOLD} segundos…`, 6500);
+  else if (inf && li === 0) toast(`Quem o João Vitão pegar vira João Vitão também. Se todos forem pegos, vocês perdem. Embaixo da claraboia da entrada ninguém é pego. Perto de um armário, ${hide} para se esconder.`, 7500);
   else if (vs && li === 0) toast(`Se o pegador pegar alunos ${MP.limit} vezes, vocês perdem. Embaixo da claraboia da entrada ele não pega ninguém. Perto de um armário, ${hide} para se esconder.`, 7000);
   else if (MP.on && li === 0) toast(`Vocês estão juntos. As chaves valem para todos, e quem achar a escada leva o grupo para baixo. Perto de um armário, ${hide} para se esconder.`, 7000);
   else if (li === 0) toast(`Ache as chaves e a escada para descer. Não deixe a bateria acabar. Perto de um armário, ${hide} para se esconder.`, 6000);
@@ -2124,8 +2209,16 @@ function jumpscare(){
 }
 
 // o João Vitão pegou alguém: sozinho é você; online, o anfitrião avisa quem foi
-function catchPlayer(id){
+function catchPlayer(id, by){
   if (!MP.on){ pushback(); return; }
+  if (MP.mode === 'infect'){
+    // infecção: ninguém volta para a entrada; quem foi pego vira João Vitão ali mesmo
+    if (MP.infected.includes(id)) return;
+    G.graceT = 1;
+    broadcast({ t:'inf', inf:[...MP.infected, id], id, by });
+    checkInfectEnd();
+    return;
+  }
   if (aiVillain()){ villainHide(); V.alpha = 0; V.timer += 4; V.x = V.y = -9; V.whisper = null; }
   G.graceT = aiVillain() ? 4 : 2;   // um respiro antes dele poder pegar de novo
   if (MP.mode === 'versus') MP.catches++;
@@ -2137,6 +2230,27 @@ function catchPlayer(id){
   }
 }
 
+// infecção (anfitrião): sem nenhum aluno sobrando, os João Vitões venceram
+function checkInfectEnd(){
+  if (!MP.host || !MP.started || MP.mode !== 'infect' || MP.busy || !L) return;
+  if (!MP.players.every(p => MP.infected.includes(p.id))) return;
+  MP.busy = true;
+  const seq = G.seq;
+  setTimeout(() => { if (MP.on && MP.host && seq === G.seq) broadcast({ t:'end', id:'inf_villain' }); }, 2600);
+}
+// infecção: você foi pego e vira João Vitão ali mesmo
+function becomeVillain(by){
+  if (!inWorld()) return;
+  if (G.state !== 'play'){ closeOverlays(); G.state = 'play'; }
+  stopEmote(); emoteMenu.classList.remove('on');
+  P.hidden = null; P.out = false; P.light = false; updateLightBtn();
+  P.speed = VILLAIN_SPEED; P.holdT = 3; P.holdMsg = '…você está virando João Vitão…'; P.invT = 1;
+  V.state = 'chase'; V.alpha = 1; V.x = P.x; V.y = P.y;
+  Tracks.scream(); G.shake = .6; jumpscare();
+  setTimeout(() => jumpEl.classList.remove('on'), 1600);
+  toast(`${by && by !== MP.id ? nameOf(by) || 'Alguém' : 'O João Vitão'} pegou você. Agora você é um João Vitão: pegue os outros alunos!`, 5000);
+}
+
 async function pushback(){
   if (MP.on){
     // online o jogo não para: pode ser pego até com a pausa ou uma página aberta
@@ -2144,6 +2258,7 @@ async function pushback(){
     closeOverlays();
   } else if (G.state !== 'play') return;
   const seq = G.seq;
+  stopEmote();
   G.state = 'cutscene'; G.rescues++; releasePointer();
   Tracks.scream(); G.shake = .6;
   jumpscare();
@@ -2308,7 +2423,7 @@ async function showEnding(id){
   const seq = ++G.seq;
   G.state = 'cutscene';
   Dialog.hide(); closeOverlays();
-  const e = ENDINGS[id], vs = id.startsWith('vs_');
+  const e = ENDINGS[id], vs = id.startsWith('vs_') || id.startsWith('inf_');
   setFade({});
   if (id === 'end_open'){ G.shake = 1.4; Sound.pushback(); }
   await fadeTo(1, id === 'end_open' ? 900 : 2200);
@@ -2324,7 +2439,9 @@ async function showEnding(id){
     box.appendChild(p);
   }
   const m = Math.floor(G.time/60), s = Math.floor(G.time % 60);
-  $('end-stats').innerHTML = vs
+  $('end-stats').innerHTML = id.startsWith('inf_')
+    ? `Infectados: ${MP.infected.length}/${MP.players.length} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>Quem começou infectado: ${escapeHTML(nameOf(MP.first) || 'o próprio João Vitão')}.`
+    : vs
     ? `Alunos pegos: ${MP.catches}/${MP.limit} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>O pegador desta rodada: ${escapeHTML(nameOf(MP.villain) || 'o próprio João Vitão')}.`
     : `Páginas encontradas: ${G.pages.size}/${PAGES.length} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>` +
       (G.rescues ? `João Vitão levou você de volta à entrada ${G.rescues} ${G.rescues === 1 ? 'vez' : 'vezes'}. Seu celular nunca voltou descarregado.` : 'O pegador nunca alcançou você.');
@@ -2376,14 +2493,16 @@ const MP = {
   id:null, name:'', code:'', nextId:0,
   players:[],           // [{ id, name, color }] — o anfitrião ('h') é sempre o primeiro
   mode:'coop', pick:'', // sala: modo e quem o anfitrião escolheu para ser o João Vitão ('' = sorteio)
-  started:false, seed:0, villain:null, catches:0, limit:0,
+  started:false, seed:0, villain:null, infected:[], first:null, catches:0, limit:0,
   others:new Map(),     // id -> estado dos outros alunos (posição suavizada etc.)
   netT:0, wk:0,         // wk: contador de sussurros do João Vitão (os convidados tocam o som quando muda)
   asked:false, busy:false, uiBusy:false,
 };
-const isVillainId = id => MP.on && MP.mode === 'versus' && !!id && id === MP.villain;
+// versus: um pegador (MP.villain); infecção: todos os infectados (MP.infected) são João Vitão
+const isVillainId = id => MP.on && !!id && (MP.mode === 'versus' ? id === MP.villain : MP.mode === 'infect' && MP.infected.includes(id));
 const isVillain = () => isVillainId(MP.id);
-const aiVillain = () => !MP.on || MP.mode !== 'versus' || !MP.villain;
+const aiVillain = () => !MP.on || MP.mode === 'coop' || (MP.mode === 'versus' ? !MP.villain : !MP.infected.length);
+const pvp = () => MP.on && MP.mode !== 'coop';   // versus ou infecção: alunos contra jogadores
 const nameOf = id => { const p = MP.players.find(q => q.id === id); return p ? p.name : ''; };
 const inWorld = () => !!L && (G.state === 'play' || G.state === 'paused' || G.state === 'modal');
 const otherVisible = o => !!L && o.li === L.li && !!(o.f & F_WORLD) && !(o.f & F_HIDDEN);
@@ -2392,13 +2511,14 @@ const r2 = v => Math.round(v*100)/100;
 function myState(){
   const f = (P.light && !P.out ? F_LIGHT : 0) | (P.hidden ? F_HIDDEN : 0) | (P.out ? F_OUT : 0) | (P.moving ? F_MOVING : 0)
           | (inWorld() || G.state === 'final' ? F_WORLD : 0) | (G.state === 'final' ? F_FINAL : 0) | (P.safeT > 0 ? F_SAFE : 0);
-  return [r2(P.x), r2(P.y), r2(P.a), f, P.hidden ? P.hidden.peek : -1, L ? L.li : -1];
+  // dançando, o corpo fica virado para P.emoteA (P.a só gira a câmera)
+  return [r2(P.x), r2(P.y), r2(P.emote ? P.emoteA : P.a), f, P.hidden ? P.hidden.peek : -1, L ? L.li : -1, P.emote];
 }
 function otherOf(id){
   let o = MP.others.get(id);
   if (!o){
     const p = MP.players.find(q => q.id === id);
-    o = { id, name:p ? p.name : '?', color:p ? p.color : 0, x:0, y:0, a:0, tx:0, ty:0, ta:0, f:0, peek:-1, li:-1, walkT:0, fresh:true };
+    o = { id, name:p ? p.name : '?', color:p ? p.color : 0, x:0, y:0, a:0, tx:0, ty:0, ta:0, f:0, peek:-1, li:-1, walkT:0, em:0, emT:0, fresh:true };
     MP.others.set(id, o);
   }
   return o;
@@ -2408,6 +2528,8 @@ function setOther(o, s){
   // acabou de aparecer ou "teleportou" (foi pego, trocou de nível): sem deslizar pelo mapa
   if (o.fresh || !(o.f & F_WORLD) || o.li !== +s[5] || Math.hypot(x - o.x, y - o.y) > 2.5){ o.x = x; o.y = y; o.a = a; o.fresh = false; }
   o.tx = x; o.ty = y; o.ta = a; o.f = s[3] | 0; o.peek = s[4] | 0; o.li = s[5] | 0;
+  const em = (s[6] | 0) % EMOTES.length;
+  if (em !== o.em){ o.em = em; o.emT = 0; }
 }
 
 /* ---------- conexão ---------- */
@@ -2509,6 +2631,8 @@ function dropGuest(c){
   if (MP.started){
     broadcast({ t:'left', id, name });
     if (MP.villain === id) broadcast({ t:'roles', villain:null });   // o João Vitão de verdade assume
+    if (MP.infected.includes(id)) broadcast({ t:'inf', inf:MP.infected.filter(q => q !== id) });
+    checkInfectEnd();
   } else { broadcastLobby(); renderLobby(); }
 }
 
@@ -2571,7 +2695,7 @@ function hostLost(){
 }
 function leaveRoom(){
   const cl = MP.net, T = MP.topic, host = MP.on && MP.host, key = MP.key;
-  Object.assign(MP, { on:false, host:false, net:null, topic:'', key:'', started:false, villain:null, players:[], code:'', id:null });
+  Object.assign(MP, { on:false, host:false, net:null, topic:'', key:'', started:false, villain:null, infected:[], players:[], code:'', id:null });
   MP.conns.clear(); MP.others.clear();
   document.body.classList.remove('mp', 'is-villain');
   if (!cl) return;
@@ -2631,7 +2755,7 @@ function hostHandle(m, pid){
     case 'seal':
       if (!here || MP.busy || !L.seal || isVillainId(pid)) return;
       MP.busy = true;
-      broadcast(MP.mode === 'versus' ? { t:'end', id:'vs_surv' } : { t:'final', by:pid });
+      broadcast(MP.mode === 'versus' ? { t:'end', id:'vs_surv' } : MP.mode === 'infect' ? { t:'end', id:'inf_surv' } : { t:'final', by:pid });
       break;
   }
 }
@@ -2644,7 +2768,7 @@ function onEvent(m){
       renderLobby();
       break;
     case 'start':
-      Object.assign(MP, { seed:m.seed >>> 0, mode:m.mode, villain:m.villain, limit:m.limit, catches:0, started:true });
+      Object.assign(MP, { seed:m.seed >>> 0, mode:m.mode, villain:m.villain, infected:m.infected || [], first:(m.infected || [])[0] || null, limit:m.limit, catches:0, started:true });
       MP.others.clear();
       document.body.classList.toggle('is-villain', isVillain());
       $('lobby').classList.remove('on');
@@ -2695,13 +2819,27 @@ function onEvent(m){
       if (MP.host && aiVillain() && L){ villainHide(); V.alpha = 0; V.timer = 6; V.x = V.y = -9; }
       toast('O pegador saiu da sala. Agora quem caça é o próprio João Vitão.', 4000);
       break;
+    case 'inf': {
+      const was = isVillain();
+      MP.infected = Array.isArray(m.inf) ? m.inf : [];
+      document.body.classList.toggle('is-villain', isVillain());
+      // o João Vitão da IA só caça quando não sobrou nenhum infectado (e some quando volta a ter)
+      if (MP.host && L && !isVillain()){ villainHide(); V.alpha = 0; V.x = V.y = -9; V.timer = 6; }
+      if (m.id === undefined){ if (!MP.infected.length) toast('Os infectados saíram da sala. Agora quem caça é o próprio João Vitão.', 4000); break; }
+      if (m.id === MP.id){ if (!was) becomeVillain(m.by); }
+      else {
+        const n = nameOf(m.id) || 'alguém';
+        toast(m.by === MP.id ? `Você pegou ${n}! Agora ${n} é João Vitão também.` : `${n} foi pego e virou João Vitão!`, 3200);
+      }
+      break;
+    }
     case 'left':
       MP.players = MP.players.filter(p => p.id !== m.id);
       MP.others.delete(m.id);
       if (m.name) toast(`${m.name} saiu da sala.`, 2600);
       break;
     case 'lobbyBack':
-      MP.started = false; MP.villain = null; MP.others.clear();
+      MP.started = false; MP.villain = null; MP.infected = []; MP.others.clear();
       document.body.classList.remove('is-villain');
       L = null; G.seq++;
       $('end').classList.remove('on');
@@ -2721,6 +2859,7 @@ function applySnapshot(m){
   }
   for (const id of [...MP.others.keys()]) if (!seen.has(id)) MP.others.delete(id);
   if (isVillain() || !L || m.li !== L.li) return;
+  if (MP.mode === 'infect' && !aiVillain()){ V.state = 'hidden'; V.alpha = 0; return; }   // os infectados aparecem pelas posições deles
   const [x, y, st, al, mv, wk] = m.v, s = VSTATES[st] || 'hidden';
   // apareceu agora ou deu um salto: vai direto para lá
   if ((V.state === 'hidden' && s !== 'hidden') || V.tx == null || Math.hypot(x - V.x, y - V.y) > 2.5){ V.x = x; V.y = y; }
@@ -2730,7 +2869,7 @@ function applySnapshot(m){
 }
 function sendSnapshot(){
   const p = [[MP.id, ...myState()]];
-  for (const o of MP.others.values()) p.push([o.id, r2(o.tx), r2(o.ty), r2(o.ta), o.f, o.peek, o.li]);
+  for (const o of MP.others.values()) p.push([o.id, r2(o.tx), r2(o.ty), r2(o.ta), o.f, o.peek, o.li, o.em]);
   broadcast({ t:'s', li:L.li, v:[r2(V.x), r2(V.y), Math.max(0, VSTATES.indexOf(V.state)), V.alpha, V.moving ? 1 : 0, MP.wk], p, c:MP.catches }, false);
 }
 
@@ -2741,12 +2880,13 @@ function updateNet(dt){
   for (const o of MP.others.values()){
     o.x += (o.tx - o.x)*k; o.y += (o.ty - o.y)*k; o.a += angDiff(o.a, o.ta)*k;
     o.walkT = o.f & F_MOVING ? o.walkT + dt*9 : 0;   // ciclo da caminhada do modelo
+    o.emT = o.em ? o.emT + dt : 0;
   }
   if (!L) return;
   if (MP.host){
     if (G.state !== 'final' && V.state !== 'final'){
       // versus com o pegador num convidado: o João Vitão fica onde ele está
-      if (!aiVillain() && !isVillain()){
+      if (MP.mode === 'versus' && !aiVillain() && !isVillain()){
         const o = MP.others.get(MP.villain), on = o && o.li === L.li && (o.f & F_WORLD);
         if (on){ V.x = o.x; V.y = o.y; V.moving = !!(o.f & F_MOVING); V.state = 'chase'; V.alpha = 1; }
         else { V.state = 'hidden'; V.alpha = 0; }
@@ -2801,9 +2941,10 @@ function renderLobby(){
     ul.appendChild(li);
   }
   for (const b of document.querySelectorAll('.modes button')){ b.setAttribute('aria-pressed', b.dataset.mode === MP.mode); b.disabled = !MP.host; }
-  const vs = MP.mode === 'versus';
+  const vs = MP.mode !== 'coop';   // versus e infecção precisam de alguém começando como João Vitão
   const sel = $('mp-villain');
   $('mp-villain-row').hidden = !vs;
+  $('mp-villain-label').textContent = MP.mode === 'infect' ? 'Quem começa infectado' : 'Quem é o João Vitão';
   sel.disabled = !MP.host;
   sel.innerHTML = '';
   sel.appendChild(new Option('Sorteio', ''));
@@ -2812,7 +2953,7 @@ function renderLobby(){
   $('mp-start').hidden = !MP.host;
   $('mp-start').disabled = vs && MP.players.length < 2;
   $('mp-wait').hidden = MP.host;
-  if (MP.host) setStatus(vs && MP.players.length < 2 ? 'O versus precisa de pelo menos 2 jogadores. Mande o código para alguém.' : MP.players.length < 2 ? 'Mande o código (ou o convite) para os seus amigos.' : '');
+  if (MP.host) setStatus(vs && MP.players.length < 2 ? (MP.mode === 'infect' ? 'O modo infecção' : 'O versus') + ' precisa de pelo menos 2 jogadores. Mande o código para alguém.' : MP.players.length < 2 ? 'Mande o código (ou o convite) para os seus amigos.' : '');
 }
 function broadcastLobby(){ broadcast({ t:'lobby', players:MP.players, mode:MP.mode, pick:MP.pick }, false); }
 
@@ -2851,10 +2992,10 @@ for (const b of document.querySelectorAll('.modes button')) b.onclick = () => {
 $('mp-villain').onchange = e => { if (!MP.host) return; MP.pick = e.target.value; broadcastLobby(); renderLobby(); e.target.blur(); };
 $('mp-start').onclick = () => {
   if (!MP.host || MP.started) return;
-  const n = MP.players.length, vs = MP.mode === 'versus';
+  const n = MP.players.length, vs = MP.mode !== 'coop', inf = MP.mode === 'infect';
   if (vs && n < 2) return;
-  const villain = !vs ? null : MP.players.some(p => p.id === MP.pick) ? MP.pick : MP.players[Math.floor(Math.random()*n)].id;
-  broadcast({ t:'start', seed:(Math.random()*4294967296) >>> 0, mode:MP.mode, villain, limit:Math.max(3, 3*(n - 1)) });
+  const first = !vs ? null : MP.players.some(p => p.id === MP.pick) ? MP.pick : MP.players[Math.floor(Math.random()*n)].id;
+  broadcast({ t:'start', seed:(Math.random()*4294967296) >>> 0, mode:MP.mode, villain:inf ? null : first, infected:inf ? [first] : [], limit:Math.max(3, 3*(n - 1)) });
 };
 $('mp-back').onclick = () => {
   if (MP.uiBusy) return;
@@ -2896,7 +3037,7 @@ function update(dt){
   G.mapT -= dt;
   if (G.mapT <= 0){ G.mapT = .15; drawMinimap(); }
 
-  const near = (L && G.state === 'play' && V.alpha > .3 && !isVillain()) ? Math.hypot(P.x - V.x, P.y - V.y) : null;
+  const nv = L && G.state === 'play' && !isVillain() ? nearestVillain(P.x, P.y) : null, near = nv ? nv.d : null;
   Tracks.update(dt, G.state, near);
   Sound.update(dt, { near, out:G.state === 'play' && P.out, walking:G.state === 'play' && P.moving });
 }
@@ -2917,7 +3058,7 @@ function updatePlay(dt){
     P.moving = false;
     if (P.invT > 0) P.invT -= dt;
     // versus: ninguém aguenta ficar no armário para sempre
-    if (MP.on && MP.mode === 'versus' && (P.hideT += dt) > LOCKER_MAX){
+    if (pvp() && (P.hideT += dt) > LOCKER_MAX){
       P.hidden = null; P.hideCd = 4; Sound.locker();
       toast('Você não aguenta mais ficar no armário apertado e sai.', 2800);
     }
@@ -2937,6 +3078,11 @@ function updatePlay(dt){
   if (P.holdT > 0){
     P.holdT -= dt; fwd = str = 0;
     if (P.holdT <= 0) toast('Pode caçar.', 2000);
+  }
+  if (P.emote){
+    // andar acaba com o emote; o passo sai na direção em que o aluno estava virado
+    if (Math.abs(fwd) + Math.abs(str) > .05) stopEmote();
+    else P.emoteT += dt;
   }
   const dirX = Math.cos(P.a), dirY = Math.sin(P.a);
   let mx = dirX*fwd - dirY*str, my = dirY*fwd + dirX*str;
@@ -3036,6 +3182,7 @@ function drawNameTags(){
   c.restore();
 }
 /* ---------- Versus: a visão do João Vitão (sem celular, tudo em vermelho) ---------- */
+const HOLD_MSG = '…um, dois, três… os alunos estão entrando…';
 function drawVillainView(){
   const c = ctx, g = c.createRadialGradient(cw/2, ch/2, Math.min(cw, ch)*.22, cw/2, ch/2, Math.max(cw, ch)*.75);
   g.addColorStop(0, 'rgba(110,0,0,0)'); g.addColorStop(1, `rgba(110,0,0,${.42 + .1*Math.sin(G.t*2.3)})`);
@@ -3046,7 +3193,7 @@ function drawVillainView(){
     c.fillStyle = 'rgba(255,90,70,.9)'; c.font = `600 ${Math.round(64*dpr)}px Cinzel, serif`;
     c.fillText(Math.ceil(P.holdT), cw/2, ch*.42);
     c.font = `italic ${Math.round(20*dpr)}px 'Cormorant Garamond', serif`; c.fillStyle = 'rgba(240,210,200,.85)';
-    c.fillText('…um, dois, três… os alunos estão entrando…', cw/2, ch*.42 + 52*dpr);
+    c.fillText(P.holdMsg || HOLD_MSG, cw/2, ch*.42 + 52*dpr);
     c.restore();
   }
 }

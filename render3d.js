@@ -121,6 +121,15 @@ export async function create(canvas){
   const villain = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), villainMat);
   const aura = new THREE.Sprite(glowMat(SPR.glowRed, .6));
   scene.add(villain, aura);
+  // infecção: os colegas infectados também são João Vitão (mais cópias da mesma foto, criadas quando precisa)
+  const extraV = [];
+  function extraVillain(k){
+    if (!extraV[k]){
+      const m = new THREE.Mesh(villain.geometry, villainMat), a = new THREE.Sprite(glowMat(SPR.glowRed, .6));
+      scene.add(m, a); extraV[k] = { m, a };
+    }
+    return extraV[k];
+  }
   let villainTexReady = false;
   const specterTex = SPECTER.map(c => canvasTex(c));
 
@@ -182,7 +191,50 @@ export async function create(canvas){
     part(HOOD_GEO, hoodIn, -.012, .004, 0, head).scale.set(.97, 1.07, .97);   // forro escuro por dentro
     part(new THREE.TorusGeometry(.066, .02, 8, 20), hoodie, -.01, .528, 0, body).rotation.x = Math.PI/2;   // capuz caído no pescoço
     scene.add(root);
-    return { root, body, legL, legR, armL:armL.sh, ci };
+    return { root, body, head, legL, legR, armL:armL.sh, elL:armL.el, armR:armR.sh, elR:armR.el, ci };
+  }
+  // pose do aluno: andando (s = balanço da passada) ou num emote (em, t = segundos desde que começou)
+  // eixos de cada junta: rotation.z leva o braço/perna para a frente; rotation.x abre para o lado
+  // (positivo abre o lado esquerdo, negativo o direito)
+  function poseMate(mm, s, em, t){
+    const { body, head, legL, legR, armL, elL, armR, elR } = mm;
+    legL.rotation.set(0, 0, s*.55); legR.rotation.set(0, 0, -s*.55);
+    armL.rotation.set(0, 0, -s*.45); elL.rotation.set(0, 0, 0);
+    armR.rotation.set(.3, 0, .3); elR.rotation.set(0, 0, 1.25);   // segurando o celular
+    body.rotation.set(0, 0, 0); body.position.set(0, Math.abs(s)*.012, 0);
+    head.rotation.set(0, 0, 0);
+    if (!em) return;
+    const TAU2 = Math.PI*2;
+    if (em === 1){
+      // dança padrão: braços batendo em diagonal, um sobe enquanto o outro desce, e os pés chutando de lado
+      const w = t*TAU2*1.1, a = Math.sin(w), b = Math.sin(w*2);
+      body.position.y = Math.abs(b)*.025;
+      body.rotation.x = a*.08;
+      armL.rotation.set(.5 + .45*a, 0, .9 + .5*a); elL.rotation.z = 1.3 - .7*a;
+      armR.rotation.set(-.5 + .45*a, 0, .9 - .5*a); elR.rotation.z = 1.3 + .7*a;
+      legL.rotation.x = Math.max(0, a)*.45; legR.rotation.x = Math.min(0, a)*.45;
+      head.rotation.x = -a*.15;
+    } else if (em === 2){
+      // floss: braços esticados indo juntos de um lado para o outro (um na frente, outro atrás) e o quadril ao contrário
+      const w = t*TAU2*1.5, side = Math.sin(w), fb = Math.cos(w);
+      armL.rotation.set(.3 + .55*side, 0, .55*fb); elL.rotation.z = 0;
+      armR.rotation.set(-.3 + .55*side, 0, -.55*fb); elR.rotation.z = 0;
+      body.position.z = -.04*side; body.rotation.x = .1*side;
+      legL.rotation.x = .12*side; legR.rotation.x = .12*side;
+      head.rotation.x = -.12*side;
+    } else if (em === 3){
+      // acenar: braço direito para o alto, a mão balançando
+      armR.rotation.set(-2.5, 0, .25); elR.rotation.set(.55*Math.sin(t*9), 0, .2);
+      head.rotation.x = -.12; body.rotation.x = .05;
+    } else if (em === 4){
+      // comemorar: os dois braços para cima, pulando
+      const j = Math.abs(Math.sin(t*5.5));
+      body.position.y = j*.07;
+      armL.rotation.set(2.6 + .2*Math.sin(t*11), 0, .2); elL.rotation.z = .3;
+      armR.rotation.set(-2.6 - .2*Math.sin(t*11), 0, .2); elR.rotation.z = .3;
+      legL.rotation.z = legR.rotation.z = -j*.25;
+      head.rotation.z = .2;
+    }
   }
 
   /* ---------- celular na mão e armário por dentro (cena própria, desenhada por cima) ---------- */
@@ -540,6 +592,16 @@ export async function create(canvas){
       yaw = P.a + (shake ? (Math.random() - .5)*shake*.05 : 0);
       pitch = clamp(P.pitch, -PITCH_MAX, PITCH_MAX) + (shake ? (Math.random() - .5)*shake*.04 : 0);
       eye = EYE + (P.moving ? Math.sin(P.walkT)*.018 : 0);
+      if (P.emote && !P.hidden){
+        // emote: a câmera sai do corpo e fica na frente do aluno, olhando para ele (o mouse gira em volta)
+        const ca = Math.cos(P.a), sa = Math.sin(P.a);
+        let d = 1.5;
+        dda(P.x, P.y, ca, sa, 1.5, (j, t) => { if (blocks(j)){ d = t - .2; return true; } return false; });
+        d = Math.max(.35, d);
+        cx = P.x + ca*d; cy = P.y + sa*d;
+        yaw = P.a + Math.PI; eye = EYE + .08;
+        pitch = clamp(-.18 + P.pitch*.5, -.7, .5);
+      }
       lightOn = !P.out && P.light && !P.hidden && !vill;
       R = lightRadius();
       vil = V;
@@ -587,17 +649,32 @@ export async function create(canvas){
       const tx = specterTex[Math.floor(t*6) % 8], first = !villainMat.map;
       villainMat.map = tx; if (first) villainMat.needsUpdate = true;
     }
-    const showV = vOn && !vill;
-    villain.visible = aura.visible = showV;
-    if (showV){
+    const placeV = (m, a, x, y, alpha, ph) => {
       const iw = villainImgReady ? villainSprite.width : 128, ih = villainImgReady ? villainSprite.height : 176;
-      const h = VILLAIN_SPRITE_HEIGHT, w = h*iw/ih, bob = Math.sin(t*1.6)*.07;
-      villain.scale.set(w, h, 1);
-      villain.position.set(vil.x, .02 + bob + h/2, vil.y);
-      villain.rotation.set(0, Math.atan2(cx - vil.x, cy - vil.y), 0);
-      aura.position.set(vil.x, .6, vil.y); aura.scale.set(h*2.4, h*2.4, 1);
-      aura.material.opacity = vil.alpha*(.4 + .25*(.6 + .4*Math.sin(t*2.3)));
+      const h = VILLAIN_SPRITE_HEIGHT, w = h*iw/ih, bob = Math.sin(t*1.6 + ph)*.07;
+      m.visible = a.visible = true;
+      m.scale.set(w, h, 1);
+      m.position.set(x, .02 + bob + h/2, y);
+      m.rotation.set(0, Math.atan2(cx - x, cy - y), 0);
+      a.position.set(x, .6, y); a.scale.set(h*2.4, h*2.4, 1);
+      a.material.opacity = alpha*(.4 + .25*(.6 + .4*Math.sin(t*2.3 + ph)));
+    };
+    const showV = vOn && !vill;
+    villain.visible = aura.visible = false;
+    if (showV) placeV(villain, aura, vil.x, vil.y, vil.alpha, 0);
+    // infecção: cada colega infectado é mais um João Vitão; a luz vermelha fica no mais perto
+    let ei = 0;
+    if (game && MP.on && MP.mode === 'infect'){
+      let rd = vOn ? Math.hypot(vil.x - cx, vil.y - cy) : 1e9;
+      for (const o of MP.others.values()){
+        if (!otherVisible(o) || !isVillainId(o.id)) continue;
+        const e = extraVillain(ei++);
+        placeV(e.m, e.a, o.x, o.y, 1, ei*1.7);
+        const d = Math.hypot(o.x - cx, o.y - cy);
+        if (!vill && d < rd){ rd = d; red.visible = true; red.position.set(o.x, .95, o.y); red.intensity = pulse*6; red.distance = 8; }
+      }
     }
+    for (let k = ei; k < extraV.length; k++) extraV[k].m.visible = extraV[k].a.visible = false;
 
     // portas, itens e faíscas
     for (const o of doors){
@@ -646,9 +723,7 @@ export async function create(canvas){
       mm.root.visible = true;
       mm.root.position.set(o.x, 0, o.y);
       mm.root.rotation.y = -o.a;
-      const s = o.f & F_MOVING ? Math.sin(o.walkT*.62) : 0;
-      mm.legL.rotation.z = s*.55; mm.legR.rotation.z = -s*.55; mm.armL.rotation.z = -s*.45;
-      mm.body.position.y = Math.abs(s)*.012;
+      poseMate(mm, o.f & F_MOVING && !o.em ? Math.sin(o.walkT*.62) : 0, o.em, o.emT);
       if (li < MAX_MATES && o.f & F_LIGHT){
         const L2 = mateLights[li++], ca = Math.cos(o.a), sa = Math.sin(o.a);
         L2.position.set(o.x + ca*.16 - sa*.1, .44, o.y + sa*.16 + ca*.1);
@@ -663,11 +738,22 @@ export async function create(canvas){
       }
     }
     for (; li < MAX_MATES; li++) mateLights[li].intensity = 0;
+    // você mesmo, dançando (só aparece com a câmera do emote)
+    if (game && P.emote && !P.hidden && !vill){
+      const me = MP.on ? MP.players.find(p => p.id === MP.id) : null, ci = me ? me.color : 0;
+      let mm = mates.get('__me');
+      if (!mm || mm.ci !== ci){ if (mm) scene.remove(mm.root); mm = makeMate(ci); mates.set('__me', mm); }
+      seen.add('__me');
+      mm.root.visible = true;
+      mm.root.position.set(P.x, 0, P.y);
+      mm.root.rotation.y = -P.emoteA;
+      poseMate(mm, 0, P.emote, P.emoteT);
+    }
     for (const [id, mm] of mates) if (!seen.has(id)) mm.root.visible = false;
 
     // celular na mão (balança ao andar) ou a porta do armário por dentro
     const hidden = game && !!P.hidden && G.state === 'play';
-    hand.visible = game && !hidden && !vill && G.state !== 'final';
+    hand.visible = game && !hidden && !vill && !P.emote && G.state !== 'final';
     lockerIn.visible = hidden;
     if (hand.visible){
       drawScreen();
@@ -681,8 +767,8 @@ export async function create(canvas){
       vmScreenLight.position.set(hand.position.x - .01, hand.position.y + .01, hand.position.z + .06);
       vmScreenLight.intensity = P.out ? 0 : .12;
       vmFlash.intensity = lit ? .1 : 0;
-      const dV = vOn ? Math.hypot(V.x - P.x, V.y - P.y) : 99;
-      vmRed.intensity = vOn ? Math.max(0, 1 - dV/7)*2.2*pulse : 0;
+      const nv = nearestVillain(P.x, P.y);
+      vmRed.intensity = nv ? Math.max(0, 1 - nv.d/7)*2.2*pulse : 0;
     }
 
     // olho se acostumando: com a lanterna encostada numa parede a imagem não estoura; no escuro, abre de novo
