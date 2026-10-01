@@ -218,6 +218,52 @@
   body.touch .lede{font-size:14px;line-height:1.35;max-width:520px}
   body.touch #title .btn{margin-top:12px;padding:10px 28px}
   body.touch #title .fov-row{margin-top:8px;font-size:11px}
+  body.touch #title .btn.ghost{margin-top:8px;padding:7px 20px}
+
+  /* ---------- Sala online ---------- */
+  [hidden]{display:none!important}
+  #lobby{justify-content:flex-start;background:radial-gradient(ellipse at 50% 40%,rgba(120,55,15,.25),rgba(6,4,3,0) 60%),var(--bg)}
+  #lobby .panel{margin:auto;border:1px solid var(--line);background:rgba(12,8,6,.92);padding:26px 26px 20px;max-width:460px;width:100%}
+  #lobby h2{font-family:Cinzel,serif;font-weight:400;letter-spacing:.3em;color:#f0d9a8;font-size:22px;margin:6px 0 10px}
+  #lobby .btn{display:block;width:100%;margin-top:12px}
+  .field{display:flex;flex-direction:column;gap:6px;text-align:left;font-family:Cinzel,serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:10px}
+  .field input,.field select,#mp-code{font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;letter-spacing:.04em;text-transform:none;color:var(--text);
+    background:rgba(255,255,255,.04);border:1px solid var(--line);padding:9px 12px;outline:none;border-radius:0;user-select:text;-webkit-user-select:text}
+  .field input:focus,.field select:focus,#mp-code:focus{border-color:var(--amber)}
+  .field select option{background:#120c08}
+  .or{margin:14px 0 2px;font-style:italic;color:var(--muted)}
+  .join-row{display:flex;gap:8px;align-items:stretch;margin-top:6px}
+  #mp-code{flex:1;min-width:0;font-family:Cinzel,serif;letter-spacing:.3em;text-transform:uppercase;text-align:center}
+  #lobby .join-row .btn{width:auto;margin-top:0;flex:none}
+  .code-box{font-family:Cinzel,serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  #mp-code-show{display:block;font-size:34px;letter-spacing:.3em;color:#f0d9a8;margin:4px 0 8px;user-select:text;-webkit-user-select:text}
+  #mp-copy{margin:0 auto;height:32px;font-size:11px;letter-spacing:.14em}
+  #mp-players{list-style:none;margin:14px 0 4px;display:flex;flex-direction:column;gap:6px;text-align:left}
+  #mp-players li{display:flex;align-items:center;gap:10px;padding:7px 12px;border:1px solid rgba(227,164,82,.18);font-size:19px}
+  #mp-players i{width:12px;height:12px;border-radius:50%;flex:none}
+  #mp-players small{margin-left:auto;font-family:Cinzel,serif;font-size:10px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+  .modes{display:flex;gap:8px;margin-top:12px}
+  .modes button{flex:1;padding:10px 8px;border:1px solid var(--line);background:rgba(10,7,5,.6);font-size:16px;line-height:1.25}
+  .modes button small{display:block;font-family:Cinzel,serif;font-size:10px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+  .modes button[aria-pressed="true"]{border-color:var(--amber);box-shadow:0 0 18px rgba(255,140,40,.2);color:#f3dcae}
+  .modes button:disabled{cursor:default}
+  .modes button:disabled:not([aria-pressed="true"]){opacity:.4}
+  #mp-status{min-height:1.4em;margin-top:12px;font-style:italic;color:#e0a77c}
+  #mp-wait,#end-wait{margin-top:14px;font-style:italic;color:var(--muted)}
+  .mp-note{margin-top:14px;font-style:italic;color:var(--muted);font-size:16px}
+  body.touch #lobby .panel{padding:12px 16px 10px}
+  body.touch #lobby h2{margin:0 0 4px;font-size:17px}
+  body.touch #lobby .btn{margin-top:8px;padding:8px 20px;font-size:13px}
+  body.touch .field input,body.touch .field select,body.touch #mp-code{font-size:16px;padding:6px 10px}
+  body.touch #mp-players li{font-size:15px;padding:4px 10px}
+  body.touch #mp-code-show{font-size:24px;margin:0 0 4px}
+  body.touch .modes button{font-size:13px;padding:6px}
+  /* online: contador de jogadores / placar do versus no HUD */
+  #mp-chip{display:none}
+  body.mp #mp-chip{display:flex}
+  #mp-chip svg{color:#cfe0ff}
+  /* quem é o João Vitão no versus não tem celular: sem bateria nem lanterna */
+  body.is-villain #fuel-box,body.is-villain #btn-light{display:none}
 
   /* tudo fica dentro de #app; com o celular em pé ele gira 90° (JS) para jogar deitado,
      mesmo com a rotação automática travada. --vw/--vh = 1% da tela do jogo (já girada) */
@@ -239,6 +285,10 @@
     </div>
   </div>
   <div class="chips">
+    <div class="chip" id="mp-chip" title="Jogadores na sala">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3 19c.6-3.4 3-5.2 6-5.2s5.4 1.8 6 5.2" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="16.5" cy="9" r="2.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M16 13.9c2.6 0 4.5 1.5 5 4.6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      <span id="mp-count"></span>
+    </div>
     <div class="chip" id="keys-chip" title="Chaves">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 12h10M17.5 12v3.5M21 12v4.5" stroke="currentColor" stroke-width="2" fill="none"/></svg>
       <span id="keys-count">0/2</span>
@@ -278,12 +328,41 @@
   <h1>João Vitão<span class="sub">A história não contada</span></h1>
   <p class="lede">João Vitão estudava na IFMT. A Menina Jojo também, e ela era bruxa. Ele disse “não” para ela, e desde então nunca mais conseguiu sair da escola. Hoje a IFMT está abandonada, mas ele continua lá dentro. A bateria do seu celular não vai durar para sempre.</p>
   <button class="btn" id="btn-start">Entrar</button>
+  <button class="btn ghost" id="btn-online">Jogar online</button>
   <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
   <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
   <div class="controls">
     <b>W</b><b>S</b> andar &nbsp;·&nbsp; <b>A</b><b>D</b> passo lateral &nbsp;·&nbsp; <b>mouse</b> olhar<br>
     <b>E</b> esconder no armário &nbsp;·&nbsp; <b>F</b> lanterna &nbsp;·&nbsp; <b>Tab</b> mapa &nbsp;·&nbsp; <b>J</b> diário &nbsp;·&nbsp; <b>P</b> pausa &nbsp;·&nbsp; <b>M</b> som<br>
     Clique na tela para controlar a visão com o mouse. Use fones de ouvido.
+  </div>
+</div>
+
+<!-- Sala online -->
+<div class="screen" id="lobby">
+  <div class="panel">
+    <div class="kicker">Jogar online</div>
+    <div id="lobby-join">
+      <h2>Entrar na IFMT</h2>
+      <label class="field">Seu nome <input id="mp-name" maxlength="14" autocomplete="off" spellcheck="false"></label>
+      <button class="btn" id="mp-create">Criar sala</button>
+      <div class="or">ou entre na sala de alguém</div>
+      <div class="join-row"><input id="mp-code" maxlength="5" placeholder="Código" aria-label="Código da sala" autocomplete="off" spellcheck="false"><button class="btn ghost" id="mp-join">Entrar</button></div>
+    </div>
+    <div id="lobby-room" hidden>
+      <div class="code-box">Código da sala <strong id="mp-code-show"></strong></div>
+      <button class="chip" id="mp-copy">Copiar convite</button>
+      <ul id="mp-players"></ul>
+      <div class="modes" role="group" aria-label="Modo de jogo">
+        <button id="mode-coop" data-mode="coop"><small>Cooperativo</small>Todos contra o João Vitão</button>
+        <button id="mode-versus" data-mode="versus"><small>Versus</small>Um de vocês é o João Vitão</button>
+      </div>
+      <label class="field" id="mp-villain-row">Quem é o João Vitão <select id="mp-villain"></select></label>
+      <button class="btn" id="mp-start">Começar</button>
+      <p id="mp-wait">Esperando o anfitrião começar…</p>
+    </div>
+    <p id="mp-status" role="status"></p>
+    <button class="btn ghost" id="mp-back">Voltar</button>
   </div>
 </div>
 
@@ -316,6 +395,8 @@
     <label class="fov-row">Campo de visão <input type="range" class="fov-input" min="50" max="120" step="1" aria-label="Campo de visão"> <output class="fov-val"></output></label>
     <label class="fov-row sens-row">Sensibilidade <input type="range" class="sens-input" min="20" max="300" step="10" aria-label="Sensibilidade da câmera"> <output class="sens-val"></output></label>
     <div class="controls"><b>W</b><b>S</b> andar · <b>A</b><b>D</b> lateral · <b>mouse</b> olhar<br><b>E</b> armário · <b>F</b> lanterna · <b>Tab</b> mapa · <b>J</b> diário · <b>M</b> som</div>
+    <p class="mp-note" id="pause-mp" hidden>Online: o jogo continua enquanto você está na pausa.</p>
+    <button class="btn ghost" id="pause-leave" hidden>Sair da sala</button>
   </div>
 </div>
 
@@ -336,6 +417,8 @@
     <div id="end-text"></div>
     <div id="end-stats"></div>
     <button class="btn" id="btn-restart">Entrar outra vez</button>
+    <p id="end-wait" hidden>Esperando o anfitrião voltar para a sala…</p>
+    <button class="btn ghost" id="btn-leave" hidden>Sair da sala</button>
   </div>
 </div>
 
@@ -416,9 +499,15 @@ const WALL_H = 1.35;        // altura das paredes (em tiles)
 const EYE = .58;            // altura dos olhos do jogador
 const PITCH_MAX = 1.1;      // quanto dá para olhar para cima/baixo (radianos, ~63°)
 
-const rand  = (a,b) => a + Math.random()*(b-a);
-const randi = (a,b) => a + Math.floor(Math.random()*(b-a+1));
-const pick  = arr => arr[Math.floor(Math.random()*arr.length)];
+// rng: Math.random, trocado por um gerador com semente enquanto o labirinto é gerado
+// (no online todo mundo gera exatamente o mesmo labirinto a partir da mesma semente)
+let rng = Math.random;
+function mulberry32(a){
+  return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0)/4294967296; };
+}
+const rand  = (a,b) => a + rng()*(b-a);
+const randi = (a,b) => a + Math.floor(rng()*(b-a+1));
+const pick  = arr => arr[Math.floor(rng()*arr.length)];
 const clamp = (v,a,b) => v<a?a:v>b?b:v;
 const lerp  = (a,b,t) => a+(b-a)*t;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -701,6 +790,17 @@ const ENDINGS = {
     'No portão, a luz do dia queima seus olhos. Seu celular está com 100% de bateria, e no bolso há um bilhete escrito com uma letra caprichada de aluno:',
     '“Obrigado por ir embora. Não volte à IFMT.”',
     'O único caminho para casa passa em frente à IFMT. Lá dentro, uma menina ri.' ]},
+  // versus online
+  vs_surv: { title:'Os Alunos Escaparam', paras:[
+    'Vocês chegam à sala 13 com a luz dos celulares tremendo nas paredes.',
+    'A luz vermelha que vinha atrás de vocês para no corredor, como se uma corda a puxasse de volta.',
+    'Desta vez, o pegador não pegou todo mundo.',
+    'Lá em cima, uma menina descalça bate o pé. “Não vale! Amanhã tem outra rodada.”' ]},
+  vs_villain: { title:'O Pegador Venceu', paras:[
+    'Uma por uma, as luzes dos celulares se apagaram nos corredores da IFMT.',
+    'O jogo terminou do jeito que a Menina Jojo gosta: com todo mundo pego.',
+    '“De novo! De novo!”, ela grita, batendo palmas.',
+    'E a luz vermelha volta a acender.' ]},
 };
 
 /* =====================================================================
@@ -922,7 +1022,7 @@ const Tracks = (() => {
       else if (!steps.paused) steps.pause();
 
       // troca a música quando sai do menu para o jogo (e volta no fim)
-      const s = state === 'title' || state === 'end' ? 'menu' : 'game';
+      const s = state === 'title' || state === 'end' || state === 'lobby' ? 'menu' : 'game';
       if (s !== scene){
         scene = s;
         try { (s === 'menu' ? menuMusic : gameMusic).currentTime = 0; } catch (e) {}
@@ -951,10 +1051,14 @@ addEventListener('keydown', () => Tracks.startMusic());
 const G = {
   state:'title', li:0, keys:0, pages:new Set(), time:0, t:0, rescues:0,
   shake:0, flick:0, flickT:0, flickTarget:0, dip:0,
-  graceT:0, hintT:0, autoSeal:false, resume:'play', showMap:true, mapT:0
+  graceT:0, hintT:0, autoSeal:false, resume:'play', showMap:true, mapT:0,
+  seq:0   // muda a cada troca de cena: cenas assíncronas antigas (intro, nível, ser pego) param no meio
 };
-const P = { x:1.5, y:1.5, a:0, pitch:0, r:.24, walkT:0, fuel:100, out:false, outT:0, invT:0, speed:3.6, turn:3, moving:false, hidden:null, hideCd:0, light:true };   // fuel = bateria do celular; light = lanterna ligada
-const V = { x:-9, y:-9, state:'hidden', timer:10, alpha:0, path:[], repath:0, moving:false, emitT:0, whisper:null };
+// fuel = bateria do celular; light = lanterna ligada
+// online: safeT = tempo protegido depois de ser pego; holdT = espera do João Vitão (versus) no começo do nível; hideT = tempo no armário
+const P = { x:1.5, y:1.5, a:0, pitch:0, r:.24, walkT:0, fuel:100, out:false, outT:0, invT:0, speed:3.6, turn:3, moving:false, hidden:null, hideCd:0, light:true,
+            safeT:0, holdT:0, hideT:0 };
+const V = { x:-9, y:-9, tx:null, ty:null, state:'hidden', timer:10, alpha:0, path:[], repath:0, moving:false, emitT:0, whisper:null };
 let L = null;
 let parts = [];
 
@@ -981,10 +1085,13 @@ function bfs(W, H, src, pass){
   return { dist, prev };
 }
 
-function generateLevel(li){
-  const cfg = LEVELS[li];
-  for (let a = 0; a < 30; a++){ const lv = tryGenerate(li, cfg, false); if (lv) return lv; }
-  return tryGenerate(li, cfg, true);
+function generateLevel(li, seed){
+  const cfg = LEVELS[li], prev = rng;
+  if (seed != null) rng = mulberry32(seed);
+  try {
+    for (let a = 0; a < 30; a++){ const lv = tryGenerate(li, cfg, false); if (lv) return lv; }
+    return tryGenerate(li, cfg, true);
+  } finally { rng = prev; }
 }
 
 function tryGenerate(li, cfg, force){
@@ -1671,7 +1778,9 @@ function solidAt(tx, ty){
 }
 function collides(x, y, r){
   const x0 = Math.floor(x - r), x1 = Math.floor(x + r), y0 = Math.floor(y - r), y1 = Math.floor(y + r);
-  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) if (solidAt(tx, ty)) return true;
+  const ghost = isVillain();   // no versus, o João Vitão atravessa portas como o fantasma de sempre
+  for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++)
+    if (solidAt(tx, ty) && !(ghost && L.map[ty*L.W + tx] === T_DOOR)) return true;
   return false;
 }
 function movePlayer(dx, dy){
@@ -1725,11 +1834,12 @@ function nearbyLocker(){
   return best;
 }
 function toggleHide(){
-  if (G.state !== 'play') return;
+  if (G.state !== 'play' || isVillain()) return;
   if (P.hidden){ P.hidden = null; P.hideCd = .4; Sound.locker(); return; }
   if (P.hideCd > 0) return;
   const lk = nearbyLocker();
   if (!lk) return;
+  P.hideT = 0;
   // de dentro você olha para fora; se ele não viu, a busca dele termina um tile à frente da porta
   const ox = Math.floor(P.x) - DX[lk.k], oy = Math.floor(P.y) - DY[lk.k];
   const peek = solidAt(ox, oy) ? tileOf(P.x, P.y) : oy*L.W + ox;
@@ -1751,22 +1861,38 @@ function villainHide(){ V.state = 'hidden'; V.timer = rand(...L.cfg.v.hide); V.p
 function villainChase(){
   V.state = 'chase'; V.timer = rand(...L.cfg.v.chase); V.repath = 0; V.path = [];
   V.whisper = { text:pick(L.cfg.whispers), t:0 };
-  Sound.whisper();
+  Sound.whisper(); MP.wk++;
 }
 function inChamber(j){
   if (!L.chamber) return false;
   const x = j % L.W, y = (j / L.W) | 0, c = L.chamber;
   return x >= c.x0 - 1 && x <= c.x1 + 1 && y >= c.y0 - 1 && y <= c.y1 + 1;
 }
-function spawnVillain(){
+// quem o João Vitão pode caçar: você (sozinho) ou cada aluno da sala (online, só no anfitrião)
+// hidden = tile da frente do armário (-1 se não está escondido); lr = alcance da luz; ok = pode ser pego agora
+function survivors(){
+  const S = [], vs = MP.on && MP.mode === 'versus';
+  // versus: embaixo da claraboia da entrada é dia, e o pegador não pega ninguém ali
+  const safe = (x, y) => vs && Math.hypot(x - L.start.x - .5, y - L.start.y - .5) < 2.5;
+  if (!isVillain() && (!MP.on || inWorld()))
+    S.push({ id:MP.on ? MP.id : null, x:P.x, y:P.y, hidden:P.hidden ? P.hidden.peek : -1, lr:lightRadius(),
+             ok:!MP.on || (G.state !== 'cutscene' && P.safeT <= 0 && !safe(P.x, P.y)) });
+  if (MP.on) for (const o of MP.others.values()){
+    if (o.li !== L.li || !(o.f & F_WORLD) || o.f & F_FINAL || (vs && o.id === MP.villain)) continue;
+    S.push({ id:o.id, x:o.tx, y:o.ty, hidden:o.f & F_HIDDEN ? o.peek : -1, lr:o.f & F_LIGHT ? 6 : .9,
+             ok:!(o.f & F_SAFE) && !safe(o.tx, o.ty) });
+  }
+  return S;
+}
+function spawnVillain(s){
   const vc = L.cfg.v;
-  const r = bfs(L.W, L.H, tileOf(P.x, P.y), ghostPass);
-  const lr = lightRadius(), c = [];
+  const r = bfs(L.W, L.H, tileOf(s.x, s.y), ghostPass);
+  const lr = s.lr, c = [];
   for (let j = 0; j < r.dist.length; j++){
     const d = r.dist[j];
     if (d < vc.spawn[0] || d > vc.spawn[1] || inChamber(j)) continue;
     const x = j % L.W + .5, y = ((j / L.W) | 0) + .5;
-    if (Math.hypot(x - P.x, y - P.y) > lr + .8) c.push(j);
+    if (Math.hypot(x - s.x, y - s.y) > lr + .8) c.push(j);
   }
   if (!c.length){ V.timer = 3; return; }
   const j = pick(c);
@@ -1791,41 +1917,62 @@ function emitVillain(dt){
 }
 function updateVillain(dt){
   const vc = L.cfg.v;
-  const target = V.state === 'hidden' ? 0 : 1;
-  V.alpha = target;   // aparece e some de uma vez, sem transparência
   if (G.graceT > 0) G.graceT -= dt;
-  const dP = Math.hypot(P.x - V.x, P.y - V.y);
+  const S = survivors();
+  // versus: o João Vitão é um jogador; aqui só se confere quem ele pegou
+  if (!aiVillain()){ checkCatch(S); if (!isVillain()) emitVillain(dt); return; }
+  V.alpha = V.state === 'hidden' ? 0 : 1;   // aparece e some de uma vez, sem transparência
+  // alvo: quem estiver mais perto e fora do armário
+  const open = S.filter(s => s.hidden < 0);
+  let tgt = null, dT = 1e9;
+  for (const s of open){ const d = Math.hypot(s.x - V.x, s.y - V.y); if (d < dT){ dT = d; tgt = s; } }
   switch (V.state){
     case 'hidden':
-      if (!P.hidden) V.timer -= dt;   // com você no armário, ele não aparece
-      if (V.timer <= 0 && G.graceT <= 0 && V.alpha < .05) spawnVillain();
+      if (open.length) V.timer -= dt;   // com todo mundo no armário, ele não aparece
+      if (V.timer <= 0 && G.graceT <= 0 && V.alpha < .05 && open.length) spawnVillain(pick(open));
       break;
     case 'chase': {
       V.timer -= dt; V.repath -= dt;
-      // você está no armário: ele vai até a frente dele, procura e desiste
-      const lost = !!P.hidden;
-      if (V.repath <= 0){ V.repath = .3; villainPathTo(lost ? P.hidden.peek : tileOf(P.x, P.y)); }
+      // todo mundo no armário: ele vai até a frente do armário mais perto, procura e desiste
+      const lost = !tgt;
+      if (V.repath <= 0){
+        V.repath = .3;
+        if (tgt) villainPathTo(tileOf(tgt.x, tgt.y));
+        else {
+          let hid = null, dh = 1e9;
+          for (const s of S){ const d = Math.hypot(s.x - V.x, s.y - V.y); if (d < dh){ dh = d; hid = s; } }
+          if (hid) villainPathTo(hid.hidden); else V.path = [];
+        }
+      }
       if (V.path.length) followPath(dt, vc.speed);
       else if (lost){
         V.state = 'search'; V.timer = rand(3.5, 5.5); V.moving = false;
-        V.whisper = { text:pick(SEARCH_WHISPERS), t:0 }; Sound.whisper();
-      } else if (dP > .01){   // mesmo tile que você: vai direto
-        const s = Math.min(dP, vc.speed*dt);
-        V.x += (P.x - V.x)/dP*s; V.y += (P.y - V.y)/dP*s; V.moving = true;
+        V.whisper = { text:pick(SEARCH_WHISPERS), t:0 }; Sound.whisper(); MP.wk++;
+      } else if (dT > .01){   // mesmo tile que o alvo: vai direto
+        const s = Math.min(dT, vc.speed*dt);
+        V.x += (tgt.x - V.x)/dT*s; V.y += (tgt.y - V.y)/dT*s; V.moving = true;
       }
-      // só desiste quando o tempo acaba e você está longe
-      if (V.state === 'chase' && V.timer <= 0 && dP > 5) villainHide();
+      // só desiste quando o tempo acaba e ninguém está perto
+      if (V.state === 'chase' && V.timer <= 0 && dT > 5) villainHide();
       break;
     }
     case 'search':   // parado na frente do armário, procurando
       V.moving = false; V.timer -= dt;
-      if (!P.hidden){ V.state = 'chase'; V.timer = Math.max(V.timer, 6); V.repath = 0; }
+      if (open.length){ V.state = 'chase'; V.timer = Math.max(V.timer, 6); V.repath = 0; }
       else if (V.timer <= 0) villainHide();
       break;
   }
   if (V.whisper){ V.whisper.t += dt; if (V.whisper.t > 3.5) V.whisper = null; }
-  if (V.state !== 'hidden' && V.alpha > .6 && dP < .55 && G.graceT <= 0 && !P.hidden) pushback();   // no armário ele nunca te pega
+  checkCatch(S);
   emitVillain(dt);
+}
+// no armário ele nunca pega ninguém
+function checkCatch(S){
+  if (V.state === 'hidden' || V.state === 'final' || V.alpha <= .6 || G.graceT > 0) return;
+  for (const s of S){
+    if (s.hidden >= 0 || !s.ok) continue;
+    if (Math.hypot(s.x - V.x, s.y - V.y) < .55){ catchPlayer(s.id); return; }
+  }
 }
 
 /* =====================================================================
@@ -1852,7 +1999,7 @@ const keys = {};
 const dpad = { x:0, y:0, id:null };
 let lookDX = 0, lookDY = 0;
 addEventListener('keydown', e => {
-  if (e.target.tagName === 'INPUT') return;   // slider de FOV com foco usa as setas
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;   // slider de FOV com foco usa as setas; nome/código da sala
   const k = e.key.toLowerCase();
   if ([' ','tab'].includes(k)) e.preventDefault();
   keys[k] = true;
@@ -1956,6 +2103,10 @@ function updateHUD(){
   if (hudCache.k !== k){ keysEl.textContent = k; hudCache.k = k; }
   const p = `${G.pages.size}/${PAGES.length}`;
   if (hudCache.p !== p){ pagesEl.textContent = p; hudCache.p = p; }
+  if (MP.on){
+    const m = MP.mode === 'versus' ? `Pegos ${MP.catches}/${MP.limit}` : String(MP.players.length);
+    if (hudCache.m !== m){ $('mp-count').textContent = m; hudCache.m = m; }
+  }
 }
 let toastTimer = null;
 function toast(msg, ms=3200){
@@ -1972,7 +2123,7 @@ function toggleMute(){ Sound.init(); Sound.toggle(); Tracks.setMuted(Sound.muted
 renderSoundBtn();
 // aviso "E — esconder no armário" (no celular, é o próprio botão)
 function updateActPrompt(){
-  const m = G.state !== 'play' || !L ? '' : P.hidden ? 'out' : nearbyLocker() ? 'in' : '';
+  const m = G.state !== 'play' || !L || isVillain() ? '' : P.hidden ? 'out' : nearbyLocker() ? 'in' : '';
   if (actEl.dataset.m === m) return;
   actEl.dataset.m = m;
   actEl.classList.toggle('on', !!m);
@@ -2032,7 +2183,7 @@ $('btn-sound').onclick = e => { e.currentTarget.blur(); toggleMute(); };
 $('btn-map').onclick = e => { e.currentTarget.blur(); toggleMap(); };
 $('btn-light').onclick = e => { e.currentTarget.blur(); toggleLight(); };
 function toggleLight(){
-  if (G.state !== 'play' || P.hidden) return;
+  if (G.state !== 'play' || P.hidden || isVillain()) return;
   if (P.out){ toast('O celular está descarregado.', 1600); return; }
   P.light = !P.light; Sound.light(P.light); updateLightBtn();
 }
@@ -2070,7 +2221,10 @@ sensInputs.forEach(i => {
 });
 setSens(SENS);
 function setPause(on){
-  if (on && G.state === 'play'){ G.state = 'paused'; $('pause').classList.add('on'); releasePointer(); }
+  if (on && G.state === 'play'){
+    G.state = 'paused'; $('pause').classList.add('on'); releasePointer();
+    $('pause-mp').hidden = $('pause-leave').hidden = !MP.on;
+  }
   else if (!on && G.state === 'paused'){ G.state = 'play'; $('pause').classList.remove('on'); }
 }
 
@@ -2106,6 +2260,12 @@ function drawMinimap(){
     mctx.fillStyle = it.type === 'key' ? '#ffcf6a' : it.type === 'page' ? '#f3e6c8' : '#5fd36a';
     mctx.beginPath(); mctx.arc(ox + (it.x + .5)*s, oy + (it.y + .5)*s, s*.28, 0, TAU); mctx.fill();
   }
+  // online: os outros alunos (o João Vitão do versus não vê ninguém no mapa)
+  if (MP.on && !isVillain()) for (const o of MP.others.values()){
+    if (!otherVisible(o) || isVillainId(o.id)) continue;
+    mctx.fillStyle = rgb(PLAYER_COLORS[o.color], 60);
+    mctx.beginPath(); mctx.arc(ox + o.x*s, oy + o.y*s, s*.42, 0, TAU); mctx.fill();
+  }
   const px = ox + P.x*s, py = oy + P.y*s;
   mctx.save(); mctx.translate(px, py); mctx.rotate(P.a);
   mctx.fillStyle = '#ff9a45'; mctx.beginPath(); mctx.moveTo(s*.8, 0); mctx.lineTo(-s*.5, -s*.5); mctx.lineTo(-s*.25, 0); mctx.lineTo(-s*.5, s*.5); mctx.closePath(); mctx.fill();
@@ -2116,13 +2276,26 @@ function drawMinimap(){
    FLUXO DE JOGO
    ===================================================================== */
 function buildLevel(li){
-  L = generateLevel(li);
+  // online: todos geram o mesmo labirinto a partir da semente da partida
+  L = generateLevel(li, MP.on ? (MP.seed + li*7919) >>> 0 : null);
   buildAssets(L);
+  L.items.forEach((it, i) => { it.i = i; });
   G.li = li; G.keys = 0;
   P.x = L.start.x + .5; P.y = L.start.y + .5; P.a = openDirAngle(L.start.x, L.start.y); P.pitch = 0;
   P.fuel = 100; P.out = false; P.invT = 0; P.hidden = null; P.hideCd = 0;
-  V.state = 'hidden'; V.alpha = 0; V.timer = L.cfg.firstAppear; V.x = V.y = -9; V.path = []; V.whisper = null;
+  P.speed = 3.6; P.safeT = 0; P.holdT = 0; P.hideT = 0;
+  V.state = 'hidden'; V.alpha = 0; V.timer = L.cfg.firstAppear; V.x = V.y = -9; V.tx = V.ty = null; V.path = []; V.whisper = null;
   G.graceT = 4;
+  MP.asked = MP.busy = false;
+  if (isVillain()){
+    // versus: o João Vitão começa lá no fundo do andar e espera os alunos entrarem
+    let k = Math.floor(L.path.length*.75);
+    while (k > 0 && inChamber(L.path[k])) k--;
+    const j = L.path[k], tx = j % L.W, ty = (j / L.W) | 0;
+    P.x = tx + .5; P.y = ty + .5; P.a = openDirAngle(tx, ty);
+    P.speed = VILLAIN_SPEED; P.holdT = VILLAIN_HOLD; P.light = false;
+    V.state = 'chase'; V.alpha = 1; V.x = P.x; V.y = P.y;
+  }
   parts = [];
   $('lvl-name').textContent = `${ROMAN[li]} · ${L.cfg.name}`;
   for (const k in hudCache) delete hudCache[k];
@@ -2130,20 +2303,38 @@ function buildLevel(li){
 }
 
 async function startLevel(li){
+  const seq = ++G.seq;
   G.state = 'cutscene'; releasePointer();
+  closeOverlays();
   const cfg = LEVELS[li];
   Tracks.round();
-  setFade({ kicker:`Nível ${ROMAN[li]}`, title:cfg.name, sub:cfg.epigraph });
+  const vs = MP.on && MP.mode === 'versus';
+  // versus: no primeiro nível a tela de entrada diz quem é o pegador
+  const sub = vs && li === 0
+    ? (isVillain() ? 'Você é o João Vitão. Pegue os alunos antes que eles cheguem à sala 13.' : `${nameOf(MP.villain)} é o João Vitão nesta rodada. Cheguem à sala 13.`)
+    : cfg.epigraph;
+  setFade({ kicker:`Nível ${ROMAN[li]}`, title:cfg.name, sub });
   await fadeTo(1, 1100);
+  if (seq !== G.seq) return;
   $('title').classList.remove('on');
   buildLevel(li);
   hudEl.classList.add('on'); dpadEl.classList.add('on'); $('look-hint').classList.add('on');
   mm.classList.toggle('on', G.showMap);
   await sleep(2700);
+  if (seq !== G.seq) return;
   await fadeTo(0, 1300);
+  if (seq !== G.seq) return;
   G.state = 'play';
-  if (li === 0) toast(`Ache as chaves e a escada para descer. Não deixe a bateria acabar. Perto de um armário, ${document.body.classList.contains('touch') ? 'toque em Esconder' : 'aperte E'} para se esconder.`, 6000);
+  const hide = document.body.classList.contains('touch') ? 'toque em Esconder' : 'aperte E';
+  if (isVillain()) toast(`Você é o João Vitão: atravessa portas e enxerga em vermelho. Pegue alunos ${MP.limit} vezes para vencer. Espere ${VILLAIN_HOLD} segundos…`, 6500);
+  else if (vs && li === 0) toast(`Se o pegador pegar alunos ${MP.limit} vezes, vocês perdem. Embaixo da claraboia da entrada ele não pega ninguém. Perto de um armário, ${hide} para se esconder.`, 7000);
+  else if (MP.on && li === 0) toast(`Vocês estão juntos. As chaves valem para todos, e quem achar a escada leva o grupo para baixo. Perto de um armário, ${hide} para se esconder.`, 7000);
+  else if (li === 0) toast(`Ache as chaves e a escada para descer. Não deixe a bateria acabar. Perto de um armário, ${hide} para se esconder.`, 6000);
   else toast(`Este andar exige ${L.totalKeys} chaves.`, 3200);
+}
+// fecha pausa, páginas e o jumpscare (troca de cena forçada pelo online)
+function closeOverlays(){
+  $('pause').classList.remove('on'); pageModal.classList.remove('on'); journalModal.classList.remove('on'); jumpEl.classList.remove('on');
 }
 
 // cena de abertura (10 s): quem é João Vitão e por que ele não sai da IFMT
@@ -2156,17 +2347,22 @@ async function playIntro(){
 }
 
 async function beginGame(){
-  if (G.state !== 'title' && G.state !== 'end') return;
+  if (G.state !== 'title' && G.state !== 'end' && G.state !== 'lobby') return;
+  const seq = ++G.seq;
   goLandscape();
   Sound.init();
   G.pages = new Set(); G.time = 0; G.rescues = 0; G.autoSeal = false;
   P.light = true; updateLightBtn();
   await playIntro();
+  if (seq !== G.seq) return;
   $('end').classList.remove('on');
   startLevel(0);
 }
 $('btn-start').onclick = beginGame;
-$('btn-restart').onclick = () => { G.state = 'end'; beginGame(); };
+$('btn-restart').onclick = () => {
+  if (MP.on){ if (MP.host) broadcast({ t:'lobbyBack' }); return; }
+  G.state = 'end'; beginGame();
+};
 
 // o rosto dele na tela inteira, em vermelho, junto com o grito (2s)
 const jumpEl = $('jumpscare');
@@ -2178,35 +2374,67 @@ function jumpscare(){
   jumpEl.classList.remove('on'); void jumpEl.offsetWidth; jumpEl.classList.add('on');   // reinicia as animações
 }
 
+// o João Vitão pegou alguém: sozinho é você; online, o anfitrião avisa quem foi
+function catchPlayer(id){
+  if (!MP.on){ pushback(); return; }
+  if (aiVillain()){ villainHide(); V.alpha = 0; V.timer += 4; V.x = V.y = -9; V.whisper = null; }
+  G.graceT = aiVillain() ? 4 : 2;   // um respiro antes dele poder pegar de novo
+  if (MP.mode === 'versus') MP.catches++;
+  broadcast({ t:'caught', id, c:MP.catches });
+  if (MP.mode === 'versus' && MP.catches >= MP.limit && !MP.busy){
+    MP.busy = true;
+    const seq = G.seq;
+    setTimeout(() => { if (MP.on && MP.host && seq === G.seq) broadcast({ t:'end', id:'vs_villain' }); }, 2600);
+  }
+}
+
 async function pushback(){
-  if (G.state !== 'play') return;
+  if (MP.on){
+    // online o jogo não para: pode ser pego até com a pausa ou uma página aberta
+    if (!inWorld() || G.state === 'final') return;
+    closeOverlays();
+  } else if (G.state !== 'play') return;
+  const seq = G.seq;
   G.state = 'cutscene'; G.rescues++; releasePointer();
   Tracks.scream(); G.shake = .6;
   jumpscare();
   await sleep(1000);
+  if (seq !== G.seq) return;
   setFade({ title:L.cfg.push, whisper:true });
   await fadeTo(1, 350);
   jumpEl.classList.remove('on');
   await sleep(2300);
+  if (seq !== G.seq) return;
   P.x = L.start.x + .5; P.y = L.start.y + .5; P.a = openDirAngle(L.start.x, L.start.y); P.pitch = 0;
   P.fuel = Math.max(P.fuel, 75); P.out = false; P.invT = 1; P.hidden = null; P.light = true; updateLightBtn();
-  villainHide(); V.alpha = 0; V.timer += 4; V.x = V.y = -9; V.whisper = null;
-  G.graceT = 10;
+  if (MP.on) P.safeT = 10;   // online o anfitrião já mandou o João Vitão embora
+  else {
+    villainHide(); V.alpha = 0; V.timer += 4; V.x = V.y = -9; V.whisper = null;
+    G.graceT = 10;
+  }
   setFade({});
   await fadeTo(0, 1300);
+  if (seq !== G.seq) return;
   G.state = 'play';
   toast(G.rescues === 1
     ? 'Você acorda na entrada. O celular está com a bateria cheia… Quem carregou?'
     : 'Você acorda na entrada outra vez. O celular, de novo, carregado.', 5000);
 }
 
-function nextLevel(){ Sound.stairs(); startLevel(L.li + 1); }
+function nextLevel(li = L.li + 1){ Sound.stairs(); startLevel(li); }
 
-function takeItem(it){
+// by: nome de outro aluno que pegou o item (online); sem by, foi você
+function takeItem(it, by){
   it.taken = true;
+  if (by){
+    if (it.type === 'key'){ Sound.key(); bumpKeys(); toast(`${by} achou uma chave (${G.keys}/${L.totalKeys}).`, 2400); }
+    else if (it.type === 'page' && !G.pages.has(it.page)){ G.pages.add(it.page); flashBook(); toast(`${by} achou uma página. Ela já está no seu diário (J).`, 2800); }
+    return;
+  }
   switch (it.type){
     case 'key':
-      G.keys++; Sound.key(); bumpKeys();
+      if (!MP.on) G.keys++;   // online o anfitrião conta as chaves
+      Sound.key(); bumpKeys();
       for (let k = 0; k < 14; k++) emit(it.x + .5, it.y + .5, .3, rand(-.6,.6), rand(-.6,.6), rand(.6,1.4), rand(.4,.8), .05, 'gold');
       toast(G.keys >= L.totalKeys ? `Chave encontrada (${G.keys}/${L.totalKeys}). Agora, a porta.` : `Chave encontrada (${G.keys}/${L.totalKeys})`, 2400);
       break;
@@ -2230,26 +2458,48 @@ function addFuel(n){
 }
 
 /* ---------- Confronto final ---------- */
-function startFinal(){
+function startFinal(by){
+  const seq = ++G.seq;
   G.state = 'final'; releasePointer(); P.hidden = null;
   clearTimeout(toastTimer); toastEl.classList.remove('on');
+  if (MP.on){
+    closeOverlays(); setFade({}); fadeTo(0, 400);
+    // quem não chegou junto aparece na sala 13, em volta da carteira
+    if (by !== MP.id){
+      const k = Math.max(0, MP.players.findIndex(p => p.id === MP.id)), ang = Math.PI*.75 + (k - 1.5)*.5;
+      P.x = L.seal.x + .5 + Math.cos(ang)*2.4; P.y = L.seal.y + .5 + Math.sin(ang)*2.4;
+    }
+  }
   V.state = 'final'; V.x = L.seal.x + .5; V.y = L.seal.y + .5; V.path = []; V.alpha = 0; V.whisper = null;
   if (P.out || P.fuel < 30){ P.out = false; P.fuel = Math.max(P.fuel, 30); }
   if (!G.pages.has(SEAL_PAGE)){ G.pages.add(SEAL_PAGE); G.autoSeal = true; flashBook(); }
   updateHUD();
   Sound.appear();
   for (let k = 0; k < 30; k++) emit(V.x + rand(-.5,.5), V.y + rand(-.5,.5), rand(0,.8), rand(-.1,.1), rand(-.1,.1), rand(.1,.3), rand(1,2.2), rand(.2,.35), 'smoke');
-  setTimeout(() => Dialog.start('start'), 1800);
+  // online quem conduz a conversa é o anfitrião; os outros acompanham
+  if (!MP.on || MP.host) setTimeout(() => { if (seq === G.seq && G.state === 'final') Dialog.start('start'); }, 1800);
 }
 
 const dlgEl = $('dialog'), dlgSpeaker = $('dlg-speaker'), dlgText = $('dlg-text'), dlgNext = $('dlg-next'), dlgChoices = $('dlg-choices');
+// online: só o anfitrião avança e escolhe; a cada mudança ele manda (cena, fala, terminou de digitar)
+// e os outros reproduzem. As condições das falas usam as páginas, que são de todos.
+const guestDlg = () => MP.on && !MP.host;
 const Dialog = {
-  node:null, lines:[], i:0, typing:false, full:'', pos:0, timer:null,
+  id:null, node:null, lines:[], i:0, typing:false, full:'', pos:0, timer:null,
   start(id){
-    this.node = SCRIPT[id];
+    this.id = id; this.node = SCRIPT[id];
     this.lines = this.node.lines.filter(l => !l.cond || l.cond());
     this.i = 0; dlgChoices.innerHTML = ''; dlgEl.classList.add('on');
+    dlgNext.textContent = guestDlg() ? `▸ ${nameOf('h')} conduz a conversa` : '▸ continuar';
     this.show();
+  },
+  sync(){ if (MP.on && MP.host) broadcast({ t:'dlg', id:this.id, i:this.i, done:!this.typing }, false); },
+  apply(m){   // convidado: segue o anfitrião
+    if (G.state !== 'final' || !SCRIPT[m.id]) return;
+    if (this.id !== m.id || !this.node) this.start(m.id);
+    const i = Math.min(m.i, this.lines.length - 1);
+    if (this.i !== i){ this.i = i; this.show(); }
+    if (m.done && this.typing) this.finish();
   },
   show(){
     const l = this.lines[this.i];
@@ -2263,15 +2513,17 @@ const Dialog = {
       this.pos += 1; dlgText.textContent = this.full.slice(0, this.pos);
       if (this.pos >= this.full.length) this.finish();
     }, 26);
+    this.sync();
   },
   finish(){
     clearInterval(this.timer); this.typing = false; dlgText.textContent = this.full;
     const last = this.i === this.lines.length - 1;
-    if (last && this.node.choices) this.showChoices();
+    if (last && this.node.choices){ this.showChoices(); if (guestDlg()) dlgNext.style.visibility = 'visible'; }
     else dlgNext.style.visibility = 'visible';
+    this.sync();
   },
   advance(){
-    if (G.state !== 'final' || !this.node) return;
+    if (G.state !== 'final' || !this.node || guestDlg()) return;
     if (this.typing){ this.finish(); return; }
     if (this.i < this.lines.length - 1){ this.i++; this.show(); }
     else if (!this.node.choices && this.node.next) this.go(this.node.next);
@@ -2282,48 +2534,518 @@ const Dialog = {
       const b = document.createElement('button');
       const locked = c.req && !c.req();
       b.textContent = `${k+1}. ${c.label}` + (locked ? ` — (${c.locked})` : '');
-      b.disabled = !!locked;
+      b.disabled = !!locked || guestDlg();
       b.onclick = e => { e.stopPropagation(); this.choose(k); };
       dlgChoices.appendChild(b);
     });
   },
   choose(k){
-    if (this.typing || !this.node || !this.node.choices || this.i !== this.lines.length - 1) return;
+    if (this.typing || !this.node || !this.node.choices || this.i !== this.lines.length - 1 || guestDlg()) return;
     const c = this.node.choices[k];
     if (!c || (c.req && !c.req())) return;
     this.go(c.to);
   },
-  go(id){ dlgChoices.innerHTML = ''; if (ENDINGS[id]) showEnding(id); else this.start(id); },
+  go(id){
+    dlgChoices.innerHTML = '';
+    if (!ENDINGS[id]) this.start(id);
+    else if (MP.on) broadcast({ t:'end', id });   // o final é o mesmo para todos
+    else showEnding(id);
+  },
   hide(){ clearInterval(this.timer); dlgEl.classList.remove('on'); this.node = null; }
 };
 dlgEl.addEventListener('click', () => Dialog.advance());
 
 async function showEnding(id){
+  const seq = ++G.seq;
   G.state = 'cutscene';
-  Dialog.hide();
-  const e = ENDINGS[id];
+  Dialog.hide(); closeOverlays();
+  const e = ENDINGS[id], vs = id.startsWith('vs_');
   setFade({});
   if (id === 'end_open'){ G.shake = 1.4; Sound.pushback(); }
   await fadeTo(1, id === 'end_open' ? 900 : 2200);
+  if (seq !== G.seq) return;
   Sound.ending();
   hudEl.classList.remove('on'); dpadEl.classList.remove('on'); mm.classList.remove('on'); $('look-hint').classList.remove('on');
   $('end-title').textContent = e.title;
   const box = $('end-text'); box.innerHTML = '';
   for (const t of e.paras){ const p = document.createElement('p'); p.textContent = t; box.appendChild(p); }
-  if (G.pages.size < PAGES.length && id !== 'end_rest'){
+  if (G.pages.size < PAGES.length && id !== 'end_rest' && !vs){
     const p = document.createElement('p'); p.className = 'hint';
     p.textContent = 'Talvez os corredores ainda guardem páginas que você não leu.';
     box.appendChild(p);
   }
   const m = Math.floor(G.time/60), s = Math.floor(G.time % 60);
-  $('end-stats').innerHTML = `Páginas encontradas: ${G.pages.size}/${PAGES.length} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>` +
-    (G.rescues ? `João Vitão levou você de volta à entrada ${G.rescues} ${G.rescues === 1 ? 'vez' : 'vezes'}. Seu celular nunca voltou descarregado.` : 'O pegador nunca alcançou você.');
+  $('end-stats').innerHTML = vs
+    ? `Alunos pegos: ${MP.catches}/${MP.limit} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>O pegador desta rodada: ${escapeHTML(nameOf(MP.villain) || 'o próprio João Vitão')}.`
+    : `Páginas encontradas: ${G.pages.size}/${PAGES.length} · Tempo: ${m}:${String(s).padStart(2,'0')}<br>` +
+      (G.rescues ? `João Vitão levou você de volta à entrada ${G.rescues} ${G.rescues === 1 ? 'vez' : 'vezes'}. Seu celular nunca voltou descarregado.` : 'O pegador nunca alcançou você.');
+  // online: o anfitrião leva todo mundo de volta para a sala; os outros esperam
+  $('btn-restart').textContent = MP.on ? 'Voltar para a sala' : 'Entrar outra vez';
+  $('btn-restart').hidden = MP.on && !MP.host;
+  $('end-wait').hidden = !MP.on || MP.host;
+  $('btn-leave').hidden = !MP.on;
   $('end').classList.add('on'); $('end').scrollTop = 0;
   L = null;
   setFade({});
   fadeTo(0, 10);
   G.state = 'end';
 }
+const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
+
+/* =====================================================================
+   ONLINE — salas com código, direto entre os navegadores (WebRTC via PeerJS)
+   ---------------------------------------------------------------------
+   O anfitrião é quem manda: ele roda o João Vitão, conta as chaves, abre
+   as portas e decide a troca de nível. Cada um anda o próprio aluno e
+   manda a posição; o anfitrião repassa tudo para todos ~15x por segundo.
+   O labirinto não é enviado: todos geram o mesmo a partir de uma semente.
+   O servidor público do PeerJS só apresenta os navegadores; o jogo em si
+   vai direto de um para o outro.
+   ===================================================================== */
+const PEER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
+const ROOM_PREFIX = 'jvitao-ifmt-sala-';
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // sem I, O, 0 e 1 (fáceis de confundir)
+const MAX_PLAYERS = 4, NET_DT = 1/15;
+const VILLAIN_SPEED = 3.75, VILLAIN_HOLD = 10;   // versus: um pouco mais rápido que os alunos; espera 10 s no começo de cada nível
+const LOCKER_MAX = 12;                           // versus: segundos máximos dentro do armário
+const PLAYER_COLORS = [[70,104,160],[160,62,62],[62,146,96],[160,132,60]];
+const VSTATES = ['hidden','chase','search','final'];
+// bits do estado de cada aluno enviado pela rede
+const F_LIGHT = 1, F_HIDDEN = 2, F_OUT = 4, F_MOVING = 8, F_WORLD = 16, F_SAFE = 32, F_FINAL = 64;
+
+const MP = {
+  on:false, host:false, peer:null,
+  conn:null,            // convidado: conexão com o anfitrião
+  conns:new Map(),      // anfitrião: id do jogador -> conexão
+  id:null, name:'', code:'', nextId:0,
+  players:[],           // [{ id, name, color }] — o anfitrião ('h') é sempre o primeiro
+  mode:'coop', pick:'', // sala: modo e quem o anfitrião escolheu para ser o João Vitão ('' = sorteio)
+  started:false, seed:0, villain:null, catches:0, limit:0,
+  others:new Map(),     // id -> estado dos outros alunos (posição suavizada etc.)
+  netT:0, wk:0,         // wk: contador de sussurros do João Vitão (os convidados tocam o som quando muda)
+  asked:false, busy:false, joinFail:null, uiBusy:false,
+};
+const isVillainId = id => MP.on && MP.mode === 'versus' && !!id && id === MP.villain;
+const isVillain = () => isVillainId(MP.id);
+const aiVillain = () => !MP.on || MP.mode !== 'versus' || !MP.villain;
+const nameOf = id => { const p = MP.players.find(q => q.id === id); return p ? p.name : ''; };
+const inWorld = () => !!L && (G.state === 'play' || G.state === 'paused' || G.state === 'modal');
+const otherVisible = o => !!L && o.li === L.li && !!(o.f & F_WORLD) && !(o.f & F_HIDDEN);
+const r2 = v => Math.round(v*100)/100;
+
+function myState(){
+  const f = (P.light && !P.out ? F_LIGHT : 0) | (P.hidden ? F_HIDDEN : 0) | (P.out ? F_OUT : 0) | (P.moving ? F_MOVING : 0)
+          | (inWorld() || G.state === 'final' ? F_WORLD : 0) | (G.state === 'final' ? F_FINAL : 0) | (P.safeT > 0 ? F_SAFE : 0);
+  return [r2(P.x), r2(P.y), r2(P.a), f, P.hidden ? P.hidden.peek : -1, L ? L.li : -1];
+}
+function otherOf(id){
+  let o = MP.others.get(id);
+  if (!o){
+    const p = MP.players.find(q => q.id === id);
+    o = { id, name:p ? p.name : '?', color:p ? p.color : 0, x:0, y:0, a:0, tx:0, ty:0, ta:0, f:0, peek:-1, li:-1, fresh:true };
+    MP.others.set(id, o);
+  }
+  return o;
+}
+function setOther(o, s){
+  const x = +s[0] || 0, y = +s[1] || 0, a = +s[2] || 0;
+  // acabou de aparecer ou "teleportou" (foi pego, trocou de nível): sem deslizar pelo mapa
+  if (o.fresh || !(o.f & F_WORLD) || o.li !== +s[5] || Math.hypot(x - o.x, y - o.y) > 2.5){ o.x = x; o.y = y; o.a = a; o.fresh = false; }
+  o.tx = x; o.ty = y; o.ta = a; o.f = s[3] | 0; o.peek = s[4] | 0; o.li = s[5] | 0;
+}
+
+/* ---------- conexão ---------- */
+let peerLib = null;
+function loadPeer(){
+  if (window.Peer) return Promise.resolve();
+  return peerLib || (peerLib = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = PEER_SRC; s.async = true;
+    s.onload = res; s.onerror = () => { peerLib = null; s.remove(); rej({ type:'load' }); };
+    document.head.appendChild(s);
+  }));
+}
+function openPeer(id){
+  return new Promise((res, rej) => {
+    const p = id ? new Peer(id) : new Peer();
+    let open = false;
+    p.on('open', () => { open = true; MP.peer = p; res(p); });
+    p.on('error', e => {
+      if (!open){ try { p.destroy(); } catch (x) {} rej(e); }
+      else if (MP.joinFail) MP.joinFail(e);
+    });
+    // perdeu o servidor de apresentação (as conexões já abertas continuam): tenta voltar para aceitar gente nova
+    p.on('disconnected', () => { if (MP.peer === p && !p.destroyed) try { p.reconnect(); } catch (e) {} });
+  });
+}
+const randomCode = () => Array.from({ length:5 }, () => CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]).join('');
+function netError(e){
+  const t = e && e.type;
+  if (t === 'load') return 'Não deu para carregar o modo online. Você está sem internet?';
+  if (t === 'browser-incompatible') return 'Este navegador não suporta o jogo online.';
+  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return 'Sem conexão com o servidor de salas. Confira a internet e tente de novo.';
+  return (e && e.message) || 'Algo deu errado na conexão.';
+}
+
+async function hostRoom(){
+  await loadPeer();
+  for (let k = 0; !MP.peer; k++){
+    const code = randomCode();
+    try { await openPeer(ROOM_PREFIX + code); MP.code = code; }
+    catch (e){ if (e.type !== 'unavailable-id' || k >= 3) throw e; }   // código já usado: sorteia outro
+  }
+  Object.assign(MP, { on:true, host:true, id:'h', nextId:0, mode:'coop', pick:'', started:false });
+  MP.players = [{ id:'h', name:MP.name, color:0 }];
+  document.body.classList.add('mp');
+  MP.peer.on('connection', c => {
+    c.on('data', m => hostRecv(c, m));
+    c.on('close', () => dropGuest(c));
+    c.on('error', () => dropGuest(c));
+  });
+}
+function hostRecv(c, m){
+  if (!MP.on || !MP.host || !m || typeof m !== 'object') return;
+  if (m.t === 'hello'){
+    if (c.pid) return;
+    if (MP.started) return refuse(c, 'A partida já começou. Espere ela acabar e tente de novo.');
+    if (MP.players.length >= MAX_PLAYERS) return refuse(c, `A sala está cheia (${MAX_PLAYERS} jogadores).`);
+    const used = new Set(MP.players.map(p => p.color));
+    const id = 'p' + (++MP.nextId);
+    c.pid = id; MP.conns.set(id, c);
+    MP.players.push({ id, name:cleanName(m.name) || 'Aluno', color:[0,1,2,3].find(k => !used.has(k)) });
+    c.send({ t:'welcome', id });
+    broadcastLobby(); renderLobby();
+    return;
+  }
+  if (c.pid && MP.conns.get(c.pid) === c) hostHandle(m, c.pid);
+}
+function refuse(c, msg){
+  try { c.send({ t:'kick', msg }); } catch (e) {}
+  setTimeout(() => { try { c.close(); } catch (e) {} }, 500);
+}
+function dropGuest(c){
+  const id = c.pid;
+  if (!MP.host || !id || MP.conns.get(id) !== c) return;
+  MP.conns.delete(id); MP.others.delete(id);
+  const name = nameOf(id);
+  MP.players = MP.players.filter(p => p.id !== id);
+  if (MP.pick === id) MP.pick = '';
+  if (MP.started){
+    broadcast({ t:'left', id, name });
+    if (MP.villain === id) broadcast({ t:'roles', villain:null });   // o João Vitão de verdade assume
+  } else { broadcastLobby(); renderLobby(); }
+}
+
+function joinRoom(code){
+  return loadPeer().then(() => openPeer(null)).then(() => new Promise((res, rej) => {
+    let done = false;
+    const end = err => { if (done) return; done = true; clearTimeout(to); err ? rej(err) : res(); };
+    const to = setTimeout(() => end(new Error('Não foi possível conectar à sala.')), 15000);
+    MP.joinFail = e => end(e.type === 'peer-unavailable' ? new Error('Sala não encontrada. Confira o código.') : new Error(netError(e)));
+    const c = MP.peer.connect(ROOM_PREFIX + code, { reliable:true });
+    c.on('open', () => c.send({ t:'hello', name:MP.name }));
+    c.on('data', m => {
+      if (!m || typeof m !== 'object') return;
+      if (m.t === 'welcome' && !done){
+        Object.assign(MP, { on:true, host:false, id:m.id, conn:c, code, wk:-1 });
+        document.body.classList.add('mp');
+        end(); return;
+      }
+      if (m.t === 'kick'){ end(new Error(m.msg)); return; }
+      if (MP.conn === c) onEvent(m);
+    });
+    c.on('close', () => { if (MP.conn === c) hostLost(); else end(new Error('A sala recusou a conexão.')); });
+  })).finally(() => { MP.joinFail = null; });
+}
+function hostLost(){
+  if (!MP.on) return;
+  leaveRoom();
+  backToTitle('A conexão com a sala caiu.');
+}
+function leaveRoom(){
+  const p = MP.peer;
+  Object.assign(MP, { on:false, host:false, conn:null, peer:null, started:false, villain:null, players:[], code:'', id:null });
+  MP.conns.clear(); MP.others.clear();
+  document.body.classList.remove('mp', 'is-villain');
+  if (p) try { p.destroy(); } catch (e) {}
+}
+// volta para a tela título no meio de qualquer cena
+function backToTitle(msg){
+  G.seq++; G.state = 'title'; L = null;
+  Dialog.hide(); closeOverlays();
+  for (const id of ['end','lobby']) $(id).classList.remove('on');
+  hudEl.classList.remove('on'); dpadEl.classList.remove('on'); mm.classList.remove('on'); $('look-hint').classList.remove('on');
+  setFade({}); fadeTo(0, 10);
+  releasePointer();
+  $('title').classList.add('on');
+  if (msg) toast(msg, 4500);
+}
+
+/* ---------- mensagens ---------- */
+function sendHost(m){ if (MP.conn && MP.conn.open) try { MP.conn.send(m); } catch (e) {} }
+// anfitrião: manda para todos (e, com apply, aplica nele mesmo como se tivesse recebido)
+function broadcast(m, apply = true){
+  for (const c of MP.conns.values()) if (c.open) try { c.send(m); } catch (e) {}
+  if (apply) onEvent(m);
+}
+// pedido de um aluno ao anfitrião (o anfitrião atende a si mesmo na hora)
+function request(m){ if (MP.host) hostHandle(m, MP.id); else sendHost(m); }
+
+// anfitrião: pedidos dos alunos
+function hostHandle(m, pid){
+  const here = L && m.li === L.li && (m.i === undefined || Number.isInteger(m.i));
+  switch (m.t){
+    case 'p':
+      if (pid !== MP.id && Array.isArray(m.s)) setOther(otherOf(pid), m.s);
+      break;
+    case 'take': {
+      const it = here && L.items[m.i];
+      if (!it || it.taken || isVillainId(pid)) return;
+      if (it.type === 'key') G.keys++;
+      broadcast({ t:'took', i:m.i, li:m.li, by:pid, keys:G.keys });
+      break;
+    }
+    case 'door': {
+      const d = here && L.doors[m.i];
+      if (!d || d.open || G.keys < d.req) return;
+      broadcast({ t:'door', i:m.i, li:m.li, by:pid });
+      break;
+    }
+    case 'exit':
+      if (!here || MP.busy || !L.exit || isVillainId(pid)) return;
+      MP.busy = true;
+      broadcast({ t:'level', li:L.li + 1, by:pid });
+      break;
+    case 'seal':
+      if (!here || MP.busy || !L.seal || isVillainId(pid)) return;
+      MP.busy = true;
+      broadcast(MP.mode === 'versus' ? { t:'end', id:'vs_surv' } : { t:'final', by:pid });
+      break;
+  }
+}
+
+// todos: eventos que o anfitrião espalha
+function onEvent(m){
+  switch (m.t){
+    case 'lobby':
+      if (!MP.host){ MP.players = m.players; MP.mode = m.mode; MP.pick = m.pick; }
+      renderLobby();
+      break;
+    case 'start':
+      Object.assign(MP, { seed:m.seed >>> 0, mode:m.mode, villain:m.villain, limit:m.limit, catches:0, started:true });
+      MP.others.clear();
+      document.body.classList.toggle('is-villain', isVillain());
+      $('lobby').classList.remove('on');
+      beginGame();
+      break;
+    case 's':
+      if (!MP.host) applySnapshot(m);
+      break;
+    case 'took': {
+      const it = L && L.li === m.li && L.items[m.i];
+      if (!it || it.taken) return;
+      if (it.type === 'key') G.keys = m.keys;
+      takeItem(it, m.by === MP.id ? null : nameOf(m.by) || 'Alguém');
+      break;
+    }
+    case 'door': {
+      const d = L && L.li === m.li && L.doors[m.i];
+      if (!d || d.open) return;
+      d.open = true; Sound.door();
+      if (m.by === MP.id){ G.shake = .25; toast('As chaves giram na fechadura. A porta range e se abre.', 2600); }
+      else toast(`${nameOf(m.by) || 'Alguém'} abriu uma porta.`, 2400);
+      break;
+    }
+    case 'level':
+      if (m.li >= LEVELS.length) return;
+      nextLevel(m.li);
+      break;
+    case 'final':
+      if (L && L.seal) startFinal(m.by);
+      break;
+    case 'dlg':
+      if (!MP.host) Dialog.apply(m);
+      break;
+    case 'end':
+      if (ENDINGS[m.id]) showEnding(m.id);
+      break;
+    case 'caught':
+      MP.catches = m.c;
+      if (m.id === MP.id) pushback();
+      else {
+        const n = nameOf(m.id) || 'alguém';
+        toast(isVillain() ? `Você pegou ${n}! (${m.c}/${MP.limit})` : `João Vitão pegou ${n} e levou de volta à entrada.`, 3000);
+      }
+      break;
+    case 'roles':
+      MP.villain = m.villain;
+      document.body.classList.toggle('is-villain', isVillain());
+      if (MP.host && aiVillain() && L){ villainHide(); V.alpha = 0; V.timer = 6; V.x = V.y = -9; }
+      toast('O pegador saiu da sala. Agora quem caça é o próprio João Vitão.', 4000);
+      break;
+    case 'left':
+      MP.players = MP.players.filter(p => p.id !== m.id);
+      MP.others.delete(m.id);
+      if (m.name) toast(`${m.name} saiu da sala.`, 2600);
+      break;
+    case 'lobbyBack':
+      MP.started = false; MP.villain = null; MP.others.clear();
+      document.body.classList.remove('is-villain');
+      L = null; G.seq++;
+      $('end').classList.remove('on');
+      openLobby();
+      if (MP.host) broadcastLobby();
+      break;
+  }
+}
+
+function applySnapshot(m){
+  MP.catches = m.c | 0;
+  const seen = new Set();
+  for (const s of m.p){
+    const id = s[0];
+    if (id === MP.id) continue;
+    seen.add(id); setOther(otherOf(id), s.slice(1));
+  }
+  for (const id of [...MP.others.keys()]) if (!seen.has(id)) MP.others.delete(id);
+  if (isVillain() || !L || m.li !== L.li) return;
+  const [x, y, st, al, mv, wk] = m.v, s = VSTATES[st] || 'hidden';
+  // apareceu agora ou deu um salto: vai direto para lá
+  if ((V.state === 'hidden' && s !== 'hidden') || V.tx == null || Math.hypot(x - V.x, y - V.y) > 2.5){ V.x = x; V.y = y; }
+  V.tx = x; V.ty = y; V.moving = !!mv;
+  if (V.state !== 'final'){ V.state = s; V.alpha = al; }
+  if (wk !== MP.wk){ if (MP.wk >= 0 && s !== 'hidden') Sound.whisper(); MP.wk = wk; }
+}
+function sendSnapshot(){
+  const p = [[MP.id, ...myState()]];
+  for (const o of MP.others.values()) p.push([o.id, r2(o.tx), r2(o.ty), r2(o.ta), o.f, o.peek, o.li]);
+  broadcast({ t:'s', li:L.li, v:[r2(V.x), r2(V.y), Math.max(0, VSTATES.indexOf(V.state)), V.alpha, V.moving ? 1 : 0, MP.wk], p, c:MP.catches }, false);
+}
+
+// a cada quadro: suaviza os outros, roda o mundo (anfitrião) e manda o estado
+function updateNet(dt){
+  if (!MP.on || !MP.started) return;
+  const k = Math.min(1, dt*12);
+  for (const o of MP.others.values()){ o.x += (o.tx - o.x)*k; o.y += (o.ty - o.y)*k; o.a += angDiff(o.a, o.ta)*k; }
+  if (!L) return;
+  if (MP.host){
+    if (G.state !== 'final' && V.state !== 'final'){
+      // versus com o pegador num convidado: o João Vitão fica onde ele está
+      if (!aiVillain() && !isVillain()){
+        const o = MP.others.get(MP.villain), on = o && o.li === L.li && (o.f & F_WORLD);
+        if (on){ V.x = o.x; V.y = o.y; V.moving = !!(o.f & F_MOVING); V.state = 'chase'; V.alpha = 1; }
+        else { V.state = 'hidden'; V.alpha = 0; }
+      }
+      updateVillain(dt);
+    }
+  } else if (!isVillain() && V.tx != null){
+    V.x += (V.tx - V.x)*k; V.y += (V.ty - V.y)*k;
+    if (V.state !== 'final') emitVillain(dt);
+  }
+  MP.netT -= dt;
+  if (MP.netT <= 0){
+    MP.netT = NET_DT;
+    if (MP.host) sendSnapshot(); else sendHost({ t:'p', s:myState() });
+  }
+}
+
+/* ---------- tela da sala ---------- */
+const cleanName = s => String(s || '').replace(/\s+/g, ' ').trim().slice(0, 14);
+const nameInput = $('mp-name'), codeInput = $('mp-code');
+try { nameInput.value = localStorage.getItem('jv-name') || ''; } catch (e) {}
+if (!nameInput.value) nameInput.value = 'Aluno ' + (10 + Math.floor(Math.random()*90));
+function readName(){
+  const n = cleanName(nameInput.value);
+  if (!n){ setStatus('Escreva um nome.'); nameInput.focus(); return ''; }
+  try { localStorage.setItem('jv-name', n); } catch (e) {}
+  return (MP.name = n);
+}
+function setStatus(msg){ $('mp-status').textContent = msg; }
+const inviteLink = () => location.origin + location.pathname + '?sala=' + MP.code;
+
+function openLobby(code){
+  G.state = 'lobby'; releasePointer();
+  $('title').classList.remove('on'); $('end').classList.remove('on'); $('lobby').classList.add('on');
+  if (code) codeInput.value = code;
+  setStatus('');
+  renderLobby();
+}
+function renderLobby(){
+  const inRoom = MP.on;
+  $('lobby-join').hidden = inRoom; $('lobby-room').hidden = !inRoom;
+  $('mp-back').textContent = inRoom ? 'Sair da sala' : 'Voltar';
+  if (!inRoom) return;
+  $('mp-code-show').textContent = MP.code;
+  const ul = $('mp-players'); ul.innerHTML = '';
+  for (const p of MP.players){
+    const li = document.createElement('li');
+    const dot = document.createElement('i'); dot.style.background = rgb(PLAYER_COLORS[p.color], 40);
+    const tag = document.createElement('small');
+    tag.textContent = [p.id === 'h' ? 'anfitrião' : '', p.id === MP.id ? 'você' : ''].filter(Boolean).join(' · ');
+    li.append(dot, document.createTextNode(p.name), tag);
+    ul.appendChild(li);
+  }
+  for (const b of document.querySelectorAll('.modes button')){ b.setAttribute('aria-pressed', b.dataset.mode === MP.mode); b.disabled = !MP.host; }
+  const vs = MP.mode === 'versus';
+  const sel = $('mp-villain');
+  $('mp-villain-row').hidden = !vs;
+  sel.disabled = !MP.host;
+  sel.innerHTML = '';
+  sel.appendChild(new Option('Sorteio', ''));
+  for (const p of MP.players) sel.appendChild(new Option(p.name, p.id));
+  sel.value = MP.players.some(p => p.id === MP.pick) ? MP.pick : '';
+  $('mp-start').hidden = !MP.host;
+  $('mp-start').disabled = vs && MP.players.length < 2;
+  $('mp-wait').hidden = MP.host;
+  if (MP.host) setStatus(vs && MP.players.length < 2 ? 'O versus precisa de pelo menos 2 jogadores. Mande o código para alguém.' : MP.players.length < 2 ? 'Mande o código (ou o convite) para os seus amigos.' : '');
+}
+function broadcastLobby(){ broadcast({ t:'lobby', players:MP.players, mode:MP.mode, pick:MP.pick }, false); }
+
+$('btn-online').onclick = () => openLobby();
+$('mp-create').onclick = async () => {
+  if (MP.uiBusy || MP.on || !readName()) return;
+  MP.uiBusy = true; setStatus('Criando a sala…');
+  try { await hostRoom(); setStatus(''); }
+  catch (e){ leaveRoom(); setStatus(netError(e)); }
+  MP.uiBusy = false;
+  renderLobby();
+};
+$('mp-join').onclick = async () => {
+  if (MP.uiBusy || MP.on || !readName()) return;
+  const code = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length !== 5){ setStatus('O código da sala tem 5 letras.'); codeInput.focus(); return; }
+  MP.uiBusy = true; setStatus('Entrando na sala…');
+  try { await joinRoom(code); setStatus(''); }
+  catch (e){ leaveRoom(); setStatus(e instanceof Error ? e.message : netError(e)); }
+  MP.uiBusy = false;
+  renderLobby();
+};
+codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); });
+codeInput.addEventListener('keydown', e => { if (e.key === 'Enter') $('mp-join').click(); });
+nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') (codeInput.value.length === 5 ? $('mp-join') : $('mp-create')).click(); });
+$('mp-copy').onclick = () => {
+  const link = inviteLink();
+  const ok = () => setStatus('Convite copiado! Cole para os seus amigos.');
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(ok, () => setStatus(link));
+  else setStatus(link);
+};
+for (const b of document.querySelectorAll('.modes button')) b.onclick = () => {
+  if (!MP.host || MP.started) return;
+  MP.mode = b.dataset.mode; broadcastLobby(); renderLobby();
+};
+$('mp-villain').onchange = e => { if (!MP.host) return; MP.pick = e.target.value; broadcastLobby(); renderLobby(); e.target.blur(); };
+$('mp-start').onclick = () => {
+  if (!MP.host || MP.started) return;
+  const n = MP.players.length, vs = MP.mode === 'versus';
+  if (vs && n < 2) return;
+  const villain = !vs ? null : MP.players.some(p => p.id === MP.pick) ? MP.pick : MP.players[Math.floor(Math.random()*n)].id;
+  broadcast({ t:'start', seed:(Math.random()*4294967296) >>> 0, mode:MP.mode, villain, limit:Math.max(3, 3*(n - 1)) });
+};
+$('mp-back').onclick = () => {
+  if (MP.uiBusy) return;
+  if (MP.on){ leaveRoom(); renderLobby(); setStatus(''); return; }
+  $('lobby').classList.remove('on'); $('title').classList.add('on'); G.state = 'title';
+};
+$('pause-leave').onclick = $('btn-leave').onclick = () => { leaveRoom(); backToTitle(); };
 
 /* =====================================================================
    ATUALIZAÇÃO
@@ -2346,6 +3068,11 @@ function update(dt){
       P.pitch += (0 - P.pitch)*Math.min(1, dt*2.2);
     }
   }
+  if (L){
+    for (const d of L.doors) if (d.open && d.anim < 1) d.anim = Math.min(1, d.anim + dt*1.1);
+    if (P.safeT > 0) P.safeT -= dt;
+  }
+  updateNet(dt);
   updateParticles(dt);
 
   updateActPrompt();
@@ -2353,7 +3080,7 @@ function update(dt){
   G.mapT -= dt;
   if (G.mapT <= 0){ G.mapT = .15; drawMinimap(); }
 
-  const near = (L && G.state === 'play' && V.alpha > .3) ? Math.hypot(P.x - V.x, P.y - V.y) : null;
+  const near = (L && G.state === 'play' && V.alpha > .3 && !isVillain()) ? Math.hypot(P.x - V.x, P.y - V.y) : null;
   Tracks.update(dt, G.state, near);
   Sound.update(dt, { near, out:G.state === 'play' && P.out, walking:G.state === 'play' && P.moving });
 }
@@ -2374,7 +3101,12 @@ function updatePlay(dt){
     P.a = P.hidden.a + clamp(angDiff(P.hidden.a, P.a), -.5, .5);
     P.moving = false;
     if (P.invT > 0) P.invT -= dt;
-    updateVillain(dt);
+    // versus: ninguém aguenta ficar no armário para sempre
+    if (MP.on && MP.mode === 'versus' && (P.hideT += dt) > LOCKER_MAX){
+      P.hidden = null; P.hideCd = 4; Sound.locker();
+      toast('Você não aguenta mais ficar no armário apertado e sai.', 2800);
+    }
+    if (!MP.on) updateVillain(dt);   // online quem move o João Vitão é o anfitrião (updateNet)
     updateHUD();
     return;
   }
@@ -2386,6 +3118,11 @@ function updatePlay(dt){
   if (keys['a']) str -= 1;
   // joystick do celular só anda (frente/trás e passo lateral); a câmera é o lado direito da tela
   fwd -= dpad.y; str += dpad.x;
+  // versus: o João Vitão espera os alunos entrarem antes de caçar
+  if (P.holdT > 0){
+    P.holdT -= dt; fwd = str = 0;
+    if (P.holdT <= 0) toast('Pode caçar.', 2000);
+  }
   const dirX = Math.cos(P.a), dirY = Math.sin(P.a);
   let mx = dirX*fwd - dirY*str, my = dirY*fwd + dirX*str;
   const ml = Math.hypot(mx, my);
@@ -2397,6 +3134,13 @@ function updatePlay(dt){
     P.walkT += dt*9;
   }
   if (P.invT > 0) P.invT -= dt;
+
+  // versus: quem é o João Vitão não tem celular, não pega itens nem desce escadas; só caça
+  if (isVillain()){
+    V.x = P.x; V.y = P.y; V.state = 'chase'; V.alpha = 1; V.moving = P.moving;
+    updateHUD();
+    return;
+  }
 
   // bateria do celular
   if (!P.out){
@@ -2413,18 +3157,26 @@ function updatePlay(dt){
   }
 
   for (const it of L.items){
-    if (it.taken) continue;
-    if (Math.abs(P.x - it.x - .5) < .45 && Math.abs(P.y - it.y - .5) < .45){ takeItem(it); if (G.state !== 'play') return; }
+    if (it.taken || it.pending) continue;
+    if (Math.abs(P.x - it.x - .5) < .45 && Math.abs(P.y - it.y - .5) < .45){
+      // online: pede ao anfitrião (dois alunos podem tocar no mesmo item ao mesmo tempo)
+      if (MP.on){ it.pending = true; request({ t:'take', i:it.i, li:L.li }); }
+      else takeItem(it);
+      if (G.state !== 'play') return;
+    }
   }
 
   G.hintT -= dt;
   for (const d of L.doors){
-    if (d.open){ d.anim = Math.min(1, d.anim + dt*1.1); continue; }
+    if (d.open) continue;
     const ddx = Math.max(Math.abs(P.x - d.x - .5) - .5, 0), ddy = Math.max(Math.abs(P.y - d.y - .5) - .5, 0);
     if (Math.hypot(ddx, ddy) < P.r + .1){
       if (G.keys >= d.req){
-        d.open = true; Sound.door(); G.shake = .25;
-        toast('As chaves giram na fechadura. A porta range e se abre.', 2600);
+        if (MP.on){ if (!d.pending){ d.pending = true; request({ t:'door', i:d.k, li:L.li }); } }
+        else {
+          d.open = true; Sound.door(); G.shake = .25;
+          toast('As chaves giram na fechadura. A porta range e se abre.', 2600);
+        }
       } else if (G.hintT <= 0){
         G.hintT = 2.6; Sound.locked();
         toast(`Porta trancada — exige ${d.req} ${d.req === 1 ? 'chave' : 'chaves'} (você tem ${G.keys}).`, 2600);
@@ -2442,10 +3194,15 @@ function updatePlay(dt){
     }
   }
 
-  if (L.exit && Math.floor(P.x) === L.exit.x && Math.floor(P.y) === L.exit.y){ nextLevel(); return; }
-  if (L.seal && Math.hypot(P.x - L.seal.x - .5, P.y - L.seal.y - .5) < 3.2){ startFinal(); return; }
+  // online: quem achar a escada (ou a sala 13) avisa o anfitrião, que leva todo mundo junto
+  const atExit = L.exit && Math.floor(P.x) === L.exit.x && Math.floor(P.y) === L.exit.y;
+  const atSeal = L.seal && Math.hypot(P.x - L.seal.x - .5, P.y - L.seal.y - .5) < 3.2;
+  if (atExit || atSeal){
+    if (!MP.on){ if (atExit) nextLevel(); else startFinal(); return; }
+    if (!MP.asked){ MP.asked = true; request({ t:atExit ? 'exit' : 'seal', li:L.li }); if (G.state !== 'play') return; }
+  }
 
-  updateVillain(dt);
+  if (!MP.on) updateVillain(dt);
   updateHUD();
 }
 
@@ -2465,6 +3222,8 @@ const TBL_MAX = 8192;
 const tblD = new Float32Array(TBL_MAX), tblHX = new Float32Array(TBL_MAX), tblHY = new Float32Array(TBL_MAX);
 const tblU = new Uint8Array(TBL_MAX), tblSide = new Uint8Array(TBL_MAX), tblTex = new Array(TBL_MAX).fill(null);
 let colAx = new Float32Array(0);   // deslocamento horizontal de cada coluna (em unidades de foco)
+// online: lanternas dos outros alunos (até 4 luzes: x, y)
+const PL = new Float32Array(8), PL_R2 = 4.4, PL_I = .5;
 
 // limite do olhar para cima/baixo: o raio mais inclinado da tela nunca aponta para trás
 function pitchLimit(){ const a = (RH/2 + 2)/FOC; return Math.min(PITCH_MAX, Math.acos(.12/Math.sqrt(1 + a*a)) - Math.atan(a)); }
@@ -2498,7 +3257,15 @@ function renderWorld(){
   // luz vermelha do fantasma (pulsa; atravessa as paredes, então você vê ele chegando)
   const vOn = V.alpha > .05 && V.state !== 'hidden' && L;
   const vPulse = .85 + .15*Math.sin(G.t*4.2);
-  const vx = V.x, vy = V.y, vI = vOn ? V.alpha*vPulse*(V.state === 'final' ? 1.6 : 1.9) : 0, VL2 = V.state === 'final' ? 9 : 7.5;
+  // versus: quem é o João Vitão enxerga pela própria luz vermelha, mais larga
+  const ownV = isVillain();
+  const vx = V.x, vy = V.y, vI = vOn ? V.alpha*vPulse*(V.state === 'final' ? 1.6 : ownV ? 1.25 : 1.9) : 0, VL2 = V.state === 'final' ? 9 : ownV ? 20 : 7.5;
+  // online: lanterna dos outros alunos — uma luz branca um pouco à frente de cada um
+  let nPL = 0;
+  if (MP.on) for (const o of MP.others.values()){
+    if (nPL >= 4 || !otherVisible(o) || !(o.f & F_LIGHT) || isVillainId(o.id)) continue;
+    PL[2*nPL] = o.x + Math.cos(o.a)*1.3; PL[2*nPL + 1] = o.y + Math.sin(o.a)*1.3; nPL++;
+  }
   // sala 13: escuridão que respira em volta da carteira
   const sealOn = !!L.seal, scx = sealOn ? L.seal.x + .5 : 0, scy = sealOn ? L.seal.y + .5 : 0;
   const sealDark = .7 + .15*Math.sin(G.t*.8);
@@ -2591,6 +3358,7 @@ function renderWorld(){
         const sh = tblSide[i] ? .74 : 1;
         mr = b*WR*sh; mg = b*WG*sh; mb = b*WB*sh;
         if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; } }
+        for (let q = 0; q < nPL; q++){ const ex = hx - PL[2*q], ey = hy - PL[2*q + 1], d2 = ex*ex + ey*ey; if (d2 < PL_R2){ const k = 1 - d2/PL_R2, l = PL_I*k*k*sh; mr += l*.92; mg += l*.96; mb += l; } }
       } else {
         if (tFC >= 1e8){ buf[row + x] = 0xff000000; continue; }
         hx = posX + tFC*(dirX*cy - dirY*ax); hy = posY + tFC*(dirY*cy + dirX*ax); dist = tFC*hl;
@@ -2605,6 +3373,7 @@ function renderWorld(){
           else c = floors[fid][(((hy - ty)*TS) | 0)*TS + (((hx - tx)*TS) | 0)];
           mr = b*WR; mg = b*WG; mb = b*WB;
           if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k; mr += vl; mg += vl*.1; mb += vl*.06; } }
+          for (let q = 0; q < nPL; q++){ const ex = hx - PL[2*q], ey = hy - PL[2*q + 1], d2 = ex*ex + ey*ey; if (d2 < PL_R2){ const k = 1 - d2/PL_R2, l = PL_I*k*k; mr += l*.92; mg += l*.96; mb += l; } }
           if (sealOn && fid === F_SEAL){ const ex = hx - scx, ey = hy - scy, m = 1 - sealDark*Math.exp(-(ex*ex + ey*ey)*.9); mr *= m; mg *= m; mb *= m; }
         } else {
           // teto
@@ -2613,6 +3382,7 @@ function renderWorld(){
           if (cid === C_HOLE){ b = Math.max(b, .55); mr = b*.85; mg = b*.9; mb = b; }   // luz do dia pela claraboia
           else { mr = b*WR*.85; mg = b*WG*.85; mb = b*WB*.85; }
           if (vOn){ const ex = hx - vx, ey = hy - vy, d2 = ex*ex + ey*ey; if (d2 < VL2){ const k = 1 - d2/VL2, vl = vI*k*k*.7; mr += vl; mg += vl*.1; mb += vl*.06; } }
+          for (let q = 0; q < nPL; q++){ const ex = hx - PL[2*q], ey = hy - PL[2*q + 1], d2 = ex*ex + ey*ey; if (d2 < PL_R2){ const k = 1 - d2/PL_R2, l = PL_I*k*k*.6; mr += l*.92; mg += l*.96; mb += l; } }
         }
       }
       let r = ((c & 255)*mr) | 0, g = (((c >> 8) & 255)*mg) | 0, bb = (((c >> 16) & 255)*mb) | 0;
@@ -2725,6 +3495,25 @@ function renderSprites(){
       else billboard(SPR.glowGold, null, p.x, p.y, p.z, p.size, p.size, a, 1, true);
     });
   }
+  // online: os outros alunos (o pegador do versus aparece como o próprio João Vitão, logo abaixo)
+  nameTags.length = 0;
+  if (MP.on) for (const o of MP.others.values()){
+    if (!otherVisible(o) || isVillainId(o.id)) continue;
+    const d = dist(o.x, o.y);
+    if (d > 16 || d < .15) continue;
+    add(d, () => {
+      const s = playerSprite(o.color), lit = o.f & F_LIGHT;
+      // a tela do celular ilumina um pouco quem está com a lanterna ligada
+      const b = Math.max(lightAt(o.x, o.y, .6), lit ? .3 : .05);
+      const r = billboard(s.img, s.sil, o.x, o.y, 0, s.ww, s.wh, 1, b, false);
+      if (lit) billboard(SPR.glowWhite, null, o.x + Math.cos(o.a)*.22, o.y + Math.sin(o.a)*.22, .3, .45, .45, .55, 1, true);
+      // nome em cima (o João Vitão do versus não vê nomes: eles entregariam quem está no escuro)
+      if (r && d < 9 && !isVillain()){
+        const zx = clamp(r.scrX | 0, 0, RW - 1);
+        if (zbuf[zx] > r.depth) nameTags.push({ name:o.name, x:r.scrX, y:r.top, a:clamp(1.3 - d/9, .25, 1), color:o.color });
+      }
+    });
+  }
   // João Vitão
   let villainScreen = null;
   if (V.alpha > .01){
@@ -2748,6 +3537,53 @@ function renderSprites(){
   list.sort((a, b) => b.d - a.d);
   for (const s of list) s.draw();
   return villainScreen;
+}
+
+/* ---------- Online: os outros alunos ---------- */
+const nameTags = [];
+const PSPR = [];
+// aluno de moletom com capuz, com o celular na mão; a cor do moletom é a do jogador na sala
+function playerSprite(ci){
+  return PSPR[ci] || (PSPR[ci] = sprite(48, 112, .42, 1.02, g => {
+    const c = PLAYER_COLORS[ci] || PLAYER_COLORS[0];
+    g.fillStyle = '#1c1d22'; g.fillRect(14, 72, 8, 38); g.fillRect(26, 72, 8, 38);          // calça
+    g.fillStyle = '#0e0f12'; g.fillRect(12, 106, 11, 6); g.fillRect(25, 106, 11, 6);         // tênis
+    g.fillStyle = rgb(c); g.beginPath(); g.roundRect(8, 30, 32, 46, 8); g.fill();            // moletom
+    g.fillStyle = rgb(c, -28); g.fillRect(3, 34, 8, 30); g.fillRect(37, 34, 8, 26);          // braços
+    g.fillStyle = rgb(c, -40); g.fillRect(14, 54, 20, 3);                                     // bolso
+    g.fillStyle = rgb(c, -18); g.beginPath(); g.arc(24, 21, 13.5, 0, TAU); g.fill();          // capuz
+    g.fillStyle = '#c99a78'; g.beginPath(); g.ellipse(24, 23, 7.5, 9, 0, 0, TAU); g.fill();   // rosto
+    g.fillStyle = '#1a1210'; g.fillRect(20, 21, 2.5, 2.5); g.fillRect(25.5, 21, 2.5, 2.5);
+    g.fillStyle = '#c99a78'; g.fillRect(37, 59, 8, 5);                                        // mão
+    g.fillStyle = '#0d0f12'; g.fillRect(38, 50, 7, 12); g.fillStyle = '#9fc4ff'; g.fillRect(39, 51, 5, 9);   // celular
+  }));
+}
+function drawNameTags(){
+  if (!nameTags.length) return;
+  const sx = cw/RW, sy = ch/RH, c = ctx;
+  c.save();
+  c.font = `600 ${Math.round(13*dpr)}px Cinzel, serif`; c.textAlign = 'center'; c.textBaseline = 'bottom';
+  c.shadowColor = 'rgba(0,0,0,.95)'; c.shadowBlur = 6*dpr;
+  for (const t of nameTags){
+    c.globalAlpha = t.a; c.fillStyle = rgb(PLAYER_COLORS[t.color] || PLAYER_COLORS[0], 110);
+    c.fillText(t.name, t.x*sx, t.y*sy - 6*dpr);
+  }
+  c.restore();
+}
+/* ---------- Versus: a visão do João Vitão (sem celular, tudo em vermelho) ---------- */
+function drawVillainView(){
+  const c = ctx, g = c.createRadialGradient(cw/2, ch/2, Math.min(cw, ch)*.22, cw/2, ch/2, Math.max(cw, ch)*.75);
+  g.addColorStop(0, 'rgba(110,0,0,0)'); g.addColorStop(1, `rgba(110,0,0,${.42 + .1*Math.sin(G.t*2.3)})`);
+  c.fillStyle = g; c.fillRect(0, 0, cw, ch);
+  if (P.holdT > 0 && G.state === 'play'){
+    c.save();
+    c.textAlign = 'center'; c.textBaseline = 'middle'; c.shadowColor = '#000'; c.shadowBlur = 12*dpr;
+    c.fillStyle = 'rgba(255,90,70,.9)'; c.font = `600 ${Math.round(64*dpr)}px Cinzel, serif`;
+    c.fillText(Math.ceil(P.holdT), cw/2, ch*.42);
+    c.font = `italic ${Math.round(20*dpr)}px 'Cormorant Garamond', serif`; c.fillStyle = 'rgba(240,210,200,.85)';
+    c.fillText('…um, dois, três… os alunos estão entrando…', cw/2, ch*.42 + 52*dpr);
+    c.restore();
+  }
 }
 
 /* ---------- Celular na mão (primeira pessoa) ---------- */
@@ -2838,8 +3674,10 @@ function render(){
   const vg = c.createRadialGradient(cw/2, ch/2, Math.min(cw, ch)*.3, cw/2, ch/2, Math.max(cw, ch)*.72);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.65)');
   c.fillStyle = vg; c.fillRect(0, 0, cw, ch);
+  drawNameTags();
 
   if (P.hidden && G.state === 'play') drawLockerView();
+  else if (isVillain()) drawVillainView();
   else if (G.state !== 'final') drawHandPhone();
 
   // pânico quando a tocha apaga / dano
@@ -2876,6 +3714,13 @@ requestAnimationFrame(frame);
   }, true);
   const p = Tracks.startMusic();
   if (p && p.then) p.then(null, () => gate.classList.add('on'));
+})();
+
+// convite: ?sala=CÓDIGO abre direto a tela da sala com o código preenchido
+(function inviteFromURL(){
+  let q = null;
+  try { q = new URLSearchParams(location.search).get('sala'); } catch (e) {}
+  if (q && /^[A-Za-z0-9]{5}$/.test(q)) openLobby(q.toUpperCase());
 })();
 
 (function titleEmbers(){
