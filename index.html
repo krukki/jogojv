@@ -2215,7 +2215,7 @@ function startFinal(by){
     closeOverlays(); setFade({}); fadeTo(0, 400);
     // quem não chegou junto aparece na sala 13, em volta da carteira
     if (by !== MP.id){
-      const k = Math.max(0, MP.players.findIndex(p => p.id === MP.id)), ang = Math.PI*.75 + (k - 1.5)*.5;
+      const k = Math.max(0, MP.players.findIndex(p => p.id === MP.id)), ang = Math.PI*.75 + k*Math.PI*2/MAX_PLAYERS;   // todos em volta da carteira
       P.x = L.seal.x + .5 + Math.cos(ang)*2.4; P.y = L.seal.y + .5 + Math.sin(ang)*2.4;
     }
   }
@@ -2354,10 +2354,11 @@ const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'
 const PEER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
 const ROOM_PREFIX = 'jvitao-ifmt-sala-';
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // sem I, O, 0 e 1 (fáceis de confundir)
-const MAX_PLAYERS = 4, NET_DT = 1/15;
+const MAX_PLAYERS = 10, NET_DT = 1/15;
 const VILLAIN_SPEED = 3.75, VILLAIN_HOLD = 10;   // versus: um pouco mais rápido que os alunos; espera 10 s no começo de cada nível
 const LOCKER_MAX = 12;                           // versus: segundos máximos dentro do armário
-const PLAYER_COLORS = [[70,104,160],[160,62,62],[62,146,96],[160,132,60]];
+const PLAYER_COLORS = [[70,104,160],[160,62,62],[62,146,96],[160,132,60],[118,76,158],
+                       [48,140,150],[178,100,44],[166,70,126],[116,118,126],[108,128,56]];
 const VSTATES = ['hidden','chase','search','final'];
 // bits do estado de cada aluno enviado pela rede
 const F_LIGHT = 1, F_HIDDEN = 2, F_OUT = 4, F_MOVING = 8, F_WORLD = 16, F_SAFE = 32, F_FINAL = 64;
@@ -2460,7 +2461,7 @@ function hostRecv(c, m){
     const used = new Set(MP.players.map(p => p.color));
     const id = 'p' + (++MP.nextId);
     c.pid = id; MP.conns.set(id, c);
-    MP.players.push({ id, name:cleanName(m.name) || 'Aluno', color:[0,1,2,3].find(k => !used.has(k)) });
+    MP.players.push({ id, name:cleanName(m.name) || 'Aluno', color:PLAYER_COLORS.findIndex((_, k) => !used.has(k)) });
     c.send({ t:'welcome', id });
     broadcastLobby(); renderLobby();
     return;
