@@ -2342,18 +2342,23 @@ async function showEnding(id){
 const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);
 
 /* =====================================================================
-   ONLINE — salas com código, direto entre os navegadores (WebRTC via PeerJS)
+   ONLINE — salas com código, por um servidor público de mensagens (MQTT)
    ---------------------------------------------------------------------
    O anfitrião é quem manda: ele roda o João Vitão, conta as chaves, abre
    as portas e decide a troca de nível. Cada um anda o próprio aluno e
    manda a posição; o anfitrião repassa tudo para todos ~15x por segundo.
    O labirinto não é enviado: todos geram o mesmo a partir de uma semente.
-   O servidor público do PeerJS só apresenta os navegadores; o jogo em si
-   vai direto de um para o outro.
+   As mensagens passam por um broker MQTT público: cada sala é um tópico.
+   (Antes era direto entre os navegadores, por WebRTC, mas isso não passa
+   pelo NAT de redes como a da escola.) O broker só repassa; quem decide
+   tudo continua sendo o anfitrião.
    ===================================================================== */
-const PEER_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js';
-const ROOM_PREFIX = 'jvitao-ifmt-sala-';
+const MQTT_SRC = 'https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.16.0/mqtt.min.js';
+const BROKERS = ['wss://broker.hivemq.com:8884/mqtt', 'wss://broker.emqx.io:8084/mqtt'];
+const TOPIC = 'jvitao-ifmt/v2/sala/';
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // sem I, O, 0 e 1 (fáceis de confundir)
+// a primeira letra do código diz em qual broker a sala está (o convidado vai direto nele)
+const brokerOf = code => Math.max(0, CODE_CHARS.indexOf(code[0])) % BROKERS.length;
 const MAX_PLAYERS = 10, NET_DT = 1/15;
 const VILLAIN_SPEED = 3.75, VILLAIN_HOLD = 10;   // versus: um pouco mais rápido que os alunos; espera 10 s no começo de cada nível
 const LOCKER_MAX = 12;                           // versus: segundos máximos dentro do armário
@@ -2364,8 +2369,9 @@ const VSTATES = ['hidden','chase','search','final'];
 const F_LIGHT = 1, F_HIDDEN = 2, F_OUT = 4, F_MOVING = 8, F_WORLD = 16, F_SAFE = 32, F_FINAL = 64;
 
 const MP = {
-  on:false, host:false, peer:null,
-  conn:null,            // convidado: conexão com o anfitrião
+  on:false, host:false,
+  net:null, topic:'',   // cliente MQTT e o tópico da sala
+  key:'',               // convidado: a chave dele no tópico da sala
   conns:new Map(),      // anfitrião: id do jogador -> conexão
   id:null, name:'', code:'', nextId:0,
   players:[],           // [{ id, name, color }] — o anfitrião ('h') é sempre o primeiro
@@ -2373,7 +2379,7 @@ const MP = {
   started:false, seed:0, villain:null, catches:0, limit:0,
   others:new Map(),     // id -> estado dos outros alunos (posição suavizada etc.)
   netT:0, wk:0,         // wk: contador de sussurros do João Vitão (os convidados tocam o som quando muda)
-  asked:false, busy:false, joinFail:null, uiBusy:false,
+  asked:false, busy:false, uiBusy:false,
 };
 const isVillainId = id => MP.on && MP.mode === 'versus' && !!id && id === MP.villain;
 const isVillain = () => isVillainId(MP.id);
@@ -2405,51 +2411,72 @@ function setOther(o, s){
 }
 
 /* ---------- conexão ---------- */
-let peerLib = null;
-function loadPeer(){
-  if (window.Peer) return Promise.resolve();
-  return peerLib || (peerLib = new Promise((res, rej) => {
-    const s = document.createElement('script'); s.src = PEER_SRC; s.async = true;
-    s.onload = res; s.onerror = () => { peerLib = null; s.remove(); rej({ type:'load' }); };
+let mqttLib = null;
+function loadNet(){
+  if (window.mqtt) return Promise.resolve();
+  return mqttLib || (mqttLib = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = MQTT_SRC; s.async = true;
+    s.onload = res; s.onerror = () => { mqttLib = null; s.remove(); rej({ type:'load' }); };
     document.head.appendChild(s);
   }));
 }
-function openPeer(id){
+const randomKey = () => Math.random().toString(36).slice(2, 10);
+// conecta num broker; will é o recado que o broker publica por nós se a gente cair sem avisar
+function openNet(url, will){
   return new Promise((res, rej) => {
-    const p = id ? new Peer(id) : new Peer();
-    let open = false;
-    p.on('open', () => { open = true; MP.peer = p; res(p); });
-    p.on('error', e => {
-      if (!open){ try { p.destroy(); } catch (x) {} rej(e); }
-      else if (MP.joinFail) MP.joinFail(e);
-    });
-    // perdeu o servidor de apresentação (as conexões já abertas continuam): tenta voltar para aceitar gente nova
-    p.on('disconnected', () => { if (MP.peer === p && !p.destroyed) try { p.reconnect(); } catch (e) {} });
+    const cl = mqtt.connect(url, { clientId:'jv_' + randomKey(), keepalive:30, clean:true, connectTimeout:15000, reconnectPeriod:2000, will });
+    let done = false;
+    const fail = () => { if (done) return; done = true; clearTimeout(to); try { cl.end(true); } catch (e) {} rej({ type:'network' }); };
+    const to = setTimeout(fail, 16000);
+    cl.once('connect', () => { if (done) return; done = true; clearTimeout(to); res(cl); });
+    cl.on('error', fail);
   });
 }
+const pub = (cl, topic, m, opts) => { try { cl.publish(topic, typeof m === 'string' ? m : JSON.stringify(m), opts || { qos:0 }); } catch (e) {} };
 const randomCode = () => Array.from({ length:5 }, () => CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]).join('');
 function netError(e){
   const t = e && e.type;
   if (t === 'load') return 'Não deu para carregar o modo online. Você está sem internet?';
-  if (t === 'browser-incompatible') return 'Este navegador não suporta o jogo online.';
-  if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return 'Sem conexão com o servidor de salas. Confira a internet e tente de novo.';
+  if (t === 'network') return 'Sem conexão com o servidor de salas. Confira a internet e tente de novo.';
   return (e && e.message) || 'Algo deu errado na conexão.';
 }
 
 async function hostRoom(){
-  await loadPeer();
-  for (let k = 0; !MP.peer; k++){
-    const code = randomCode();
-    try { await openPeer(ROOM_PREFIX + code); MP.code = code; }
-    catch (e){ if (e.type !== 'unavailable-id' || k >= 3) throw e; }   // código já usado: sorteia outro
+  await loadNet();
+  let cl = null, err = null, code, T;
+  for (let b = 0; b < BROKERS.length && !cl; b++){
+    do code = randomCode(); while (brokerOf(code) !== b);
+    T = TOPIC + code;
+    // se o anfitrião cair, o broker apaga a sala e os convidados ficam sabendo
+    try { cl = await openNet(BROKERS[b], { topic:T + '/sala', payload:'', qos:1, retain:true }); }
+    catch (e){ err = e; }
   }
-  Object.assign(MP, { on:true, host:true, id:'h', nextId:0, mode:'coop', pick:'', started:false });
+  if (!cl) throw err;
+  Object.assign(MP, { on:true, host:true, id:'h', net:cl, topic:T, code, nextId:0, mode:'coop', pick:'', started:false });
   MP.players = [{ id:'h', name:MP.name, color:0 }];
   document.body.classList.add('mp');
-  MP.peer.on('connection', c => {
-    c.on('data', m => hostRecv(c, m));
-    c.on('close', () => dropGuest(c));
-    c.on('error', () => dropGuest(c));
+  const guests = new Map();   // chave do convidado -> "conexão" (o tópico particular dele)
+  const openRoom = () => { if (MP.net === cl) pub(cl, T + '/sala', '1', { qos:1, retain:true }); };
+  openRoom();
+  cl.on('connect', openRoom);   // voltou depois de cair: reabre a sala
+  cl.subscribe(T + '/h');
+  cl.on('message', (topic, buf) => {
+    if (MP.net !== cl || topic !== T + '/h') return;
+    let d; try { d = JSON.parse(buf.toString()); } catch (e) { return; }
+    if (!d || typeof d.f !== 'string' || !d.m || typeof d.m !== 'object') return;
+    let c = guests.get(d.f);
+    if (d.m.t === 'bye'){ if (c) c.close(); return; }
+    if (!c){
+      // alguém que a sala já tinha esquecido (ficou muito tempo sem sinal): avisa que caiu
+      if (d.m.t !== 'hello') return pub(cl, T + '/g/' + d.f, { t:'gone' });
+      c = {
+        pid:null, open:true,
+        send: m => pub(cl, T + '/g/' + d.f, m),
+        close(){ if (!c.open) return; c.open = false; guests.delete(d.f); dropGuest(c); },
+      };
+      guests.set(d.f, c);
+    }
+    hostRecv(c, d.m);
   });
 }
 function hostRecv(c, m){
@@ -2462,15 +2489,15 @@ function hostRecv(c, m){
     const id = 'p' + (++MP.nextId);
     c.pid = id; MP.conns.set(id, c);
     MP.players.push({ id, name:cleanName(m.name) || 'Aluno', color:PLAYER_COLORS.findIndex((_, k) => !used.has(k)) });
-    c.send({ t:'welcome', id });
+    c.send({ t:'welcome', id, players:MP.players, mode:MP.mode, pick:MP.pick });
     broadcastLobby(); renderLobby();
     return;
   }
   if (c.pid && MP.conns.get(c.pid) === c) hostHandle(m, c.pid);
 }
 function refuse(c, msg){
-  try { c.send({ t:'kick', msg }); } catch (e) {}
-  setTimeout(() => { try { c.close(); } catch (e) {} }, 500);
+  c.send({ t:'kick', msg });
+  setTimeout(() => c.close(), 500);
 }
 function dropGuest(c){
   const id = c.pid;
@@ -2485,26 +2512,57 @@ function dropGuest(c){
   } else { broadcastLobby(); renderLobby(); }
 }
 
-function joinRoom(code){
-  return loadPeer().then(() => openPeer(null)).then(() => new Promise((res, rej) => {
-    let done = false;
-    const end = err => { if (done) return; done = true; clearTimeout(to); err ? rej(err) : res(); };
-    const to = setTimeout(() => end(new Error('Não foi possível conectar à sala.')), 15000);
-    MP.joinFail = e => end(e.type === 'peer-unavailable' ? new Error('Sala não encontrada. Confira o código.') : new Error(netError(e)));
-    const c = MP.peer.connect(ROOM_PREFIX + code, { reliable:true });
-    c.on('open', () => c.send({ t:'hello', name:MP.name }));
-    c.on('data', m => {
-      if (!m || typeof m !== 'object') return;
-      if (m.t === 'welcome' && !done){
-        Object.assign(MP, { on:true, host:false, id:m.id, conn:c, code, wk:-1 });
-        document.body.classList.add('mp');
-        end(); return;
+async function joinRoom(code){
+  await loadNet();
+  const T = TOPIC + code, key = randomKey(), url = BROKERS[brokerOf(code)];
+  let cl = null, err = null;
+  // se a gente cair sem avisar, o broker manda o "tchau" para o anfitrião
+  for (let k = 0; k < 2 && !cl; k++){
+    try { cl = await openNet(url, { topic:T + '/h', payload:JSON.stringify({ f:key, m:{ t:'bye' } }), qos:1 }); }
+    catch (e){ err = e; }
+  }
+  if (!cl) throw err;
+  const r = await knock(cl, T, key, code);
+  if (r === true) return;
+  try { cl.end(true); } catch (e) {}
+  throw r;
+}
+// procura a sala e pede para entrar: true (entrou) ou o erro
+function knock(cl, T, key, code){
+  return new Promise(res => {
+    let state = 'look', to = null;
+    const end = r => { if (state === 'done') return; state = 'done'; clearTimeout(to); res(r); };
+    cl.on('message', (topic, buf) => {
+      const s = buf.toString();
+      if (topic === T + '/sala'){
+        if (s && state === 'look'){
+          state = 'hello'; clearTimeout(to);
+          to = setTimeout(() => end(new Error('A sala não respondeu. Tente de novo.')), 10000);
+          pub(cl, T + '/h', { f:key, m:{ t:'hello', name:MP.name } });
+        } else if (!s && MP.net === cl) hostLost();   // o anfitrião fechou a sala
+        return;
       }
-      if (m.t === 'kick'){ end(new Error(m.msg)); return; }
-      if (MP.conn === c) onEvent(m);
+      let m; try { m = JSON.parse(s); } catch (e) { return; }
+      if (!m || typeof m !== 'object') return;
+      if (state === 'hello' && topic === T + '/g/' + key){
+        if (m.t === 'welcome'){
+          Object.assign(MP, { on:true, host:false, id:m.id, net:cl, topic:T, key, code, wk:-1 });
+          document.body.classList.add('mp');
+          end(true);
+          onEvent({ t:'lobby', players:m.players, mode:m.mode, pick:m.pick });
+        } else if (m.t === 'kick') end(new Error(m.msg));
+        return;
+      }
+      if (MP.net !== cl) return;
+      if (m.t === 'gone') hostLost();
+      else onEvent(m);
     });
-    c.on('close', () => { if (MP.conn === c) hostLost(); else end(new Error('A sala recusou a conexão.')); });
-  })).finally(() => { MP.joinFail = null; });
+    cl.subscribe([T + '/sala', T + '/all', T + '/g/' + key], err => {
+      if (err) return end({ type:'network' });
+      // a sala, se existir, chega logo depois da inscrição
+      if (state === 'look') to = setTimeout(() => end(new Error('Sala não encontrada. Confira o código.')), 6000);
+    });
+  });
 }
 function hostLost(){
   if (!MP.on) return;
@@ -2512,12 +2570,17 @@ function hostLost(){
   backToTitle('A conexão com a sala caiu.');
 }
 function leaveRoom(){
-  const p = MP.peer;
-  Object.assign(MP, { on:false, host:false, conn:null, peer:null, started:false, villain:null, players:[], code:'', id:null });
+  const cl = MP.net, T = MP.topic, host = MP.on && MP.host, key = MP.key;
+  Object.assign(MP, { on:false, host:false, net:null, topic:'', key:'', started:false, villain:null, players:[], code:'', id:null });
   MP.conns.clear(); MP.others.clear();
   document.body.classList.remove('mp', 'is-villain');
-  if (p) try { p.destroy(); } catch (e) {}
+  if (!cl) return;
+  // avisa na hora (sem esperar o broker perceber que a gente sumiu)
+  if (host) pub(cl, T + '/sala', '', { qos:1, retain:true });
+  else if (key) pub(cl, T + '/h', { f:key, m:{ t:'bye' } }, { qos:1 });
+  try { cl.end(false); } catch (e) {}
 }
+addEventListener('pagehide', () => { if (MP.on) leaveRoom(); });
 // volta para a tela título no meio de qualquer cena
 function backToTitle(msg){
   G.seq++; G.state = 'title'; L = null;
@@ -2531,10 +2594,10 @@ function backToTitle(msg){
 }
 
 /* ---------- mensagens ---------- */
-function sendHost(m){ if (MP.conn && MP.conn.open) try { MP.conn.send(m); } catch (e) {} }
+function sendHost(m){ if (MP.net && !MP.host) pub(MP.net, MP.topic + '/h', { f:MP.key, m }); }
 // anfitrião: manda para todos (e, com apply, aplica nele mesmo como se tivesse recebido)
 function broadcast(m, apply = true){
-  for (const c of MP.conns.values()) if (c.open) try { c.send(m); } catch (e) {}
+  if (MP.net && MP.host && MP.conns.size) pub(MP.net, MP.topic + '/all', m);
   if (apply) onEvent(m);
 }
 // pedido de um aluno ao anfitrião (o anfitrião atende a si mesmo na hora)
